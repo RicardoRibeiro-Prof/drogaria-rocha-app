@@ -197,6 +197,7 @@ footer { background:#efeeec;padding:45px clamp(20px,6vw,90px);display:grid;grid-
 .banner-produto .banner-circulo { position:absolute;width:min(34vw,460px);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.22);box-shadow:0 30px 80px rgba(0,0,0,.08); }
 .banner-branco .banner-circulo { background:rgba(255,255,255,.72);border-color:#fff; }
 .banner-produto img { position:relative;z-index:2;width:min(56%,300px);height:78%;object-fit:contain;filter:drop-shadow(0 25px 24px rgba(0,0,0,.2)); }
+.banner-produto img.produto-em-disco { width:min(72%,390px);height:auto;aspect-ratio:1;object-fit:contain;border-radius:50%;background:#f8f5fa;filter:drop-shadow(0 22px 24px rgba(0,0,0,.24)); }
 .banner-produto small,.banner-produto strong { position:absolute;z-index:3;padding:11px 14px;border-radius:12px;background:rgba(255,255,255,.92);color:#171717;box-shadow:0 10px 30px rgba(0,0,0,.12); }
 .banner-produto small { left:5%;top:23%;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.12em; }
 .banner-produto strong { right:1%;bottom:20%;font:800 16px/1.25 'Manrope',sans-serif; }
@@ -218,6 +219,7 @@ footer { background:#efeeec;padding:45px clamp(20px,6vw,90px);display:grid;grid-
   .banner-produto { min-width:0; }
   .banner-produto .banner-circulo { width:155px; }
   .banner-produto img { width:88%;height:75%;max-width:145px;filter:drop-shadow(0 15px 14px rgba(0,0,0,.18)); }
+  .banner-produto img.produto-em-disco { width:145px;height:145px;aspect-ratio:1;border-radius:50%; }
   .banner-produto small { display:none; }
   .banner-produto strong { right:-3px;bottom:15%;padding:7px 8px;border-radius:8px;font-size:9px; }
   .banner-seta { display:none; }
