@@ -5,8 +5,8 @@
   "start_url": "/drogaria-rocha-app/",
   "scope": "/drogaria-rocha-app/",
   "display": "standalone",
-  "background_color": "#f5f8f6",
-  "theme_color": "#075f4e",
+  "background_color": "#f7f7f5",
+  "theme_color": "#121212",
   "icons": [
     { "src": "/drogaria-rocha-app/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
