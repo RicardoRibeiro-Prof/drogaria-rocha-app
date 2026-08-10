@@ -178,6 +178,129 @@ footer { background:#efeeec;padding:45px clamp(20px,6vw,90px);display:grid;grid-
 
 @media (prefers-reduced-motion:reduce) { *{scroll-behavior:auto!important;transition:none!important} }
 
+/* Experiência comercial profissional — Drogaria Rocha */
+:root { --laranja-rocha:#f26522;--preto-rocha:#111;--cinza-pagina:#f5f5f4;--cinza-texto:#666; }
+body { background:var(--cinza-pagina); }
+.cabecalho { min-height:92px;height:92px;padding:0 max(28px,calc((100vw - 1320px)/2));display:block;background:rgba(255,255,255,.98);box-shadow:0 1px 0 rgba(17,17,17,.08);backdrop-filter:blur(16px); }
+.cabecalho-linha { height:100%;display:grid;grid-template-columns:auto minmax(300px,1fr) auto auto;gap:22px;align-items:center; }
+.marca { gap:12px; }
+.marca-simbolo { width:44px;height:44px;border-radius:13px; }
+.marca em { font-size:24px; }
+.busca-topo { display:flex;width:100%;max-width:640px;height:50px;margin:0 auto;border:1px solid #dededc;border-radius:14px;background:#f7f7f6;box-shadow:none;transition:border-color .2s,box-shadow .2s,background .2s; }
+.busca-topo:focus-within { background:#fff;border-color:var(--laranja-rocha);box-shadow:0 0 0 4px rgba(242,101,34,.1); }
+.busca-topo span { color:var(--laranja-rocha); }
+.busca-topo input { font-size:14px; }
+.localizacao { padding:4px 20px;border-left:1px solid #e5e5e3; }
+.botao-carrinho.topo { margin:0;height:48px;padding:0 18px;border-radius:13px;background:#171717;color:#fff;box-shadow:0 8px 18px rgba(17,17,17,.12); }
+.botao-carrinho.topo b { background:var(--laranja-rocha); }
+.barra-confianca { min-height:38px;padding:8px max(28px,calc((100vw - 1320px)/2));display:flex;justify-content:center;gap:clamp(25px,6vw,90px);background:#171717;color:#d8d8d8;font-size:11px;letter-spacing:.01em; }
+.barra-confianca span { display:flex;align-items:center;gap:5px;white-space:nowrap; }
+.barra-confianca b { color:var(--laranja-rocha);font-size:13px; }
+.barra-confianca strong { color:#fff; }
+
+.hero-banners { height:440px;padding:24px max(28px,calc((100vw - 1376px)/2)) 20px;background:var(--cinza-pagina); }
+.banner-janela { max-width:1320px;margin:auto;border-radius:24px;box-shadow:0 16px 42px rgba(17,17,17,.12); }
+.banner-slide,.banner-slide.ativo { padding:38px clamp(60px,6vw,94px);grid-template-columns:minmax(0,1.08fr) minmax(330px,.92fr); }
+.banner-conteudo { max-width:650px; }
+.banner-conteudo h1 { margin:16px 0 15px;font-size:clamp(40px,4.2vw,58px);line-height:1.01;letter-spacing:-.05em; }
+.banner-conteudo p { margin-bottom:22px;font-size:15px;line-height:1.5; }
+.banner-produto img { height:285px;max-width:72%;max-height:calc(100% - 28px); }
+.banner-produto .banner-circulo { width:min(31vw,390px); }
+.banner-produto strong { right:5%;bottom:14%; }
+.banner-seta { width:42px;height:42px; }
+.banner-seta.anterior { left:max(42px,calc((100vw - 1320px)/2 + 18px)); }
+.banner-seta.proximo { right:max(42px,calc((100vw - 1320px)/2 + 18px)); }
+.banner-indicadores { bottom:29px; }
+
+.atalhos { max-width:1320px;margin:4px auto 0;border-radius:18px;box-shadow:0 8px 26px rgba(17,17,17,.06); }
+.atalhos button { min-height:82px;padding:18px 24px; }
+.atalho-icone { width:46px;height:46px;border-radius:14px; }
+.atalhos strong { font:700 14px 'Manrope',sans-serif; }
+.atalhos small { font-size:11px; }
+
+.secao.catalogo { max-width:1320px;padding:72px 0 84px; }
+.secao-titulo { align-items:center;margin-bottom:25px; }
+.secao-titulo h2 { font-size:clamp(30px,3vw,40px); }
+.secao-titulo p { max-width:430px;font-size:13px;line-height:1.55; }
+.catalogo>.busca { max-width:720px;height:54px;border-radius:14px;box-shadow:none; }
+.categorias { margin:17px 0 24px;padding-bottom:4px; }
+.categorias button { min-height:42px;padding:9px 16px;border-color:#dededc;color:#535353;transition:.18s; }
+.categorias button:hover { border-color:#bdbdb9;background:#fafafa; }
+.categorias button[aria-selected="true"] { border-color:#171717;background:#171717;color:#fff;box-shadow:0 6px 14px rgba(17,17,17,.13); }
+.grade-produtos { gap:16px; }
+.produto { display:flex;min-width:0;flex-direction:column;border-radius:16px;border-color:#e1e1df;box-shadow:0 3px 12px rgba(17,17,17,.035); }
+.produto:hover { transform:translateY(-3px);border-color:#d3d3d0;box-shadow:0 14px 28px rgba(17,17,17,.09); }
+.produto-imagem { height:235px;background:linear-gradient(145deg,#fafafa,#fff);border-bottom:1px solid #eeeeec; }
+.produto-imagem>img { width:86%;height:86%; }
+.produto-corpo { display:flex;flex:1;flex-direction:column;padding:17px 17px 18px; }
+.produto h3 { min-height:42px;font-size:15px;line-height:1.35; }
+.produto p { min-height:36px;margin:7px 0 16px;line-height:1.5; }
+.produto-rodape { margin-top:auto; }
+.preco-info>strong { color:#171717;font:800 18px 'Manrope',sans-serif; }
+.adicionar { background:#171717;transition:transform .18s,background .18s; }
+.adicionar:hover { background:var(--laranja-rocha);transform:scale(1.04); }
+.faixa-atendimento { max-width:1320px;margin:0 auto 78px; }
+footer { padding-left:max(28px,calc((100vw - 1320px)/2));padding-right:max(28px,calc((100vw - 1320px)/2)); }
+
+@media (max-width:1360px) {
+  .secao.catalogo,.atalhos,.faixa-atendimento { margin-left:24px;margin-right:24px; }
+  .secao.catalogo { padding-left:0;padding-right:0; }
+}
+
+@media (max-width:900px) {
+  .cabecalho { padding:0 22px; }
+  .cabecalho-linha { grid-template-columns:auto minmax(220px,1fr) auto; }
+  .localizacao { display:none; }
+  .grade-produtos { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .banner-slide,.banner-slide.ativo { grid-template-columns:1.1fr .9fr;padding-left:50px;padding-right:50px; }
+}
+
+@media (max-width:760px) {
+  body { background:#f5f5f4;padding-bottom:76px; }
+  .cabecalho { height:auto;min-height:0;padding:10px 14px 12px;background:#171717;box-shadow:0 7px 22px rgba(0,0,0,.18); }
+  .cabecalho-linha { height:auto;display:grid;grid-template-columns:1fr auto;gap:10px 12px; }
+  .marca { grid-column:1; }
+  .cabecalho .marca-simbolo { width:36px;height:36px;background:var(--laranja-rocha); }
+  .cabecalho .marca em { font-size:19px; }
+  .botao-carrinho.topo { grid-column:2;grid-row:1;width:42px;height:42px;padding:0;border:1px solid #3d3d3d;border-radius:50%;background:#262626;justify-content:center; }
+  .busca-topo { grid-column:1/-1;grid-row:2;max-width:none;height:46px;border:0;border-radius:13px;background:#fff;padding:0 14px; }
+  .busca-topo input { font-size:14px; }
+  .barra-confianca { min-height:32px;padding:7px 14px;justify-content:flex-start;gap:26px;overflow-x:auto;scrollbar-width:none;font-size:9px; }
+  .barra-confianca::-webkit-scrollbar { display:none; }
+  .hero-banners { height:294px;padding:10px 10px 18px;background:#f5f5f4; }
+  .banner-janela { border-radius:18px;box-shadow:0 9px 24px rgba(17,17,17,.12); }
+  .banner-slide,.banner-slide.ativo { grid-template-columns:minmax(0,1.18fr) minmax(110px,.82fr);gap:5px;padding:21px 14px 32px; }
+  .banner-conteudo h1 { margin:10px 0 8px;font-size:22px;line-height:1.04; }
+  .banner-conteudo p { margin-bottom:11px;font-size:10px;line-height:1.38;-webkit-line-clamp:2; }
+  .banner-botao { min-height:38px;padding:0 12px;border-radius:10px;font-size:10px; }
+  .banner-produto img { width:auto;height:145px;max-width:92%;max-height:74%; }
+  .banner-produto .banner-circulo { width:140px; }
+  .banner-indicadores { bottom:25px; }
+  .atalhos { margin:0;padding:9px 10px 12px;background:transparent;box-shadow:none; }
+  .atalhos button { flex:0 0 160px;min-height:62px;padding:10px;background:#fff; }
+  .secao.catalogo { margin:0;padding:27px 12px 42px; }
+  .secao-titulo { margin:0 3px 15px; }
+  .secao-titulo h2 { font-size:22px; }
+  .categorias { margin-left:-12px;margin-right:-12px;padding-left:12px;padding-right:12px; }
+  .grade-produtos { grid-template-columns:repeat(2,minmax(0,1fr));gap:9px; }
+  .produto { border-radius:14px; }
+  .produto-imagem { height:154px; }
+  .produto-imagem>img { width:90%;height:90%; }
+  .produto-corpo { padding:10px; }
+  .produto h3 { min-height:43px;font-size:12px; }
+  .produto-rodape { margin-top:8px; }
+  .preco-info>strong { font-size:14px; }
+  .faixa-atendimento { margin:0 12px 25px; }
+  footer { padding-left:18px;padding-right:18px; }
+}
+
+@media (max-width:370px) {
+  .hero-banners { height:278px; }
+  .banner-conteudo h1 { font-size:20px; }
+  .banner-produto img { height:132px; }
+  .produto-imagem { height:136px; }
+}
+
 /* Vitrine comercial do início */
 .hero-banners { position:relative;display:block;height:clamp(430px,43vw,590px);min-height:0;padding:0;background:#fff;overflow:hidden; }
 .banner-trilho { position:relative;width:100%;height:100%;overflow:hidden; }
