@@ -16,6 +16,8 @@ const retornoAutenticacao = new URLSearchParams(window.location.search).get('adm
 const fluxoDeSenha = retornoAutenticacao === 'redefinir' || window.location.hash.includes('type=recovery') || window.location.hash.includes('type=invite');
 
 const app = document.querySelector('#app');
+let bannerAtual = 0;
+let bannerTimer;
 
 function quantidadeTotal() {
   return Object.values(estado.carrinho).reduce((soma, quantidade) => soma + quantidade, 0);
@@ -53,24 +55,24 @@ function render() {
     </header>
 
     <main id="inicio">
-      <section class="hero">
-        <div class="hero-conteudo">
-          <span class="etiqueta">CUIDADO QUE CHEGA ATÉ VOCÊ</span>
-          <h1>Saúde e bem-estar,<br><mark>sempre por perto.</mark></h1>
-          <p>Encontre seus produtos, envie sua receita e faça seu pedido de forma simples e segura.</p>
-          <div class="hero-acoes">
-            <button class="botao primario" type="button" data-scroll="catalogo">Ver produtos <span>→</span></button>
-            <button class="botao secundario" type="button" data-open-prescription>Enviar receita</button>
-          </div>
-          <div class="beneficios">
-            <span><b>✓</b> Atendimento humano</span><span><b>✓</b> Pedido rápido</span><span><b>✓</b> Retire ou receba</span>
-          </div>
+      <section class="hero hero-banners" aria-label="Ofertas em destaque">
+        <div class="banner-trilho">
+          <article class="banner-slide ativo banner-laranja" data-banner="0">
+            <div class="banner-conteudo"><span>DESTAQUE DA SEMANA</span><h1>Cuidado facial<br>que cabe na rotina.</h1><p>Dermocosméticos selecionados com compra rápida e atendimento da Drogaria Rocha.</p><button class="botao banner-botao" type="button" data-product="1">Ver produto <b>→</b></button></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img src="${PRODUTOS[0].imagem}" alt="${PRODUTOS[0].nome}"><small>Glycare</small><strong>A partir de<br>${moeda(PRODUTOS[0].preco)}</strong></div>
+          </article>
+          <article class="banner-slide banner-preto" data-banner="1">
+            <div class="banner-conteudo"><span>HIDRATAÇÃO INTENSIVA</span><h1>Pele protegida<br>todos os dias.</h1><p>Conheça a linha Epidrat e encontre o cuidado ideal para sua pele.</p><button class="botao banner-botao claro" type="button" data-product="6">Conhecer agora <b>→</b></button></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img src="${PRODUTOS[5].imagem}" alt="${PRODUTOS[5].nome}"><small>Epidrat</small><strong>Hidratação<br>e conforto</strong></div>
+          </article>
+          <article class="banner-slide banner-branco" data-banner="2">
+            <div class="banner-conteudo"><span>PROTEÇÃO SOLAR</span><h1>Proteção com cor<br>e toque seco.</h1><p>Produtos para proteger a pele com praticidade em todos os momentos.</p><button class="botao banner-botao escuro" type="button" data-product="15">Ver destaque <b>→</b></button></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img src="${PRODUTOS[14].imagem}" alt="${PRODUTOS[14].nome}"><small>Episol</small><strong>Proteção<br>FPS 60</strong></div>
+          </article>
         </div>
-        <div class="hero-visual" aria-hidden="true">
-          <div class="forma forma-1"></div><div class="forma forma-2"></div>
-          <div class="sacola"><span class="cruz">+</span><small>Drogaria</small><strong>ROCHA</strong></div>
-          <div class="cartao-flutuante"><span>✓</span><div><strong>Pedido fácil</strong><small>Direto pelo celular</small></div></div>
-        </div>
+        <button class="banner-seta anterior" type="button" data-banner-prev aria-label="Banner anterior">‹</button>
+        <button class="banner-seta proximo" type="button" data-banner-next aria-label="Próximo banner">›</button>
+        <div class="banner-indicadores" role="tablist" aria-label="Escolher banner"><button class="ativo" type="button" data-banner-dot="0" aria-label="Banner 1"></button><button type="button" data-banner-dot="1" aria-label="Banner 2"></button><button type="button" data-banner-dot="2" aria-label="Banner 3"></button></div>
       </section>
 
       <section class="atalhos" aria-label="Serviços rápidos">
@@ -423,7 +425,36 @@ function mostrarToast(texto) {
   clearTimeout(mostrarToast.timer); mostrarToast.timer = setTimeout(() => toast.classList.remove('visivel'), 2600);
 }
 
+function mostrarBanner(indice) {
+  const banners = [...document.querySelectorAll('[data-banner]')];
+  if (!banners.length) return;
+  bannerAtual = (indice + banners.length) % banners.length;
+  banners.forEach((banner, posicao) => {
+    const ativo = posicao === bannerAtual;
+    banner.classList.toggle('ativo', ativo);
+    banner.setAttribute('aria-hidden', String(!ativo));
+  });
+  document.querySelectorAll('[data-banner-dot]').forEach((botao, posicao) => {
+    const ativo = posicao === bannerAtual;
+    botao.classList.toggle('ativo', ativo);
+    botao.setAttribute('aria-selected', String(ativo));
+  });
+}
+
+function iniciarBanner() {
+  clearInterval(bannerTimer);
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  bannerTimer = setInterval(() => mostrarBanner(bannerAtual + 1), 5500);
+}
+
 function ligarEventos() {
+  document.querySelector('[data-banner-prev]')?.addEventListener('click', () => { mostrarBanner(bannerAtual - 1); iniciarBanner(); });
+  document.querySelector('[data-banner-next]')?.addEventListener('click', () => { mostrarBanner(bannerAtual + 1); iniciarBanner(); });
+  document.querySelectorAll('[data-banner-dot]').forEach((botao) => botao.addEventListener('click', () => { mostrarBanner(Number(botao.dataset.bannerDot)); iniciarBanner(); }));
+  document.querySelector('.hero-banners')?.addEventListener('mouseenter', () => clearInterval(bannerTimer));
+  document.querySelector('.hero-banners')?.addEventListener('mouseleave', iniciarBanner);
+  mostrarBanner(0);
+  iniciarBanner();
   document.querySelectorAll('#busca, #busca-mobile').forEach((campo) => campo.addEventListener('input', (event) => {
     estado.busca = event.target.value;
     document.querySelectorAll('#busca, #busca-mobile').forEach((outro) => { if (outro !== event.target) outro.value = estado.busca; });
