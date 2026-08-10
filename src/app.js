@@ -64,7 +64,7 @@ function render() {
           </article>
           <article class="banner-slide banner-preto" data-banner="1">
             <div class="banner-conteudo"><span>HIDRATAÇÃO INTENSIVA</span><h1>Pele protegida<br>todos os dias.</h1><p>Conheça a linha Epidrat e encontre o cuidado ideal para sua pele.</p><button class="botao banner-botao claro" type="button" data-product="6">Conhecer agora <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[6]}" alt="${PRODUTOS[5].nome}"><small>Epidrat</small><strong>Hidratação<br>e conforto</strong></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img class="produto-em-disco" src="${PRODUTOS[5].imagem}" alt="${PRODUTOS[5].nome}"><small>Epidrat</small><strong>Hidratação<br>e conforto</strong></div>
           </article>
           <article class="banner-slide banner-branco" data-banner="2">
             <div class="banner-conteudo"><span>PROTEÇÃO SOLAR</span><h1>Proteção com cor<br>e toque seco.</h1><p>Produtos para proteger a pele com praticidade em todos os momentos.</p><button class="botao banner-botao escuro" type="button" data-product="15">Ver destaque <b>→</b></button></div>
