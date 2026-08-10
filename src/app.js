@@ -12,6 +12,9 @@ const estado = {
   admin: null
 };
 
+const retornoAutenticacao = new URLSearchParams(window.location.search).get('admin');
+const fluxoDeSenha = retornoAutenticacao === 'redefinir' || window.location.hash.includes('type=recovery') || window.location.hash.includes('type=invite');
+
 const app = document.querySelector('#app');
 
 function quantidadeTotal() {
@@ -34,16 +37,19 @@ function atualizarIndicadores() {
 function render() {
   app.innerHTML = `
     <header class="cabecalho">
-      <a class="marca" href="#inicio" aria-label="Drogaria Rocha - início">
-        <span class="marca-simbolo" aria-hidden="true"><i></i><b></b></span>
-        <span><strong>Drogaria</strong><em>ROCHA</em></span>
-      </a>
-      <button class="localizacao" type="button" data-scroll="atendimento" aria-label="Ver informações de atendimento">
-        <span>Atendimento local</span><strong>Entrega e retirada</strong>
-      </button>
-      <button class="botao-carrinho topo" type="button" data-open-cart aria-label="Abrir carrinho">
-        <span aria-hidden="true">◫</span><span class="texto-carrinho">Meu carrinho</span><b data-cart-count hidden>0</b>
-      </button>
+      <div class="cabecalho-linha">
+        <a class="marca" href="#inicio" aria-label="Drogaria Rocha - início">
+          <span class="marca-simbolo" aria-hidden="true"><i></i><b></b></span>
+          <span><strong>Drogaria</strong><em>ROCHA</em></span>
+        </a>
+        <button class="localizacao" type="button" data-scroll="atendimento" aria-label="Ver informações de atendimento">
+          <span>Atendimento local</span><strong>Entrega e retirada</strong>
+        </button>
+        <button class="botao-carrinho topo" type="button" data-open-cart aria-label="Abrir carrinho">
+          <span aria-hidden="true">◫</span><span class="texto-carrinho">Meu carrinho</span><b data-cart-count hidden>0</b>
+        </button>
+      </div>
+      <label class="busca busca-mobile"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca-mobile" type="search" placeholder="O que você está procurando?" autocomplete="off"></label>
     </header>
 
     <main id="inicio">
@@ -95,6 +101,12 @@ function render() {
     <div class="modal" id="modal-admin" aria-hidden="true"><div class="modal-fundo" data-close></div><section class="painel painel-admin" role="dialog" aria-modal="true" aria-labelledby="titulo-admin"><header><div><span class="sobretitulo">ÁREA PROTEGIDA</span><h2 id="titulo-admin">Administrar catálogo</h2></div><button type="button" class="fechar" data-close aria-label="Fechar">×</button></header><div id="conteudo-admin"></div></section></div>
     <div class="toast" role="status" aria-live="polite"></div>
     <button class="carrinho-flutuante" type="button" data-open-cart><span>Ver carrinho</span><strong><b data-cart-count hidden>0</b> itens</strong></button>
+    <nav class="navegacao-mobile" aria-label="Navegação principal">
+      <button class="ativo" type="button" data-scroll="inicio"><span aria-hidden="true">⌂</span><small>Início</small></button>
+      <button type="button" data-scroll="catalogo"><span aria-hidden="true">⌕</span><small>Produtos</small></button>
+      <button type="button" data-open-prescription><span aria-hidden="true">▤</span><small>Receita</small></button>
+      <button type="button" data-open-cart><span aria-hidden="true">◫</span><small>Carrinho</small><b data-cart-count hidden>0</b></button>
+    </nav>
   `;
   renderProdutos();
   ligarEventos();
@@ -230,7 +242,7 @@ async function usuarioEhAdmin() {
 
 function renderAdminLogin() {
   const conteudo = document.querySelector('#conteudo-admin');
-  conteudo.innerHTML = `<div class="admin-login"><p>Entre com o e-mail autorizado para gerenciar os produtos da Drogaria Rocha.</p><form id="login-admin"><label>E-mail<input required type="email" name="email" autocomplete="username" placeholder="seuemail@exemplo.com"></label><label>Senha<input required type="password" name="senha" autocomplete="current-password" minlength="6" placeholder="Digite sua senha"></label><p class="admin-erro" role="alert" hidden></p><button class="botao primario largura-total" type="submit">Entrar no painel</button></form></div>`;
+  conteudo.innerHTML = `<div class="admin-login"><p>Entre com o e-mail autorizado para gerenciar os produtos da Drogaria Rocha.</p><form id="login-admin"><label>E-mail<input required type="email" name="email" autocomplete="username" placeholder="seuemail@exemplo.com"></label><label>Senha<input required type="password" name="senha" autocomplete="current-password" minlength="6" placeholder="Digite sua senha"></label><p class="admin-erro" role="alert" hidden></p><button class="botao primario largura-total" type="submit">Entrar no painel</button><button class="admin-recuperar" type="button" data-recuperar-senha>Primeiro acesso ou esqueci minha senha</button></form></div>`;
   conteudo.querySelector('#login-admin').addEventListener('submit', async (evento) => {
     evento.preventDefault();
     const form = evento.currentTarget;
@@ -249,6 +261,64 @@ function renderAdminLogin() {
     await carregarCatalogo();
     renderAdminPainel();
   });
+  conteudo.querySelector('[data-recuperar-senha]').addEventListener('click', async () => {
+    const form = conteudo.querySelector('#login-admin');
+    const email = form.elements.email;
+    const erro = form.querySelector('.admin-erro');
+    const botao = form.querySelector('[data-recuperar-senha]');
+    if (!email.reportValidity()) return;
+    botao.disabled = true; botao.textContent = 'Enviando acesso...'; erro.hidden = true;
+    const redirectTo = `${window.location.origin}${window.location.pathname}?admin=redefinir`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email.value.trim(), { redirectTo });
+    if (error) {
+      erro.textContent = 'Não foi possível enviar o acesso. Tente novamente em alguns minutos.';
+      erro.hidden = false; botao.disabled = false; botao.textContent = 'Primeiro acesso ou esqueci minha senha';
+      return;
+    }
+    erro.classList.add('admin-sucesso');
+    erro.textContent = 'Enviamos um novo link para seu e-mail. Abra a mensagem mais recente para criar sua senha.';
+    erro.hidden = false; botao.textContent = 'Link enviado';
+  });
+}
+
+function renderDefinirSenha() {
+  abrirModal('#modal-admin');
+  const conteudo = document.querySelector('#conteudo-admin');
+  conteudo.innerHTML = `<div class="admin-login"><p>Crie uma senha para acessar o painel administrativo.</p><form id="definir-senha"><label>Nova senha<input required type="password" name="senha" autocomplete="new-password" minlength="8" placeholder="Mínimo de 8 caracteres"></label><label>Confirmar senha<input required type="password" name="confirmacao" autocomplete="new-password" minlength="8" placeholder="Digite novamente"></label><p class="admin-erro" role="alert" hidden></p><button class="botao primario largura-total" type="submit">Salvar senha e entrar</button></form></div>`;
+  conteudo.querySelector('#definir-senha').addEventListener('submit', async (evento) => {
+    evento.preventDefault();
+    const form = evento.currentTarget;
+    const erro = form.querySelector('.admin-erro');
+    const botao = form.querySelector('button');
+    if (form.elements.senha.value !== form.elements.confirmacao.value) {
+      erro.textContent = 'As senhas precisam ser iguais.'; erro.hidden = false; return;
+    }
+    botao.disabled = true; botao.textContent = 'Salvando senha...'; erro.hidden = true;
+    const { data, error } = await supabase.auth.updateUser({ password: form.elements.senha.value });
+    if (error || !(await usuarioEhAdmin())) {
+      erro.textContent = error ? 'Não foi possível salvar a senha. Solicite um novo link de acesso.' : 'Este usuário não possui permissão administrativa.';
+      erro.hidden = false; botao.disabled = false; botao.textContent = 'Salvar senha e entrar';
+      return;
+    }
+    estado.admin = data.user;
+    window.history.replaceState({}, '', window.location.pathname);
+    await carregarCatalogo();
+    renderAdminPainel();
+    mostrarToast('Senha criada. Bem-vindo ao painel.');
+  });
+}
+
+function iniciarFluxoAutenticacao() {
+  supabase.auth.onAuthStateChange((evento, sessao) => {
+    if (sessao && (evento === 'PASSWORD_RECOVERY' || fluxoDeSenha)) {
+      window.setTimeout(renderDefinirSenha, 0);
+    }
+  });
+  if (fluxoDeSenha) {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) renderDefinirSenha();
+    });
+  }
 }
 
 function formularioProduto(produto = {}) {
@@ -323,7 +393,12 @@ function mostrarToast(texto) {
 }
 
 function ligarEventos() {
-  document.querySelector('#busca').addEventListener('input', (event) => { estado.busca = event.target.value; renderProdutos(); });
+  document.querySelectorAll('#busca, #busca-mobile').forEach((campo) => campo.addEventListener('input', (event) => {
+    estado.busca = event.target.value;
+    document.querySelectorAll('#busca, #busca-mobile').forEach((outro) => { if (outro !== event.target) outro.value = estado.busca; });
+    renderProdutos();
+    if (campo.id === 'busca-mobile') document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
   document.querySelectorAll('[data-category]').forEach((botao) => botao.addEventListener('click', () => { estado.categoria = botao.dataset.category; document.querySelectorAll('[data-category]').forEach((item) => item.setAttribute('aria-selected', String(item === botao))); renderProdutos(); }));
   document.querySelectorAll('[data-scroll]').forEach((botao) => botao.addEventListener('click', () => document.querySelector(`#${botao.dataset.scroll}`).scrollIntoView({ behavior: 'smooth' })));
   document.querySelectorAll('[data-open-cart]').forEach((botao) => botao.addEventListener('click', () => { renderCarrinho(); abrirModal('#modal-carrinho'); }));
@@ -339,3 +414,4 @@ function ligarEventos() {
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`));
 render();
 carregarCatalogo();
+iniciarFluxoAutenticacao();
