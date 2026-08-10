@@ -1,4 +1,4 @@
-const CACHE = 'drogaria-rocha-v6';
+const CACHE = 'drogaria-rocha-v7';
 const BASE = '/drogaria-rocha-app/';
 const APP_SHELL = [BASE, `${BASE}index.html`, `${BASE}manifest.webmanifest`, `${BASE}icons/icon.svg`];
 
