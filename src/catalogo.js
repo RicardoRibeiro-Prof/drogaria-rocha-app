@@ -1,3 +1,5 @@
+import { IMAGENS_LOCAIS } from './imagens-locais.js';
+
 export const CATEGORIAS = [
   { id: 'todos', nome: 'Todos', icone: '✦' }, { id: 'limpeza', nome: 'Limpeza', icone: '◌' },
   { id: 'hidratacao', nome: 'Hidratação', icone: '◇' }, { id: 'protecao', nome: 'Proteção solar', icone: '☀' },
@@ -21,6 +23,6 @@ export const PRODUTOS = [
   { id: 14, nome: 'Ivy C Corpo e Colo FPS 20', descricao: 'Loção corporal antioxidante e rejuvenescedora • 200 ml', categoria: 'rejuvenescimento', preco: 129.90, selo: '', icone: 'I', imagem: 'https://cr-net-public-prod.s3.amazonaws.com/variation_image/38F117D9E0E40B154172CA32DA3F485A.a432f33a-1679-43b0-96db-f81de4c5b0ee' },
   { id: 15, nome: 'Episol Sec Acqua com Cor FPS 60 - Claro', descricao: 'Protetor solar com cor para pele oleosa • 40 ml', categoria: 'protecao', preco: 109.90, selo: 'Destaque', icone: 'E', imagem: 'https://d16w7cuzwgzfcy.cloudfront.net/Custom/Content/Products/19/67/196725_protetor-solar-episol-sec-acqua-cor-claro-fps60-40ml-p567647_l2_639008632171176737.webp' },
   { id: 16, nome: 'Episol Color Pó Compacto FPS 50 - Tom 1 Extra Claro', descricao: 'Pó compacto com alta cobertura e proteção solar • 10 g', categoria: 'protecao', preco: 159.90, selo: 'Lançamento', icone: 'E', imagem: 'https://down-br.img.susercontent.com/file/sg-11134201-7rdyr-mdaevpf0za4g1a' }
-];
+].map((produto) => ({ ...produto, imagem: IMAGENS_LOCAIS[produto.id] || produto.imagem }));
 
 export const moeda = (valor) => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
