@@ -245,7 +245,7 @@ footer { background:#efeeec;padding:45px clamp(20px,6vw,90px);display:grid;grid-
 .banner-trilho { position:relative;display:flex;width:100%;height:100%;overflow:visible;border-radius:0;box-shadow:none;transform:translate3d(0,0,0);transition:transform .72s cubic-bezier(.22,.75,.2,1);touch-action:pan-y; }
 .banner-slide,.banner-slide.ativo { position:relative;inset:auto;z-index:auto;flex:0 0 100%;width:100%;height:100%;padding:36px clamp(48px,7vw,108px);opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:none; }
 .banner-conteudo h1 { font-size:clamp(35px,4.4vw,59px); }
-.banner-produto img { max-height:88%; }
+.banner-produto img { height:70%;max-height:74%; }
 .banner-indicadores { bottom:8px; }
 .banner-indicadores button { background:#bdb9b5; }
 .banner-indicadores button.ativo { background:#f26a21; }
@@ -259,7 +259,7 @@ footer { background:#efeeec;padding:45px clamp(20px,6vw,90px);display:grid;grid-
   .banner-slide,.banner-slide.ativo { grid-template-columns:minmax(0,1.18fr) minmax(105px,.82fr);padding:20px 14px 33px; }
   .banner-conteudo h1 { font-size:23px; }
   .banner-conteudo p { font-size:10.5px;-webkit-line-clamp:2; }
-  .banner-produto img { width:88%;height:80%;max-width:135px; }
+  .banner-produto img { width:88%;height:70%;max-width:125px; }
   .banner-indicadores { bottom:7px; }
 }
 
