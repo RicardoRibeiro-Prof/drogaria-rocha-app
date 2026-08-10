@@ -1,20 +1,26 @@
 export const CATEGORIAS = [
-  { id: 'todos', nome: 'Todos', icone: '✦' },
-  { id: 'medicamentos', nome: 'Medicamentos', icone: '✚' },
-  { id: 'higiene', nome: 'Higiene', icone: '◌' },
-  { id: 'beleza', nome: 'Beleza', icone: '◇' },
-  { id: 'infantil', nome: 'Infantil', icone: '☀' }
+  { id: 'todos', nome: 'Todos', icone: '✦' }, { id: 'limpeza', nome: 'Limpeza', icone: '◌' },
+  { id: 'hidratacao', nome: 'Hidratação', icone: '◇' }, { id: 'protecao', nome: 'Proteção solar', icone: '☀' },
+  { id: 'rejuvenescimento', nome: 'Rejuvenescimento', icone: '✧' }
 ];
 
 export const PRODUTOS = [
-  { id: 1, nome: 'Paracetamol 750 mg', descricao: '20 comprimidos', categoria: 'medicamentos', preco: 12.9, selo: 'Mais pedido', icone: 'P' },
-  { id: 2, nome: 'Vitamina C 1 g', descricao: '10 comprimidos efervescentes', categoria: 'medicamentos', preco: 16.5, selo: 'Oferta', icone: 'C' },
-  { id: 3, nome: 'Protetor solar FPS 60', descricao: 'Toque seco • 50 g', categoria: 'beleza', preco: 49.9, selo: '', icone: '☼' },
-  { id: 4, nome: 'Fralda infantil M', descricao: 'Pacote com 24 unidades', categoria: 'infantil', preco: 34.9, selo: '', icone: 'M' },
-  { id: 5, nome: 'Sabonete líquido', descricao: 'Hidratação suave • 250 ml', categoria: 'higiene', preco: 18.75, selo: '', icone: '◌' },
-  { id: 6, nome: 'Shampoo anticaspa', descricao: 'Uso diário • 200 ml', categoria: 'higiene', preco: 24.9, selo: '', icone: 'S' },
-  { id: 7, nome: 'Repelente corporal', descricao: 'Proteção prolongada • 100 ml', categoria: 'higiene', preco: 21.9, selo: 'Oferta', icone: 'R' },
-  { id: 8, nome: 'Hidratante corporal', descricao: 'Pele seca • 400 ml', categoria: 'beleza', preco: 27.5, selo: '', icone: 'H' }
+  { id: 1, nome: 'Glycare Sabonete Líquido Facial', descricao: 'Limpeza diária para pele oleosa e acneica • 150 ml', categoria: 'limpeza', preco: 99.90, selo: 'Lançamento', icone: 'G', imagem: 'https://cdn.awsli.com.br/600x1000/764/764220/produto/134307330/626f391567.jpg' },
+  { id: 2, nome: 'Glycare Intense Gel de Limpeza Profunda', descricao: 'Higienização profunda para pele oleosa • 150 g', categoria: 'limpeza', preco: 79.90, selo: '', icone: 'G', imagem: 'https://www.drogasil.com.br/_next/image?q=40&url=https%3A%2F%2Fproduct-data.raiadrogasil.io%2Fimages%2F14557296.webp&w=3840' },
+  { id: 3, nome: 'Glycare Control Gel de Limpeza', descricao: 'Auxilia no controle da oleosidade e do brilho • 300 g', categoria: 'limpeza', preco: 89.90, selo: 'Destaque', icone: 'G', imagem: 'https://dmvfarma.vtexassets.com/arquivos/ids/323239/099be13c-b1ed-4b7d-8033-934ad13f9fb8.jpg?v=639052894066500000' },
+  { id: 4, nome: 'Glycare Loção Hidratante', descricao: 'Hidratação para pele seca e áreas ásperas • 120 ml', categoria: 'hidratacao', preco: 109.90, selo: '', icone: 'G', imagem: 'https://farmaconde.vtexassets.com/arquivos/ids/209311/WhatsApp-Image-2024-02-23-at-15.52.07.jpg?v=638443111590630000' },
+  { id: 5, nome: 'Glycare Control Sabonete em Barra', descricao: 'Limpeza para pele oleosa, acneica e sensível • 70 g', categoria: 'limpeza', preco: 49.90, selo: '', icone: 'G', imagem: 'https://mantecorp.vtexassets.com/arquivos/ids/167429/7891142983039_1-20231211-141057.jpg?v=638417247568870000' },
+  { id: 6, nome: 'Epidrat Corpo Intensivo', descricao: 'Creme hidratante para peles secas e sensíveis • 500 g', categoria: 'hidratacao', preco: 119.90, selo: 'Destaque', icone: 'E', imagem: 'https://drogariavenancio.vtexassets.com/arquivos/ids/1062586/89036_z.jpg?v=638295212951630000' },
+  { id: 7, nome: 'Epidrat Rosto Acqua', descricao: 'Hidratante facial leve para todos os tipos de pele • 50 ml', categoria: 'hidratacao', preco: 89.90, selo: '', icone: 'E', imagem: 'https://down-br.img.susercontent.com/file/sg-11134201-7rcc0-lt24n3wb0xbee7' },
+  { id: 8, nome: 'Epidrat Calm B5 Multi-Reparador', descricao: 'Hidratante reparador para pele sensível • 20 ml', categoria: 'hidratacao', preco: 54.90, selo: '', icone: 'E', imagem: 'https://crescerfarma.vtexassets.com/arquivos/ids/204530/IMAGEM1.jpg?v=638675681788470000' },
+  { id: 9, nome: 'Epidrat Calm B5 Multi-Reparador', descricao: 'Hidratante reparador com D-pantenol e prebiótico • 50 ml', categoria: 'hidratacao', preco: 99.90, selo: '', icone: 'E', imagem: 'https://www.drogariaminasbrasil.com.br/media/webp/catalog/product/cache/74c1057f7991b4edb2bc7bdaa94de933/image/872109775/hidratante-epidrat-calm-b5-50ml_jpg.webp' },
+  { id: 10, nome: 'Epidrat Calm B5 FPS 50', descricao: 'Protetor solar hidratante para pele sensível • 50 ml', categoria: 'protecao', preco: 129.90, selo: 'Lançamento', icone: 'E', imagem: 'https://www.ihypera.com.br/_next/image?q=75&url=https%3A%2F%2Fihypera2022.vtexassets.com%2Farquivos%2Fids%2F167114%2F7891142982957_1.jpg%3Fv%3D638368595065070000&w=1280' },
+  { id: 11, nome: 'Ivy C UV Sérum FPS 30', descricao: 'Sérum antioxidante com proteção solar • 30 ml', categoria: 'rejuvenescimento', preco: 229.90, selo: 'Destaque', icone: 'I', imagem: 'https://drogariasp.vteximg.com.br/arquivos/ids/1179831-1000-1000/_0000_663247---serum-anti-idade-ivy-c-uv-30ml-hypermarcas-%283%29.png.png?v=638671218600770000' },
+  { id: 12, nome: 'Ivy C Ferulic Sérum Antioxidante', descricao: 'Vitamina C pura nanoencapsulada e ácido ferúlico • 30 g', categoria: 'rejuvenescimento', preco: 239.90, selo: 'Lançamento', icone: 'I', imagem: 'https://drogal.vtexassets.com/arquivos/ids/214486/93486.jpg?v=638478324248300000' },
+  { id: 13, nome: 'Ivy C Sabonete Líquido Facial', descricao: 'Limpeza facial com vitamina C e ácido hialurônico • 200 ml', categoria: 'limpeza', preco: 84.90, selo: '', icone: 'I', imagem: 'https://images.tcdn.com.br/img/img_prod/1037107/ivy_c_sabonete_liquido_200ml_mantecorp_112757595_1_300d9e6b7c4883785938968461458a03.jpg' },
+  { id: 14, nome: 'Ivy C Corpo e Colo FPS 20', descricao: 'Loção corporal antioxidante e rejuvenescedora • 200 ml', categoria: 'rejuvenescimento', preco: 129.90, selo: '', icone: 'I', imagem: 'https://cr-net-public-prod.s3.amazonaws.com/variation_image/38F117D9E0E40B154172CA32DA3F485A.a432f33a-1679-43b0-96db-f81de4c5b0ee' },
+  { id: 15, nome: 'Episol Sec Acqua com Cor FPS 60 - Claro', descricao: 'Protetor solar com cor para pele oleosa • 40 ml', categoria: 'protecao', preco: 109.90, selo: 'Destaque', icone: 'E', imagem: 'https://d16w7cuzwgzfcy.cloudfront.net/Custom/Content/Products/19/67/196725_protetor-solar-episol-sec-acqua-cor-claro-fps60-40ml-p567647_l2_639008632171176737.webp' },
+  { id: 16, nome: 'Episol Color Pó Compacto FPS 50 - Tom 1 Extra Claro', descricao: 'Pó compacto com alta cobertura e proteção solar • 10 g', categoria: 'protecao', preco: 159.90, selo: 'Lançamento', icone: 'E', imagem: 'https://down-br.img.susercontent.com/file/sg-11134201-7rdyr-mdaevpf0za4g1a' }
 ];
 
 export const moeda = (valor) => valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
