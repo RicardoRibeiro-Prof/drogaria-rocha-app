@@ -1,6 +1,7 @@
 import './styles.css';
 import { CATEGORIAS, PRODUTOS, moeda } from './catalogo.js';
 import { supabase } from './supabase.js';
+import { IMAGENS_BANNERS } from './imagens-banners.js';
 
 const estado = {
   busca: '',
@@ -59,15 +60,15 @@ function render() {
         <div class="banner-trilho">
           <article class="banner-slide ativo banner-laranja" data-banner="0">
             <div class="banner-conteudo"><span>DESTAQUE DA SEMANA</span><h1>Cuidado facial<br>que cabe na rotina.</h1><p>Dermocosméticos selecionados com compra rápida e atendimento da Drogaria Rocha.</p><button class="botao banner-botao" type="button" data-product="1">Ver produto <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img src="${PRODUTOS[0].imagem}" alt="${PRODUTOS[0].nome}"><small>Glycare</small><strong>A partir de<br>${moeda(PRODUTOS[0].preco)}</strong></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[1]}" alt="${PRODUTOS[0].nome}"><small>Glycare</small><strong>A partir de<br>${moeda(PRODUTOS[0].preco)}</strong></div>
           </article>
           <article class="banner-slide banner-preto" data-banner="1">
             <div class="banner-conteudo"><span>HIDRATAÇÃO INTENSIVA</span><h1>Pele protegida<br>todos os dias.</h1><p>Conheça a linha Epidrat e encontre o cuidado ideal para sua pele.</p><button class="botao banner-botao claro" type="button" data-product="6">Conhecer agora <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img src="${PRODUTOS[5].imagem}" alt="${PRODUTOS[5].nome}"><small>Epidrat</small><strong>Hidratação<br>e conforto</strong></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[6]}" alt="${PRODUTOS[5].nome}"><small>Epidrat</small><strong>Hidratação<br>e conforto</strong></div>
           </article>
           <article class="banner-slide banner-branco" data-banner="2">
             <div class="banner-conteudo"><span>PROTEÇÃO SOLAR</span><h1>Proteção com cor<br>e toque seco.</h1><p>Produtos para proteger a pele com praticidade em todos os momentos.</p><button class="botao banner-botao escuro" type="button" data-product="15">Ver destaque <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img src="${PRODUTOS[14].imagem}" alt="${PRODUTOS[14].nome}"><small>Episol</small><strong>Proteção<br>FPS 60</strong></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[15]}" alt="${PRODUTOS[14].nome}"><small>Episol</small><strong>Proteção<br>FPS 60</strong></div>
           </article>
         </div>
         <button class="banner-seta anterior" type="button" data-banner-prev aria-label="Banner anterior">‹</button>
