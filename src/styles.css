@@ -175,6 +175,7 @@ footer { background:#efeeec;padding:45px clamp(20px,6vw,90px);display:grid;grid-
   .produto h3 { font-size:11.5px; }
   .preco-info>strong { font-size:13px; }
 }
+
 @media (prefers-reduced-motion:reduce) { *{scroll-behavior:auto!important;transition:none!important} }
 
 /* Vitrine comercial do início */
@@ -236,4 +237,33 @@ footer { background:#efeeec;padding:45px clamp(20px,6vw,90px);display:grid;grid-
   .banner-conteudo p { -webkit-line-clamp:2; }
   .banner-produto .banner-circulo { width:132px; }
   .banner-produto strong { font-size:8px; }
+}
+
+/* Carrossel comercial: deslocamento horizontal real */
+.hero-banners { height:clamp(400px,38vw,520px);padding:22px clamp(18px,4vw,58px) 34px;background:#f4f4f2; }
+.banner-janela { width:100%;height:100%;overflow:hidden;border-radius:28px;box-shadow:0 18px 45px rgba(18,18,18,.13); }
+.banner-trilho { position:relative;display:flex;width:100%;height:100%;overflow:visible;border-radius:0;box-shadow:none;transform:translate3d(0,0,0);transition:transform .72s cubic-bezier(.22,.75,.2,1);touch-action:pan-y; }
+.banner-slide,.banner-slide.ativo { position:relative;inset:auto;z-index:auto;flex:0 0 100%;width:100%;height:100%;padding:36px clamp(48px,7vw,108px);opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:none; }
+.banner-conteudo h1 { font-size:clamp(35px,4.4vw,59px); }
+.banner-produto img { max-height:88%; }
+.banner-indicadores { bottom:8px; }
+.banner-indicadores button { background:#bdb9b5; }
+.banner-indicadores button.ativo { background:#f26a21; }
+.banner-seta { top:47%; }
+.banner-seta.anterior { left:calc(clamp(18px,4vw,58px) + 14px); }
+.banner-seta.proximo { right:calc(clamp(18px,4vw,58px) + 14px); }
+
+@media (max-width:760px) {
+  .hero-banners { height:290px;padding:10px 10px 26px; }
+  .banner-janela { border-radius:18px; }
+  .banner-slide,.banner-slide.ativo { grid-template-columns:minmax(0,1.18fr) minmax(105px,.82fr);padding:20px 14px 33px; }
+  .banner-conteudo h1 { font-size:23px; }
+  .banner-conteudo p { font-size:10.5px;-webkit-line-clamp:2; }
+  .banner-produto img { width:88%;height:80%;max-width:135px; }
+  .banner-indicadores { bottom:7px; }
+}
+
+@media (max-width:390px) {
+  .hero-banners { height:275px; }
+  .banner-conteudo h1 { font-size:21px; }
 }
