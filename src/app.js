@@ -218,5 +218,5 @@ function ligarEventos() {
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') document.querySelectorAll('.modal.aberto').forEach(fecharModal); });
 }
 
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`));
 render();
