@@ -2,6 +2,7 @@ import './styles.css';
 import { CATEGORIAS, PRODUTOS, moeda } from './catalogo.js';
 import { supabase } from './supabase.js';
 import { IMAGENS_BANNERS } from './imagens-banners.js';
+import { IMAGEM_BANNER_MAXTON } from './imagem-banner-maxton.js';
 
 const estado = {
   busca: '',
@@ -57,20 +58,20 @@ function render() {
 
     <main id="inicio">
       <section class="hero hero-banners" aria-label="Ofertas em destaque">
-        <div class="banner-trilho">
+        <div class="banner-janela"><div class="banner-trilho">
           <article class="banner-slide ativo banner-laranja" data-banner="0">
             <div class="banner-conteudo"><span>DESTAQUE DA SEMANA</span><h1>Cuidado facial<br>que cabe na rotina.</h1><p>Dermocosméticos selecionados com compra rápida e atendimento da Drogaria Rocha.</p><button class="botao banner-botao" type="button" data-product="1">Ver produto <b>→</b></button></div>
             <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[1]}" alt="${PRODUTOS[0].nome}"><small>Glycare</small><strong>A partir de<br>${moeda(PRODUTOS[0].preco)}</strong></div>
           </article>
           <article class="banner-slide banner-preto" data-banner="1">
-            <div class="banner-conteudo"><span>HIDRATAÇÃO INTENSIVA</span><h1>Pele protegida<br>todos os dias.</h1><p>Conheça a linha Epidrat e encontre o cuidado ideal para sua pele.</p><button class="botao banner-botao claro" type="button" data-product="6">Conhecer agora <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img class="produto-em-disco" src="${PRODUTOS[5].imagem}" alt="${PRODUTOS[5].nome}"><small>Epidrat</small><strong>Hidratação<br>e conforto</strong></div>
+            <div class="banner-conteudo"><span>BELEZA E CUIDADO</span><h1>Cor renovada.<br>Atitude também.</h1><p>Encontre sua tonalidade Maxton e renove o visual com praticidade.</p><button class="botao banner-botao claro" type="button" data-product="17">Ver coloração <b>→</b></button></div>
+            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGEM_BANNER_MAXTON}" alt="${PRODUTOS[16].nome}"><small>Maxton</small><strong>Coloração<br>a partir de ${moeda(PRODUTOS[16].preco)}</strong></div>
           </article>
           <article class="banner-slide banner-branco" data-banner="2">
             <div class="banner-conteudo"><span>PROTEÇÃO SOLAR</span><h1>Proteção com cor<br>e toque seco.</h1><p>Produtos para proteger a pele com praticidade em todos os momentos.</p><button class="botao banner-botao escuro" type="button" data-product="15">Ver destaque <b>→</b></button></div>
             <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[15]}" alt="${PRODUTOS[14].nome}"><small>Episol</small><strong>Proteção<br>FPS 60</strong></div>
           </article>
-        </div>
+        </div></div>
         <button class="banner-seta anterior" type="button" data-banner-prev aria-label="Banner anterior">‹</button>
         <button class="banner-seta proximo" type="button" data-banner-next aria-label="Próximo banner">›</button>
         <div class="banner-indicadores" role="tablist" aria-label="Escolher banner"><button class="ativo" type="button" data-banner-dot="0" aria-label="Banner 1"></button><button type="button" data-banner-dot="1" aria-label="Banner 2"></button><button type="button" data-banner-dot="2" aria-label="Banner 3"></button></div>
@@ -135,7 +136,7 @@ function renderProdutos() {
 function ligarBotoesProduto() {
   document.querySelectorAll('[data-add]').forEach((botao) => botao.addEventListener('click', (event) => { event.stopPropagation(); alterarQuantidade(Number(botao.dataset.add), 1); }));
   document.querySelectorAll('[data-remove]').forEach((botao) => botao.addEventListener('click', (event) => { event.stopPropagation(); alterarQuantidade(Number(botao.dataset.remove), -1); }));
-  document.querySelectorAll('[data-product]').forEach((cartao) => {
+  document.querySelectorAll('#lista-produtos [data-product]').forEach((cartao) => {
     cartao.addEventListener('click', () => abrirProduto(Number(cartao.dataset.product)));
     cartao.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); abrirProduto(Number(cartao.dataset.product)); } });
   });
@@ -430,10 +431,13 @@ function mostrarBanner(indice) {
   const banners = [...document.querySelectorAll('[data-banner]')];
   if (!banners.length) return;
   bannerAtual = (indice + banners.length) % banners.length;
+  const trilho = document.querySelector('.banner-trilho');
+  if (trilho) trilho.style.transform = `translate3d(-${bannerAtual * 100}%, 0, 0)`;
   banners.forEach((banner, posicao) => {
     const ativo = posicao === bannerAtual;
     banner.classList.toggle('ativo', ativo);
     banner.setAttribute('aria-hidden', String(!ativo));
+    banner.inert = !ativo;
   });
   document.querySelectorAll('[data-banner-dot]').forEach((botao, posicao) => {
     const ativo = posicao === bannerAtual;
@@ -449,11 +453,17 @@ function iniciarBanner() {
 }
 
 function ligarEventos() {
+  document.querySelectorAll('.banner-botao[data-product]').forEach((botao) => botao.addEventListener('click', () => abrirProduto(Number(botao.dataset.product))));
   document.querySelector('[data-banner-prev]')?.addEventListener('click', () => { mostrarBanner(bannerAtual - 1); iniciarBanner(); });
   document.querySelector('[data-banner-next]')?.addEventListener('click', () => { mostrarBanner(bannerAtual + 1); iniciarBanner(); });
   document.querySelectorAll('[data-banner-dot]').forEach((botao) => botao.addEventListener('click', () => { mostrarBanner(Number(botao.dataset.bannerDot)); iniciarBanner(); }));
   document.querySelector('.hero-banners')?.addEventListener('mouseenter', () => clearInterval(bannerTimer));
   document.querySelector('.hero-banners')?.addEventListener('mouseleave', iniciarBanner);
+  const trilhoBanner = document.querySelector('.banner-trilho');
+  let inicioArraste = 0;
+  trilhoBanner?.addEventListener('pointerdown', (event) => { inicioArraste = event.clientX; clearInterval(bannerTimer); });
+  trilhoBanner?.addEventListener('pointerup', (event) => { const distancia = event.clientX - inicioArraste; if (Math.abs(distancia) > 45) mostrarBanner(bannerAtual + (distancia < 0 ? 1 : -1)); iniciarBanner(); });
+  trilhoBanner?.addEventListener('pointercancel', iniciarBanner);
   mostrarBanner(0);
   iniciarBanner();
   document.querySelectorAll('#busca, #busca-mobile').forEach((campo) => campo.addEventListener('input', (event) => {
