@@ -46,6 +46,7 @@ function render() {
           <span class="marca-simbolo" aria-hidden="true"><i></i><b></b></span>
           <span><strong>Drogaria</strong><em>ROCHA</em></span>
         </a>
+        <label class="busca busca-mobile busca-topo"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca-mobile" type="search" placeholder="Busque medicamentos, beleza e cuidados..." autocomplete="off"></label>
         <button class="localizacao" type="button" data-scroll="atendimento" aria-label="Ver informações de atendimento">
           <span>Atendimento local</span><strong>Entrega e retirada</strong>
         </button>
@@ -53,8 +54,13 @@ function render() {
           <span aria-hidden="true">◫</span><span class="texto-carrinho">Meu carrinho</span><b data-cart-count hidden>0</b>
         </button>
       </div>
-      <label class="busca busca-mobile"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca-mobile" type="search" placeholder="O que você está procurando?" autocomplete="off"></label>
     </header>
+
+    <div class="barra-confianca" aria-label="Benefícios da Drogaria Rocha">
+      <span><b>✓</b><strong>Atendimento local</strong> com cuidado</span>
+      <span><b>✓</b><strong>Retirada ou entrega</strong> combinada</span>
+      <span><b>✓</b><strong>Compra segura</strong> e confirmação do pedido</span>
+    </div>
 
     <main id="inicio">
       <section class="hero hero-banners" aria-label="Ofertas em destaque">
@@ -84,7 +90,7 @@ function render() {
       </section>
 
       <section class="secao catalogo" id="catalogo">
-        <div class="secao-titulo"><div><span class="sobretitulo">LANÇAMENTOS • LOTE 01</span><h2>Produtos selecionados para você</h2></div><p>Preços demonstrativos. A Drogaria Rocha confirmará o valor e a disponibilidade antes de finalizar.</p></div>
+        <div class="secao-titulo"><div><span class="sobretitulo">CUIDADOS PARA TODOS OS DIAS</span><h2>Ofertas e produtos para você</h2></div><p>Escolha seus itens e envie o pedido. Nossa equipe confirma preço, disponibilidade e entrega com você.</p></div>
         <label class="busca"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca" type="search" placeholder="Busque pelo nome do produto..." autocomplete="off"></label>
         <div class="categorias" role="tablist" aria-label="Categorias">
           ${CATEGORIAS.map((cat) => `<button type="button" role="tab" data-category="${cat.id}" aria-selected="${cat.id === estado.categoria}"><span>${cat.icone}</span>${cat.nome}</button>`).join('')}
