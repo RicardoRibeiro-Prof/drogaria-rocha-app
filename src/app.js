@@ -62,6 +62,16 @@ function render() {
       <span><b>✓</b><strong>Compra segura</strong> e confirmação do pedido</span>
     </div>
 
+    <nav class="menu-departamentos" aria-label="Departamentos da loja">
+      <strong>Departamentos</strong>
+      <button type="button" data-category="protecao">Proteção solar</button>
+      <button type="button" data-category="hidratacao">Dermocosméticos</button>
+      <button type="button" data-category="coloracao">Coloração</button>
+      <button type="button" data-category="shampoo">Cabelos</button>
+      <button type="button" data-category="tratamento-capilar">Tratamentos</button>
+      <button class="menu-ofertas" type="button" data-category="todos">Ofertas</button>
+    </nav>
+
     <main id="inicio">
       <section class="hero hero-banners" aria-label="Ofertas em destaque">
         <div class="banner-janela"><div class="banner-trilho">
@@ -81,6 +91,18 @@ function render() {
         <button class="banner-seta anterior" type="button" data-banner-prev aria-label="Banner anterior">‹</button>
         <button class="banner-seta proximo" type="button" data-banner-next aria-label="Próximo banner">›</button>
         <div class="banner-indicadores" role="tablist" aria-label="Escolher banner"><button class="ativo" type="button" data-banner-dot="0" aria-label="Banner 1"></button><button type="button" data-banner-dot="1" aria-label="Banner 2"></button><button type="button" data-banner-dot="2" aria-label="Banner 3"></button></div>
+      </section>
+
+      <section class="vitrine-categorias" aria-labelledby="titulo-categorias">
+        <div class="vitrine-categorias-topo"><div><span>ENCONTRE MAIS RÁPIDO</span><h2 id="titulo-categorias">Compre por categoria</h2></div><button type="button" data-scroll="catalogo">Ver todos os produtos →</button></div>
+        <div class="vitrine-categorias-lista">
+          <button type="button" data-category="protecao"><i>☀</i><strong>Proteção solar</strong><small>Cuidados diários</small></button>
+          <button type="button" data-category="hidratacao"><i>◇</i><strong>Hidratação</strong><small>Rosto e corpo</small></button>
+          <button type="button" data-category="limpeza"><i>◌</i><strong>Limpeza facial</strong><small>Pele bem cuidada</small></button>
+          <button type="button" data-category="coloracao"><i>◆</i><strong>Coloração</strong><small>Renove o visual</small></button>
+          <button type="button" data-category="shampoo"><i>◒</i><strong>Shampoos</strong><small>Todos os tipos</small></button>
+          <button type="button" data-category="tratamento-capilar"><i>✺</i><strong>Tratamentos</strong><small>Nutrição capilar</small></button>
+        </div>
       </section>
 
       <section class="atalhos" aria-label="Serviços rápidos">
@@ -476,7 +498,7 @@ function ligarEventos() {
     renderProdutos();
     if (campo.id === 'busca-mobile') document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
-  document.querySelectorAll('[data-category]').forEach((botao) => botao.addEventListener('click', () => { estado.categoria = botao.dataset.category; document.querySelectorAll('[data-category]').forEach((item) => item.setAttribute('aria-selected', String(item === botao))); renderProdutos(); }));
+  document.querySelectorAll('[data-category]').forEach((botao) => botao.addEventListener('click', () => { estado.categoria = botao.dataset.category; document.querySelectorAll('[data-category]').forEach((item) => item.setAttribute('aria-selected', String(item.dataset.category === estado.categoria))); renderProdutos(); document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
   document.querySelectorAll('[data-scroll]').forEach((botao) => botao.addEventListener('click', () => document.querySelector(`#${botao.dataset.scroll}`).scrollIntoView({ behavior: 'smooth' })));
   document.querySelectorAll('[data-open-cart]').forEach((botao) => botao.addEventListener('click', () => { renderCarrinho(); abrirModal('#modal-carrinho'); }));
   document.querySelectorAll('[data-open-prescription]').forEach((botao) => botao.addEventListener('click', () => abrirModal('#modal-receita')));
