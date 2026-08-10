@@ -1,0 +1,12 @@
+{
+  "name": "Drogaria Rocha",
+  "short_name": "Drogaria Rocha",
+  "description": "Seu cuidado, do seu jeito.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f8f6",
+  "theme_color": "#075f4e",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
