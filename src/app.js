@@ -96,6 +96,7 @@ function render() {
 
     <footer><div class="marca marca-rodape"><span class="marca-simbolo" aria-hidden="true"><i></i><b></b></span><span><strong>Drogaria</strong><em>ROCHA</em></span></div><p>Medicamentos podem exigir receita e avaliação do farmacêutico. Não se automedique.</p><div class="rodape-final"><small>© 2026 Drogaria Rocha.</small><button type="button" class="admin-link" data-open-admin>Administrar catálogo</button></div></footer>
 
+    <div class="modal modal-produto" id="modal-produto" aria-hidden="true"><div class="modal-fundo" data-close></div><section class="painel painel-produto" role="dialog" aria-modal="true" aria-labelledby="detalhe-nome"><button type="button" class="voltar-produto" data-close aria-label="Voltar">←</button><div id="conteudo-produto"></div></section></div>
     <div class="modal" id="modal-carrinho" aria-hidden="true"><div class="modal-fundo" data-close></div><section class="painel" role="dialog" aria-modal="true" aria-labelledby="titulo-carrinho"><header><div><span class="sobretitulo">SEU PEDIDO</span><h2 id="titulo-carrinho">Meu carrinho</h2></div><button type="button" class="fechar" data-close aria-label="Fechar">×</button></header><div id="conteudo-carrinho"></div></section></div>
     <div class="modal" id="modal-receita" aria-hidden="true"><div class="modal-fundo" data-close></div><section class="painel painel-menor" role="dialog" aria-modal="true" aria-labelledby="titulo-receita"><header><div><span class="sobretitulo">COTAÇÃO SEGURA</span><h2 id="titulo-receita">Enviar receita</h2></div><button type="button" class="fechar" data-close aria-label="Fechar">×</button></header><p>Use uma foto nítida, com todos os dados visíveis. A dispensação dependerá da análise do farmacêutico.</p><label class="upload"><input id="arquivo-receita" type="file" accept="image/*,.pdf" capture="environment"><span>＋</span><strong>Fotografar ou escolher receita</strong><small>Imagem ou PDF</small></label><div id="arquivo-selecionado" class="arquivo-selecionado" hidden></div><button class="botao primario largura-total" type="button" data-prescription-done>Continuar pedido</button></section></div>
     <div class="modal" id="modal-admin" aria-hidden="true"><div class="modal-fundo" data-close></div><section class="painel painel-admin" role="dialog" aria-modal="true" aria-labelledby="titulo-admin"><header><div><span class="sobretitulo">ÁREA PROTEGIDA</span><h2 id="titulo-admin">Administrar catálogo</h2></div><button type="button" class="fechar" data-close aria-label="Fechar">×</button></header><div id="conteudo-admin"></div></section></div>
@@ -123,14 +124,43 @@ function renderProdutos() {
   const produtos = produtosFiltrados();
   lista.innerHTML = produtos.length ? produtos.map((produto) => {
     const quantidade = estado.carrinho[produto.id] || 0;
-    return `<article class="produto"><div class="produto-imagem"><img src="${produto.imagem}" alt="${produto.nome}" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="produto-fallback" hidden>${produto.icone}</span>${produto.selo ? `<b>${produto.selo}</b>` : ''}</div><div class="produto-corpo"><small>${CATEGORIAS.find((cat) => cat.id === produto.categoria)?.nome}</small><h3>${produto.nome}</h3><p>${produto.descricao}</p><div class="produto-rodape"><div class="preco-info"><strong>${moeda(produto.preco)}</strong><small>Preço demonstrativo</small></div>${quantidade ? `<div class="controle"><button type="button" data-remove="${produto.id}" aria-label="Remover uma unidade">−</button><b>${quantidade}</b><button type="button" data-add="${produto.id}" aria-label="Adicionar uma unidade">＋</button></div>` : `<button class="adicionar" type="button" data-add="${produto.id}" aria-label="Adicionar ${produto.nome}">＋</button>`}</div></div></article>`;
+    return `<article class="produto" data-product="${produto.id}" role="button" tabindex="0" aria-label="Ver detalhes de ${produto.nome}"><div class="produto-imagem"><img src="${produto.imagem}" alt="${produto.nome}" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="produto-fallback" hidden>${produto.icone}</span>${produto.selo ? `<b>${produto.selo}</b>` : ''}</div><div class="produto-corpo"><small>${CATEGORIAS.find((cat) => cat.id === produto.categoria)?.nome}</small><h3>${produto.nome}</h3><p>${produto.descricao}</p><div class="produto-rodape"><div class="preco-info"><strong>${moeda(produto.preco)}</strong><small>Preço demonstrativo</small></div>${quantidade ? `<div class="controle"><button type="button" data-remove="${produto.id}" aria-label="Remover uma unidade">−</button><b>${quantidade}</b><button type="button" data-add="${produto.id}" aria-label="Adicionar uma unidade">＋</button></div>` : `<button class="adicionar" type="button" data-add="${produto.id}" aria-label="Adicionar ${produto.nome}">＋</button>`}</div></div></article>`;
   }).join('') : `<div class="vazio"><span>⌕</span><h3>Nenhum produto encontrado</h3><p>Tente outro nome ou escolha uma categoria diferente.</p></div>`;
   ligarBotoesProduto();
 }
 
 function ligarBotoesProduto() {
-  document.querySelectorAll('[data-add]').forEach((botao) => botao.addEventListener('click', () => alterarQuantidade(Number(botao.dataset.add), 1)));
-  document.querySelectorAll('[data-remove]').forEach((botao) => botao.addEventListener('click', () => alterarQuantidade(Number(botao.dataset.remove), -1)));
+  document.querySelectorAll('[data-add]').forEach((botao) => botao.addEventListener('click', (event) => { event.stopPropagation(); alterarQuantidade(Number(botao.dataset.add), 1); }));
+  document.querySelectorAll('[data-remove]').forEach((botao) => botao.addEventListener('click', (event) => { event.stopPropagation(); alterarQuantidade(Number(botao.dataset.remove), -1); }));
+  document.querySelectorAll('[data-product]').forEach((cartao) => {
+    cartao.addEventListener('click', () => abrirProduto(Number(cartao.dataset.product)));
+    cartao.addEventListener('keydown', (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); abrirProduto(Number(cartao.dataset.product)); } });
+  });
+}
+
+function abrirProduto(id) {
+  const produto = estado.produtos.find((item) => Number(item.id) === Number(id));
+  if (!produto) return;
+  const categoria = CATEGORIAS.find((cat) => cat.id === produto.categoria)?.nome || 'Produto';
+  const quantidade = estado.carrinho[produto.id] || 0;
+  document.querySelector('#conteudo-produto').innerHTML = `
+    <div class="detalhe-imagem"><img src="${produto.imagem}" alt="${produto.nome}" referrerpolicy="no-referrer"><span>${produto.icone}</span>${produto.selo ? `<b>${produto.selo}</b>` : ''}</div>
+    <div class="detalhe-conteudo">
+      <span class="detalhe-categoria">${categoria}</span>
+      <h2 id="detalhe-nome">${produto.nome}</h2>
+      <p class="detalhe-descricao">${produto.descricao}</p>
+      <div class="detalhe-status"><span><b>✓</b> Produto disponível</span><span><b>✓</b> Entrega ou retirada</span></div>
+      <div class="detalhe-preco"><small>Preço demonstrativo</small><strong>${moeda(produto.preco)}</strong><p>O valor e a disponibilidade serão confirmados pela Drogaria Rocha antes da finalização.</p></div>
+      <div class="detalhe-acoes">
+        ${quantidade ? `<div class="controle detalhe-controle"><button type="button" data-detail-remove="${produto.id}" aria-label="Remover uma unidade">−</button><b>${quantidade}</b><button type="button" data-detail-add="${produto.id}" aria-label="Adicionar uma unidade">＋</button></div>` : ''}
+        <button class="botao primario detalhe-adicionar" type="button" data-detail-add="${produto.id}">${quantidade ? 'Adicionar mais uma unidade' : 'Adicionar ao carrinho'} <span>＋</span></button>
+      </div>
+      <button class="detalhe-ajuda" type="button" data-contact>Precisa de ajuda com este produto? Fale conosco</button>
+    </div>`;
+  document.querySelectorAll('[data-detail-add]').forEach((botao) => botao.addEventListener('click', () => alterarQuantidade(Number(botao.dataset.detailAdd), 1)));
+  document.querySelectorAll('[data-detail-remove]').forEach((botao) => botao.addEventListener('click', () => alterarQuantidade(Number(botao.dataset.detailRemove), -1)));
+  document.querySelector('#conteudo-produto [data-contact]').addEventListener('click', contatoGeral);
+  abrirModal('#modal-produto');
 }
 
 function alterarQuantidade(id, delta) {
@@ -141,6 +171,7 @@ function alterarQuantidade(id, delta) {
   renderProdutos();
   if (delta > 0) mostrarToast('Produto adicionado ao carrinho');
   if (document.querySelector('#modal-carrinho').classList.contains('aberto')) renderCarrinho();
+  if (document.querySelector('#modal-produto').classList.contains('aberto')) abrirProduto(id);
 }
 
 function abrirModal(id) {
