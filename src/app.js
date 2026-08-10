@@ -449,7 +449,7 @@ function mostrarBanner(indice) {
 function iniciarBanner() {
   clearInterval(bannerTimer);
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  bannerTimer = setInterval(() => mostrarBanner(bannerAtual + 1), 5500);
+  bannerTimer = setInterval(() => mostrarBanner(bannerAtual + 1), 4000);
 }
 
 function ligarEventos() {
@@ -457,8 +457,6 @@ function ligarEventos() {
   document.querySelector('[data-banner-prev]')?.addEventListener('click', () => { mostrarBanner(bannerAtual - 1); iniciarBanner(); });
   document.querySelector('[data-banner-next]')?.addEventListener('click', () => { mostrarBanner(bannerAtual + 1); iniciarBanner(); });
   document.querySelectorAll('[data-banner-dot]').forEach((botao) => botao.addEventListener('click', () => { mostrarBanner(Number(botao.dataset.bannerDot)); iniciarBanner(); }));
-  document.querySelector('.hero-banners')?.addEventListener('mouseenter', () => clearInterval(bannerTimer));
-  document.querySelector('.hero-banners')?.addEventListener('mouseleave', iniciarBanner);
   const trilhoBanner = document.querySelector('.banner-trilho');
   let inicioArraste = 0;
   trilhoBanner?.addEventListener('pointerdown', (event) => { inicioArraste = event.clientX; clearInterval(bannerTimer); });
