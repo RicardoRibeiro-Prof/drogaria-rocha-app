@@ -1,7 +1,6 @@
 import { CATEGORIAS, PRODUTOS, moeda } from './catalogo.js';
 import { supabase } from './supabase.js';
-import { IMAGENS_BANNERS } from './imagens-banners.js';
-import { IMAGEM_BANNER_MAXTON } from './imagem-banner-maxton.js';
+import { BANNER_CUIDADOS, BANNER_CABELOS, BANNER_PROTECAO } from './banners-v20.js';
 const LOGO_ROCHA = new URL('../assets/logo-rocha-oficial.webp', import.meta.url).href;
 
 const estado = {
@@ -76,17 +75,17 @@ function render() {
     <main id="inicio">
       <section class="hero hero-banners" aria-label="Ofertas em destaque">
         <div class="banner-janela"><div class="banner-trilho">
-          <article class="banner-slide ativo banner-laranja" data-banner="0">
-            <div class="banner-conteudo"><span>CUIDADO PARA SUA PELE</span><h1>Beleza e saúde<br>todos os dias.</h1><p>Dermocosméticos selecionados para cuidar da sua rotina com praticidade.</p><button class="botao banner-botao" type="button" data-product="1">Conhecer produto <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[1]}" alt="${PRODUTOS[0].nome}"><small>Glycare</small><strong>A partir de<br>${moeda(PRODUTOS[0].preco)}</strong></div>
+          <article class="banner-slide ativo banner-claro" data-banner="0">
+            <img class="banner-fundo" src="${BANNER_CUIDADOS}" alt="" aria-hidden="true">
+            <div class="banner-conteudo"><span>CUIDADOS DIÁRIOS</span><h1>Higiene e beleza<br>para sua rotina.</h1><p>Seleção especial para cuidar de você todos os dias.</p><button class="botao banner-botao escuro" type="button" data-scroll="catalogo">Ver produtos <b>→</b></button></div>
           </article>
-          <article class="banner-slide banner-preto" data-banner="1">
-            <div class="banner-conteudo"><span>BELEZA E CUIDADO</span><h1>Cor renovada.<br>Atitude também.</h1><p>Encontre sua tonalidade Maxton e renove o visual com praticidade.</p><button class="botao banner-botao claro" type="button" data-product="17">Ver coloração <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGEM_BANNER_MAXTON}" alt="${PRODUTOS[16].nome}"><small>Maxton</small><strong>Coloração<br>a partir de ${moeda(PRODUTOS[16].preco)}</strong></div>
+          <article class="banner-slide banner-escuro" data-banner="1">
+            <img class="banner-fundo" src="${BANNER_CABELOS}" alt="" aria-hidden="true">
+            <div class="banner-conteudo"><span>CUIDADO CAPILAR</span><h1>Cabelos bem cuidados<br>começam aqui.</h1><p>Shampoos, tratamentos e colorações para diferentes rotinas.</p><button class="botao banner-botao claro" type="button" data-category="tratamento-capilar">Explorar cabelos <b>→</b></button></div>
           </article>
-          <article class="banner-slide banner-branco" data-banner="2">
-            <div class="banner-conteudo"><span>PROTEÇÃO SOLAR</span><h1>Proteção com cor<br>e toque seco.</h1><p>Produtos para proteger a pele com praticidade em todos os momentos.</p><button class="botao banner-botao escuro" type="button" data-product="15">Ver destaque <b>→</b></button></div>
-            <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[15]}" alt="${PRODUTOS[14].nome}"><small>Episol</small><strong>Proteção<br>FPS 60</strong></div>
+          <article class="banner-slide banner-claro" data-banner="2">
+            <img class="banner-fundo" src="${BANNER_PROTECAO}" alt="" aria-hidden="true">
+            <div class="banner-conteudo"><span>PROTEÇÃO E BEM-ESTAR</span><h1>Cuidados essenciais<br>sempre por perto.</h1><p>Proteção solar e bem-estar para completar sua rotina.</p><button class="botao banner-botao escuro" type="button" data-category="protecao">Ver proteção solar <b>→</b></button></div>
           </article>
         </div></div>
         <button class="banner-seta anterior" type="button" data-banner-prev aria-label="Banner anterior">‹</button>
