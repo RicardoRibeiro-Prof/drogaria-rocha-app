@@ -1,4 +1,4 @@
-/* V15 — Home organizada por seções e vitrines curtas */
+/* V17 — Home organizada por seções, mantendo todos os produtos acessíveis */
 body:not(.category-page-mode).rocha-home-sections-active .secao.catalogo>.secao-titulo,
 body:not(.category-page-mode).rocha-home-sections-active .secao.catalogo>.busca,
 body:not(.category-page-mode).rocha-home-sections-active .secao.catalogo>.categorias{display:none!important}
@@ -20,10 +20,17 @@ body:not(.category-page-mode).rocha-home-sections-active .secao.catalogo>.catego
 .rocha-section-copy{min-width:0}
 .rocha-section-head h3{font-size:26px!important}
 .rocha-section-head p{margin:6px 0 0!important;min-height:0!important;color:#777!important;font-size:10px!important;line-height:1.4!important;display:block!important;overflow:visible!important}
-.rocha-section-head button{flex:none;height:38px;padding:0 14px;border:1px solid #e8e8e6;border-radius:11px;background:#fff;color:#222;font-size:9px;font-weight:800;white-space:nowrap}
-.rocha-section-head button:hover{border-color:#ffb38a;background:#fff8f4;color:#e34f00}
-.rocha-section-row{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px!important;overflow:visible!important;padding:0!important}
-.rocha-section-row>.produto{width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;overflow:hidden!important}
+.rocha-section-actions{display:flex;align-items:center;gap:7px;flex:none}
+.rocha-section-actions button{height:38px;border:1px solid #e8e8e6;border-radius:11px;background:#fff;color:#222;font-size:9px;font-weight:800}
+.rocha-section-actions button:hover{border-color:#ffb38a;background:#fff8f4;color:#e34f00}
+.rocha-row-arrow{width:38px;padding:0;font-size:14px!important}
+.rocha-see-all{padding:0 14px;white-space:nowrap}
+
+.rocha-section-row{display:grid!important;grid-auto-flow:column!important;grid-auto-columns:calc((100% - 48px)/4)!important;grid-template-columns:none!important;gap:16px!important;overflow-x:auto!important;overflow-y:hidden!important;padding:1px 1px 14px!important;scroll-snap-type:x proximity;scroll-behavior:smooth;overscroll-behavior-inline:contain;scrollbar-width:thin;scrollbar-color:#ddd transparent}
+.rocha-section-row::-webkit-scrollbar{height:6px}
+.rocha-section-row::-webkit-scrollbar-track{background:transparent}
+.rocha-section-row::-webkit-scrollbar-thumb{background:#ddd;border-radius:999px}
+.rocha-section-row>.produto{width:auto!important;min-width:0!important;max-width:none!important;margin:0!important;overflow:hidden!important;scroll-snap-align:start}
 .rocha-section-divider{height:1px;background:#efefed;margin:0 0 36px}
 
 /* Produtos identificados nas fotos da loja: não usar foto de prateleira como packshot público. */
@@ -45,7 +52,7 @@ body:not(.category-page-mode).rocha-home-sections-active .secao.catalogo>.catego
   .secao.catalogo.rocha-catalog-home{padding-top:30px!important;padding-bottom:36px!important}
 }
 @media (min-width:761px) and (max-width:1050px){
-  .rocha-section-row{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .rocha-section-row{grid-auto-columns:calc((100% - 32px)/3)!important}
 }
 @media (max-width:760px){
   .secao.catalogo.rocha-catalog-home{padding-left:12px!important;padding-right:12px!important}
@@ -58,8 +65,11 @@ body:not(.category-page-mode).rocha-home-sections-active .secao.catalogo>.catego
   .rocha-home-section{margin-bottom:30px!important}
   .rocha-section-head{align-items:center;margin-bottom:11px!important}
   .rocha-section-head p{display:none!important}
-  .rocha-section-head button{height:34px;padding:0 10px;font-size:8px}
-  .rocha-section-row{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .rocha-section-actions{gap:5px}
+  .rocha-row-arrow{display:none!important}
+  .rocha-see-all{height:34px!important;padding:0 10px!important;font-size:8px!important}
+  .rocha-section-row{grid-auto-columns:calc((100% - 9px)/2)!important;gap:9px!important;padding-bottom:8px!important;scrollbar-width:none}
+  .rocha-section-row::-webkit-scrollbar{display:none}
   .produto.produto-importado-foto .produto-imagem{height:142px!important;min-height:142px!important;padding:8px!important}
   .rocha-packshot-placeholder{padding:13px 8px}
   .rocha-packshot-mark{width:42px;height:42px;border-radius:12px;font-size:17px;margin-bottom:9px}
