@@ -1,23 +1,21 @@
-const CACHE = 'drogaria-rocha-v14';
+const CACHE = 'drogaria-rocha-v15';
 const BASE = '/drogaria-rocha-app/';
 const APP_SHELL = [
   BASE,
   `${BASE}index.html`,
   `${BASE}manifest.webmanifest`,
   `${BASE}icons/icon.svg`,
-  `${BASE}approved-ui.css?v=6`,
-  `${BASE}approved-responsive-v2.css?v=6`,
-  `${BASE}approved-features-v3.css?v=6`,
-  `${BASE}approved-banners-v5.css?v=6`,
-  `${BASE}approved-banners-v6.css?v=6`,
-  `${BASE}approved-ui.js?v=6`,
-  `${BASE}approved-features-v3.js?v=6`,
-  `${BASE}approved-banners-v5.js?v=6`,
-  `${BASE}approved-banners-v6.js?v=6`,
-  `${BASE}assets/logo-rocha-oficial.webp`,
-  `${BASE}assets/banner-aprovado-higiene.webp`,
-  `${BASE}assets/banner-aprovado-vitaminas.webp`,
-  `${BASE}assets/banner-aprovado-app.webp`
+  `${BASE}approved-ui.css?v=7`,
+  `${BASE}approved-responsive-v2.css?v=7`,
+  `${BASE}approved-features-v3.css?v=7`,
+  `${BASE}approved-banners-v5.css?v=7`,
+  `${BASE}approved-banners-v6.css?v=7`,
+  `${BASE}approved-ui.js?v=7`,
+  `${BASE}approved-features-v3.js?v=7`,
+  `${BASE}approved-banners-v6.js?v=7`,
+  `${BASE}assets/banner-aprovado-higiene.webp?v=7`,
+  `${BASE}assets/banner-aprovado-vitaminas.webp?v=7`,
+  `${BASE}assets/banner-aprovado-app.webp?v=7`
 ];
 
 self.addEventListener('install', (event) => {
