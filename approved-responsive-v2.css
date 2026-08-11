@@ -1,0 +1,180 @@
+/* V2 — corrige o erro de limitar o projeto inteiro a uma coluna de 480px */
+
+/* Base compartilhada */
+#app{max-width:none!important;width:100%!important;box-shadow:none!important;overflow:visible!important;background:#fff!important}
+.produto{overflow:visible!important;min-height:0!important}
+.produto-corpo{padding:14px!important}
+.produto-corpo>small{display:block!important;color:#ff5a00!important;font-size:8px!important;font-weight:800!important;letter-spacing:.08em!important;text-transform:uppercase!important}
+.produto h3{height:auto!important;min-height:34px!important;margin:6px 0 4px!important;font-size:12px!important;line-height:1.25!important}
+.produto p{height:auto!important;min-height:30px!important;margin:0 0 10px!important;font-size:9px!important;line-height:1.35!important;color:#777!important}
+.produto-rodape{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important}
+.preco-info{display:flex!important;flex-direction:column!important;gap:2px!important}
+.preco-info>strong{color:#171717!important;font:800 17px/1 'Manrope',sans-serif!important}
+.preco-info>small{font-size:7px!important;color:#999!important}
+.adicionar{width:38px!important;height:38px!important;border-radius:11px!important;background:#ff5a00!important;color:#fff!important;border:0!important;box-shadow:none!important}
+
+/* Corrige modais que herdavam transform da versão antiga */
+.modal.aberto .painel{transform:translateX(50%)!important}
+
+/* DESKTOP — e-commerce amplo, mesma identidade visual dos mockups */
+@media (min-width: 761px){
+  html,body{background:#fff!important}
+  body{min-width:760px!important}
+  #app{min-height:100vh!important}
+
+  .cabecalho{position:sticky!important;top:0!important;z-index:50!important;width:100%!important;background:rgba(255,255,255,.98)!important;border-bottom:1px solid #ededeb!important;box-shadow:0 5px 20px rgba(0,0,0,.025)!important;padding:0!important}
+  .cabecalho-linha{width:min(1320px,calc(100% - 56px))!important;max-width:1320px!important;min-height:96px!important;margin:0 auto!important;padding:14px 0!important;display:grid!important;grid-template-columns:210px minmax(320px,1fr) 190px 54px!important;grid-template-areas:'brand search location cart'!important;gap:22px!important;align-items:center!important}
+  .marca{grid-area:brand!important}
+  .marca-simbolo{width:48px!important;height:48px!important;min-width:48px!important;border-radius:14px!important}
+  .marca strong{font-size:10px!important}
+  .marca em{font-size:27px!important}
+  .busca-topo{grid-area:search!important;display:flex!important;height:54px!important;border-radius:16px!important;background:#fafafa!important;border:1px solid #e2e2df!important}
+  .busca-topo input{font-size:14px!important}
+  .localizacao{grid-area:location!important;padding:0!important;border:0!important}
+  .localizacao span{font-size:10px!important}
+  .localizacao strong{font-size:13px!important}
+  .botao-carrinho.topo{grid-area:cart!important;width:48px!important;height:48px!important;min-width:48px!important;border-radius:14px!important;border:1px solid #ececea!important}
+
+  main#inicio{padding-bottom:40px!important}
+
+  .hero-banners{width:min(1320px,calc(100% - 56px))!important;max-width:1320px!important;height:410px!important;min-height:410px!important;margin:22px auto 4px!important}
+  .banner-janela{height:370px!important;border-radius:26px!important}
+  .banner-slide{grid-template-columns:1.1fr .9fr!important;padding:48px 64px!important}
+  .banner-conteudo>span{font-size:9px!important;padding:6px 10px!important}
+  .banner-conteudo h1{max-width:570px!important;margin:14px 0 12px!important;font-size:54px!important;line-height:.98!important;letter-spacing:-.055em!important}
+  .banner-conteudo p{max-width:490px!important;margin:0 0 24px!important;font-size:15px!important;line-height:1.5!important}
+  .banner-botao{height:46px!important;min-height:46px!important;padding:0 20px!important;font-size:12px!important;border-radius:12px!important}
+  .banner-produto{height:330px!important}
+  .banner-produto .banner-circulo{width:300px!important;height:300px!important}
+  .banner-produto img{max-width:300px!important;height:315px!important}
+  .banner-indicadores{height:38px!important}
+  .banner-indicadores button{width:8px!important;height:8px!important}
+  .banner-indicadores button.ativo{width:24px!important}
+
+  .vitrine-categorias{width:min(1320px,calc(100% - 56px))!important;max-width:1320px!important;margin:16px auto 18px!important;padding:22px 0 18px!important}
+  .vitrine-categorias-lista{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:14px!important;padding:0!important;overflow:visible!important}
+  .vitrine-categorias-lista button{width:auto!important;min-width:0!important;flex:none!important;padding:18px 10px 16px!important;border:1px solid #ececea!important;border-radius:18px!important;background:#fff!important;box-shadow:0 5px 16px rgba(18,18,18,.04)!important;transition:.18s ease!important}
+  .vitrine-categorias-lista button:hover{transform:translateY(-3px)!important;border-color:#ffc4a5!important;box-shadow:0 12px 24px rgba(255,90,0,.09)!important}
+  .vitrine-categorias-lista i{width:64px!important;height:64px!important;border-radius:17px!important;margin-bottom:10px!important}
+  .vitrine-categorias-lista strong{font-size:11px!important}
+
+  .atalhos{width:min(1320px,calc(100% - 56px))!important;max-width:1320px!important;margin:0 auto 26px!important;display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:12px!important}
+  .atalhos button{min-height:92px!important;padding:18px!important;border-radius:17px!important;display:grid!important;grid-template-columns:44px 1fr auto!important;align-items:center!important;gap:13px!important;box-shadow:0 5px 14px rgba(18,18,18,.03)!important}
+  .atalhos .atalho-icone{width:42px!important;height:42px!important;border-radius:12px!important}
+  .atalhos strong{font-size:12px!important}
+  .atalhos small{display:block!important;font-size:9px!important;color:#777!important;margin-top:3px!important}
+  .atalhos button>b{display:block!important;color:#ff5a00!important;font-size:20px!important}
+
+  .secao.catalogo{width:min(1320px,calc(100% - 56px))!important;max-width:1320px!important;margin:0 auto!important;padding:38px 0 56px!important}
+  .secao-titulo{margin-bottom:20px!important}
+  .secao-titulo h2{font-size:32px!important}
+  .catalogo-ver-todas{font-size:12px!important}
+  .grade-produtos{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:16px!important}
+  .produto{border-radius:19px!important;border:1px solid #ececea!important;box-shadow:0 5px 16px rgba(18,18,18,.035)!important;background:#fff!important;overflow:hidden!important}
+  .produto-imagem{height:220px!important;padding:14px!important;background:#fafaf9!important}
+  .produto-corpo{padding:16px!important}
+  .produto h3{font-size:14px!important;min-height:38px!important}
+  .produto p{font-size:10px!important;min-height:32px!important}
+  .preco-info>strong{font-size:20px!important}
+  .adicionar{width:42px!important;height:42px!important}
+
+  .faixa-atendimento{width:min(1320px,calc(100% - 56px))!important;max-width:1320px!important;margin:0 auto 50px!important;padding:34px 42px!important;border-radius:22px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:30px!important}
+  .faixa-atendimento h2{font-size:32px!important}
+  .faixa-atendimento p{font-size:12px!important;max-width:700px!important}
+  .faixa-atendimento .botao{height:46px!important;font-size:11px!important;flex:none!important}
+
+  .navegacao-mobile{display:none!important}
+
+  /* Produto no desktop abre como uma ficha premium centralizada */
+  .painel-produto{width:min(1060px,calc(100% - 80px))!important;max-width:1060px!important;height:auto!important;max-height:88vh!important;left:50%!important;right:auto!important;top:50%!important;bottom:auto!important;transform:translate(-50%,-50%)!important;border-radius:24px!important;padding:26px!important;overflow:auto!important}
+  .modal.aberto .painel-produto{transform:translate(-50%,-50%)!important}
+  #conteudo-produto{display:grid!important;grid-template-columns:1fr 1fr!important;gap:34px!important;align-items:start!important}
+  .detalhe-imagem{height:500px!important}
+  .detalhe-conteudo{padding:24px 8px!important}
+  .detalhe-conteudo h2{font-size:34px!important}
+  .detalhe-descricao{font-size:13px!important}
+  .detalhe-preco strong{font-size:34px!important}
+  .detalhe-adicionar{height:56px!important;font-size:13px!important}
+  .voltar-produto{top:18px!important;left:18px!important}
+
+  #modal-carrinho .painel{width:min(560px,100%)!important;max-width:560px!important;height:100%!important;max-height:none!important;right:0!important;left:auto!important;top:0!important;bottom:0!important;transform:translateX(100%)!important;border-radius:0!important;padding:26px!important}
+  #modal-carrinho.aberto .painel{transform:none!important}
+}
+
+/* TABLET */
+@media (min-width:761px) and (max-width:1050px){
+  .cabecalho-linha{width:calc(100% - 32px)!important;grid-template-columns:180px minmax(230px,1fr) 150px 48px!important;gap:12px!important}
+  .hero-banners,.vitrine-categorias,.atalhos,.secao.catalogo,.faixa-atendimento{width:calc(100% - 32px)!important}
+  .banner-conteudo h1{font-size:44px!important}
+  .grade-produtos{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+
+/* MOBILE — fiel ao conceito aprovado, mas funcional em tela real */
+@media (max-width:760px){
+  html,body{background:#fff!important;width:100%!important;min-width:0!important;overflow-x:hidden!important}
+  #app{width:100%!important;max-width:none!important;min-height:100dvh!important;margin:0!important;box-shadow:none!important;overflow:hidden!important}
+
+  .cabecalho{position:sticky!important;top:0!important;width:100%!important;padding:0!important}
+  .cabecalho-linha{width:100%!important;max-width:none!important;min-height:142px!important;margin:0!important;padding:14px 14px 12px!important;display:grid!important;grid-template-columns:minmax(138px,1fr) minmax(116px,.82fr) 42px!important;grid-template-areas:'brand location cart' 'search search search'!important;gap:12px 8px!important;align-items:center!important}
+  .marca-simbolo{width:40px!important;height:40px!important;min-width:40px!important}
+  .marca strong{font-size:8px!important}
+  .marca em{font-size:22px!important}
+  .localizacao{display:block!important;min-width:0!important;padding:0!important;border:0!important;overflow:hidden!important}
+  .localizacao span,.localizacao strong{overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+  .localizacao span{font-size:8px!important}
+  .localizacao strong{font-size:10px!important}
+  .busca-topo{display:flex!important;grid-area:search!important;position:static!important;inset:auto!important;width:100%!important;max-width:none!important;min-width:0!important;height:48px!important;margin:0!important;padding:0 14px!important;border-radius:14px!important;transform:none!important}
+  .busca-topo input{font-size:12px!important;min-width:0!important}
+  .botao-carrinho.topo{width:40px!important;height:40px!important;min-width:40px!important;border:0!important;padding:0!important}
+
+  .hero-banners{width:auto!important;max-width:none!important;height:290px!important;min-height:290px!important;margin:0 12px 6px!important}
+  .banner-janela{height:254px!important;border-radius:18px!important}
+  .banner-slide{grid-template-columns:1.08fr .92fr!important;padding:24px 16px!important}
+  .banner-conteudo h1{max-width:190px!important;font-size:27px!important;line-height:.96!important}
+  .banner-conteudo p{max-width:175px!important;font-size:8px!important;line-height:1.35!important;margin-bottom:10px!important}
+  .banner-produto{height:205px!important;min-width:0!important}
+  .banner-produto img{width:100%!important;max-width:132px!important;height:190px!important}
+  .banner-produto .banner-circulo{width:148px!important;height:148px!important}
+
+  .vitrine-categorias{width:100%!important;margin:0!important;padding:8px 0 16px!important}
+  .vitrine-categorias-lista{width:100%!important;padding:0 12px 5px!important;gap:9px!important}
+  .vitrine-categorias-lista button{flex:0 0 64px!important;width:64px!important;min-width:64px!important}
+  .vitrine-categorias-lista i{width:54px!important;height:54px!important;border-radius:14px!important}
+  .vitrine-categorias-lista strong{font-size:8px!important}
+
+  .atalhos{width:auto!important;margin:2px 12px 18px!important;gap:7px!important}
+  .atalhos button{min-height:72px!important;padding:10px 8px!important;border-radius:13px!important}
+
+  .secao.catalogo{width:100%!important;margin:0!important;padding:16px 12px 100px!important}
+  .secao-titulo{margin-bottom:12px!important}
+  .secao-titulo h2{font-size:22px!important}
+  .catalogo-ver-todas{font-size:9px!important}
+  .grade-produtos{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .produto{border-radius:15px!important;overflow:hidden!important}
+  .produto-imagem{height:142px!important;padding:8px!important}
+  .produto-corpo{padding:10px!important}
+  .produto h3{font-size:10px!important;min-height:32px!important}
+  .produto p{font-size:8px!important;min-height:27px!important;margin-bottom:8px!important}
+  .preco-info>strong{font-size:15px!important}
+  .adicionar{width:34px!important;height:34px!important}
+
+  .faixa-atendimento{margin:0 12px 20px!important}
+  .navegacao-mobile{display:grid!important;width:100%!important;left:0!important;right:0!important;transform:none!important}
+
+  .painel{width:100%!important;max-width:none!important;right:0!important;transform:translateY(100%)!important}
+  .modal.aberto .painel{transform:none!important}
+  .painel-produto{height:94vh!important;max-height:94vh!important;right:0!important;left:0!important;top:auto!important;bottom:0!important;border-radius:22px 22px 0 0!important;padding:58px 14px 24px!important}
+  .detalhe-imagem{height:300px!important}
+  .detalhe-conteudo h2{font-size:24px!important}
+}
+
+@media (max-width:390px){
+  .cabecalho-linha{grid-template-columns:minmax(126px,1fr) minmax(104px,.8fr) 40px!important;padding-left:10px!important;padding-right:10px!important}
+  .marca{gap:7px!important}
+  .marca em{font-size:20px!important}
+  .hero-banners{margin-left:9px!important;margin-right:9px!important}
+  .banner-slide{padding-left:14px!important;padding-right:12px!important}
+  .banner-conteudo h1{font-size:24px!important;max-width:170px!important}
+  .banner-produto img{max-width:118px!important}
+  .secao.catalogo{padding-left:10px!important;padding-right:10px!important}
+}
