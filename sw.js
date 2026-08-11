@@ -1,18 +1,23 @@
-const CACHE = 'drogaria-rocha-v13';
+const CACHE = 'drogaria-rocha-v14';
 const BASE = '/drogaria-rocha-app/';
 const APP_SHELL = [
   BASE,
   `${BASE}index.html`,
   `${BASE}manifest.webmanifest`,
   `${BASE}icons/icon.svg`,
-  `${BASE}approved-ui.css?v=5`,
-  `${BASE}approved-responsive-v2.css?v=5`,
-  `${BASE}approved-features-v3.css?v=5`,
-  `${BASE}approved-banners-v5.css?v=5`,
-  `${BASE}approved-ui.js?v=5`,
-  `${BASE}approved-features-v3.js?v=5`,
-  `${BASE}approved-banners-v5.js?v=5`,
-  `${BASE}assets/logo-rocha-oficial.webp`
+  `${BASE}approved-ui.css?v=6`,
+  `${BASE}approved-responsive-v2.css?v=6`,
+  `${BASE}approved-features-v3.css?v=6`,
+  `${BASE}approved-banners-v5.css?v=6`,
+  `${BASE}approved-banners-v6.css?v=6`,
+  `${BASE}approved-ui.js?v=6`,
+  `${BASE}approved-features-v3.js?v=6`,
+  `${BASE}approved-banners-v5.js?v=6`,
+  `${BASE}approved-banners-v6.js?v=6`,
+  `${BASE}assets/logo-rocha-oficial.webp`,
+  `${BASE}assets/banner-aprovado-higiene.webp`,
+  `${BASE}assets/banner-aprovado-vitaminas.webp`,
+  `${BASE}assets/banner-aprovado-app.webp`
 ];
 
 self.addEventListener('install', (event) => {
