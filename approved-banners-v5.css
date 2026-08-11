@@ -1,33 +1,76 @@
-/* V5 — carrossel compacto e imagens de produtos sem cortes */
+/* V5 — banners nativos, compactos e nítidos + produtos sem corte */
 
-/* Cards de produto: sempre mostrar a embalagem inteira */
+/* Embalagens completas nos cards, detalhe e carrinho */
 .produto-imagem{display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;background:#fff!important;padding:18px!important}
 .produto-imagem img{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center!important;padding:0!important;margin:0!important;transform:none!important;clip-path:none!important;mix-blend-mode:normal!important}
 .detalhe-imagem{display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;background:#fff!important;padding:28px!important}
 .detalhe-imagem img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;margin:0!important;padding:0!important;transform:none!important;mix-blend-mode:normal!important}
 .item-carrinho .miniatura img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:4px!important;margin:0!important;transform:none!important;mix-blend-mode:normal!important}
 
-/* Carrossel mais leve e proporcional */
+/* Estrutura compacta */
 .hero-banners{background:#fff!important;overflow:visible!important;padding:0!important}
-.banner-janela{position:relative!important;width:100%!important;overflow:hidden!important;background:#fff!important;border-radius:22px!important}
+.banner-janela{position:relative!important;width:100%!important;overflow:hidden!important;background:#fff!important;border-radius:24px!important}
 .banner-trilho,.banner-slide{width:100%!important;height:100%!important}
-.banner-slide.banner-art-slide{padding:0!important;display:block!important;background:#fff!important;overflow:hidden!important;cursor:pointer!important}
-.banner-slide.banner-art-slide:after,.banner-slide.banner-art-slide:before{display:none!important;content:none!important}
-.banner-art-img{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important;object-position:center!important;margin:0!important;padding:0!important;background:#fff!important}
-.banner-art-slide .banner-conteudo,.banner-art-slide .banner-produto{display:none!important}
+.banner-slide.banner-native-slide{padding:0!important;display:block!important;overflow:hidden!important;background:#fff!important;cursor:pointer!important}
+.banner-slide.banner-native-slide:after,.banner-slide.banner-native-slide:before{display:none!important;content:none!important}
+.banner-native{position:relative;width:100%;height:100%;display:grid;grid-template-columns:minmax(0,1.03fr) minmax(0,.97fr);overflow:hidden;background:linear-gradient(115deg,#fff 0%,#fff 50%,#fff6ef 100%);isolation:isolate}
+.banner-native:before{content:'';position:absolute;left:-7%;bottom:-45%;width:58%;height:115%;border-radius:50%;background:radial-gradient(circle at 50% 50%,rgba(255,91,0,.07),rgba(255,91,0,0) 67%);z-index:-1}
+.banner-native:after{content:'';position:absolute;right:-11%;top:-45%;width:54%;height:145%;border-radius:50%;background:linear-gradient(140deg,rgba(255,126,47,.24),rgba(255,235,219,.5));z-index:-1}
+.banner-native-copy{padding:38px 20px 34px 52px;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-width:0;z-index:2}
+.banner-native-brand{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.banner-native-brand img{width:50px;height:50px;object-fit:contain;border-radius:50%}
+.banner-native-brand span{display:flex;flex-direction:column;line-height:.96}
+.banner-native-brand small{font-size:9px;font-weight:800;letter-spacing:.07em;color:#222}
+.banner-native-brand strong{font:800 23px/1 'Manrope',sans-serif;letter-spacing:-.04em;color:#ff5a00}
+.banner-native-badge{display:inline-flex;align-items:center;min-height:28px;padding:0 12px;border:1px solid rgba(255,90,0,.45);border-radius:999px;background:#fff;color:#f05200;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.banner-native h2{max-width:520px;margin:13px 0 8px;font:800 37px/.98 'Manrope',sans-serif;letter-spacing:-.052em;color:#171717}
+.banner-native h2 em{font-style:normal;color:#ff5a00}
+.banner-native-copy>p{max-width:450px;margin:0 0 16px;color:#676767;font-size:12px;line-height:1.45}
+.banner-native-offer{display:flex;align-items:flex-end;gap:7px;margin:0 0 14px;color:#222}
+.banner-native-offer span{font-size:9px;font-weight:800;margin-bottom:8px}
+.banner-native-offer strong{font:800 43px/.8 'Manrope',sans-serif;color:#ff5a00;letter-spacing:-.06em}
+.banner-native-offer small{font-size:11px;font-weight:800;margin-bottom:2px}
+.banner-native-cta{min-height:40px;padding:0 20px;border:0;border-radius:12px;background:#171717;color:#fff;font-size:10px;font-weight:800;display:inline-flex;align-items:center;gap:18px;box-shadow:0 8px 18px rgba(0,0,0,.12)}
+.banner-native-cta.orange{background:#ff5a00;box-shadow:0 8px 18px rgba(255,90,0,.2)}
+.banner-native-note{display:flex;gap:11px;align-items:center;margin-top:14px;color:#6e6e6e;font-size:8px}
+.banner-native-note b{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;border:1px solid #ff7a36;color:#ff5a00;font-size:9px}
+.banner-native-products{position:relative;display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:34px 38px 30px 8px;z-index:2}
+.banner-native-products:before{content:'';position:absolute;left:4%;right:9%;bottom:26px;height:34%;border-radius:50%;background:rgba(255,255,255,.57);filter:blur(24px);z-index:-1}
+.banner-native-product{position:relative;display:flex;align-items:flex-end;justify-content:center;width:30%;height:83%;min-width:0;filter:drop-shadow(0 15px 10px rgba(65,35,15,.13))}
+.banner-native-product.main{width:35%;height:92%}
+.banner-native-product img{display:block;width:100%;height:100%;object-fit:contain!important;object-position:center bottom!important;margin:0!important;padding:0!important;mix-blend-mode:multiply}
+.banner-native-decoration{position:absolute;right:18px;top:24px;width:115px;height:155px;opacity:.32;background:radial-gradient(ellipse at center,rgba(82,127,47,.42),rgba(82,127,47,0) 67%);border-radius:50%}
+.banner-native-benefits{display:flex;gap:15px;flex-wrap:wrap;margin-top:11px}
+.banner-native-benefits span{display:flex;align-items:center;gap:5px;color:#555;font-size:7px;font-weight:700}
+.banner-native-benefits i{width:18px;height:18px;border-radius:7px;background:#fff3ec;color:#ff5a00;display:grid;place-items:center;font-style:normal}
+.banner-native-slide .banner-conteudo,.banner-native-slide .banner-produto{display:none!important}
 
 @media (min-width:761px){
-  .hero-banners{width:min(1040px,calc(100% - 72px))!important;max-width:1040px!important;height:auto!important;min-height:0!important;margin:20px auto 8px!important}
-  .banner-janela{aspect-ratio:2/1!important;height:auto!important;max-height:520px!important;border-radius:22px!important;box-shadow:0 12px 32px rgba(20,20,20,.07)!important}
-  .banner-indicadores{height:34px!important}
+  .hero-banners{width:min(1040px,calc(100% - 72px))!important;max-width:1040px!important;height:auto!important;min-height:0!important;margin:18px auto 7px!important}
+  .banner-janela{height:420px!important;aspect-ratio:auto!important;max-height:420px!important;border-radius:24px!important;box-shadow:0 12px 30px rgba(20,20,20,.07)!important}
+  .banner-indicadores{height:32px!important}
   .produto-imagem{height:220px!important;padding:22px!important}
   .detalhe-imagem{min-height:370px!important}
 }
 
 @media (max-width:760px){
-  .hero-banners{width:calc(100% - 24px)!important;height:auto!important;min-height:0!important;margin:8px 12px 4px!important}
-  .banner-janela{aspect-ratio:2/1!important;height:auto!important;border-radius:16px!important;box-shadow:0 7px 20px rgba(20,20,20,.06)!important}
-  .banner-indicadores{height:25px!important}
+  .hero-banners{width:calc(100% - 24px)!important;height:auto!important;min-height:0!important;margin:7px 12px 3px!important}
+  .banner-janela{height:228px!important;aspect-ratio:auto!important;border-radius:16px!important;box-shadow:0 7px 18px rgba(20,20,20,.055)!important}
+  .banner-native{grid-template-columns:1.08fr .92fr}
+  .banner-native-copy{padding:15px 6px 14px 16px}
+  .banner-native-brand{gap:6px;margin-bottom:8px}
+  .banner-native-brand img{width:29px;height:29px}
+  .banner-native-brand small{font-size:5px}.banner-native-brand strong{font-size:13px}
+  .banner-native-badge{min-height:18px;padding:0 7px;font-size:5px}
+  .banner-native h2{margin:7px 0 5px;font-size:19px;line-height:.98;max-width:230px}
+  .banner-native-copy>p{font-size:6.6px;line-height:1.35;margin-bottom:7px;max-width:220px}
+  .banner-native-offer{gap:4px;margin-bottom:7px}.banner-native-offer span{font-size:5px;margin-bottom:4px}.banner-native-offer strong{font-size:24px}.banner-native-offer small{font-size:6px}
+  .banner-native-cta{min-height:27px;border-radius:8px;padding:0 10px;font-size:6px;gap:8px}
+  .banner-native-note{margin-top:6px;font-size:5px;gap:5px}.banner-native-note b{width:12px;height:12px;font-size:6px}
+  .banner-native-products{gap:4px;padding:16px 8px 12px 0}.banner-native-product{width:31%;height:78%}.banner-native-product.main{width:36%;height:88%}
+  .banner-native-decoration{display:none}
+  .banner-native-benefits{gap:5px;margin-top:5px}.banner-native-benefits span{font-size:4.6px;gap:3px}.banner-native-benefits i{width:12px;height:12px;border-radius:4px}
+  .banner-indicadores{height:24px!important}
   .produto-imagem{height:158px!important;padding:14px!important}
   .detalhe-imagem{height:320px!important;min-height:320px!important;padding:22px!important}
 }
