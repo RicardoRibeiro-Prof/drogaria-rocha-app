@@ -77,22 +77,32 @@
     if(intro) return intro;
     intro=document.createElement('section');
     intro.id='rocha-home-intro';
-    intro.innerHTML=`<div class="rocha-home-intro-head"><div><span>COMPRE DO SEU JEITO</span><h2>Encontre por cuidado</h2></div><p>Uma vitrine organizada para você encontrar rápido o que precisa, sem misturar dezenas de produtos na mesma tela.</p></div><div class="rocha-brand-strip">${brands.map(b=>`<div class="rocha-brand-chip"><i>${b.charAt(0)}</i><strong>${b}</strong></div>`).join('')}</div>`;
+    intro.innerHTML=`<div class="rocha-home-intro-head"><div><span>COMPRE DO SEU JEITO</span><h2>Encontre por cuidado</h2></div><p>Uma vitrine organizada para você encontrar rápido o que precisa.</p></div><div class="rocha-brand-strip">${brands.map(b=>`<div class="rocha-brand-chip"><i>${b.charAt(0)}</i><strong>${b}</strong></div>`).join('')}</div>`;
     catalog.insertBefore(intro,catalog.querySelector('#lista-produtos'));
     return intro;
   }
 
-  function makeSection(def,cards,total){
+  function scrollRow(row,direction){
+    const amount=Math.max(row.clientWidth*.82,260);
+    row.scrollBy({left:amount*direction,behavior:'smooth'});
+  }
+
+  function makeSection(def,cards){
     const section=document.createElement('section');
     section.className='rocha-home-section';
     section.dataset.section=def.key;
+
     const head=document.createElement('div');
     head.className='rocha-section-head';
-    head.innerHTML=`<div class="rocha-section-copy"><span class="rocha-section-kicker">${total} ${total===1?'produto':'produtos'}</span><h3>${def.title}</h3><p>${def.subtitle}</p></div><button type="button">Ver todos →</button>`;
-    head.querySelector('button').addEventListener('click',()=>openCategory(def.key));
+    head.innerHTML=`<div class="rocha-section-copy"><span class="rocha-section-kicker">${cards.length} ${cards.length===1?'produto':'produtos'}</span><h3>${def.title}</h3><p>${def.subtitle}</p></div><div class="rocha-section-actions"><button class="rocha-row-arrow" type="button" data-dir="-1" aria-label="Produtos anteriores">←</button><button class="rocha-row-arrow" type="button" data-dir="1" aria-label="Próximos produtos">→</button><button class="rocha-see-all" type="button">Ver todos</button></div>`;
+
     const row=document.createElement('div');
     row.className='rocha-section-row';
     cards.forEach(card=>{polishImportedCard(card);row.appendChild(card)});
+
+    head.querySelectorAll('.rocha-row-arrow').forEach(button=>button.addEventListener('click',()=>scrollRow(row,Number(button.dataset.dir))));
+    head.querySelector('.rocha-see-all').addEventListener('click',()=>openCategory(def.key));
+
     section.append(head,row);
     return section;
   }
@@ -114,29 +124,38 @@
       return;
     }
 
-    const cards=[...list.querySelectorAll(':scope > .produto[data-product]')];
-    if(!cards.length){
-      if(list.classList.contains('rocha-sectioned')) return;
+    if(list.classList.contains('rocha-sectioned') && list.querySelector('.rocha-home-section')){
+      updateCatalogMode('home');
       return;
     }
+
+    const cards=[...list.querySelectorAll(':scope > .produto[data-product]')];
+    if(!cards.length) return;
 
     busy=true;
     try{
       ensureIntro(catalog);
       const buckets=new Map(defs.map(d=>[d.key,[]]));
+      const others=[];
       cards.forEach(card=>{
         const key=categoryFromCard(card);
-        if(buckets.has(key)) buckets.get(key).push(card);
+        if(buckets.has(key)) buckets.get(key).push(card); else others.push(card);
       });
 
       const fragment=document.createDocumentFragment();
-      defs.forEach((def,index)=>{
+      const visibleDefs=defs.filter(def=>(buckets.get(def.key)||[]).length);
+      visibleDefs.forEach((def,index)=>{
         const group=buckets.get(def.key)||[];
-        if(!group.length) return;
-        fragment.appendChild(makeSection(def,group.slice(0,4),group.length));
-        const more=defs.slice(index+1).some(next=>(buckets.get(next.key)||[]).length);
-        if(more){const divider=document.createElement('div');divider.className='rocha-section-divider';fragment.appendChild(divider)}
+        fragment.appendChild(makeSection(def,group));
+        if(index<visibleDefs.length-1 || others.length){
+          const divider=document.createElement('div');
+          divider.className='rocha-section-divider';
+          fragment.appendChild(divider);
+        }
       });
+      if(others.length){
+        fragment.appendChild(makeSection({key:'todos',title:'Outros produtos',subtitle:'Mais opções disponíveis na Drogaria Rocha.'},others));
+      }
       list.replaceChildren(fragment);
       list.classList.add('rocha-sectioned');
       updateCatalogMode('home');
