@@ -1,6 +1,21 @@
-const CACHE = 'drogaria-rocha-v10';
+const CACHE = 'drogaria-rocha-v12';
 const BASE = '/drogaria-rocha-app/';
-const APP_SHELL = [BASE, `${BASE}index.html`, `${BASE}manifest.webmanifest`, `${BASE}icons/icon.svg`];
+const APP_SHELL = [
+  BASE,
+  `${BASE}index.html`,
+  `${BASE}manifest.webmanifest`,
+  `${BASE}icons/icon.svg`,
+  `${BASE}approved-ui.css?v=4`,
+  `${BASE}approved-responsive-v2.css?v=4`,
+  `${BASE}approved-features-v3.css?v=4`,
+  `${BASE}approved-banners-v4.css?v=4`,
+  `${BASE}approved-ui.js?v=4`,
+  `${BASE}approved-features-v3.js?v=4`,
+  `${BASE}approved-banners-v4.js?v=4`,
+  `${BASE}assets/banner-higiene-beleza.webp`,
+  `${BASE}assets/banner-vitaminas-bem-estar.webp`,
+  `${BASE}assets/banner-app-facilidade.webp`
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)));
