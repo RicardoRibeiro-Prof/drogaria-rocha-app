@@ -1,0 +1,173 @@
+/* V4 — banners promocionais + imagens de produtos inteiras */
+
+/* Garante que as embalagens apareçam completas nos cards, detalhes e carrinho */
+.produto-imagem{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  padding:14px!important;
+}
+.produto-imagem>img,
+.produto-imagem img{
+  display:block!important;
+  width:88%!important;
+  height:88%!important;
+  max-width:88%!important;
+  max-height:88%!important;
+  padding:0!important;
+  margin:auto!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  transform:none!important;
+  clip-path:none!important;
+  mix-blend-mode:normal!important;
+}
+.detalhe-imagem{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  padding:22px!important;
+}
+.detalhe-imagem img{
+  width:92%!important;
+  height:92%!important;
+  max-width:92%!important;
+  max-height:92%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  padding:0!important;
+  margin:auto!important;
+  transform:none!important;
+  mix-blend-mode:normal!important;
+}
+.item-carrinho .miniatura{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  padding:6px!important;
+}
+.item-carrinho .miniatura img{
+  width:88%!important;
+  height:88%!important;
+  max-width:88%!important;
+  max-height:88%!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  padding:0!important;
+  margin:auto!important;
+  transform:none!important;
+  mix-blend-mode:normal!important;
+}
+
+/* Novo carrossel: o próprio banner já traz composição, logo, texto e produtos */
+.hero-banners{
+  background:#fff!important;
+  overflow:visible!important;
+}
+.banner-janela{
+  position:relative!important;
+  width:100%!important;
+  overflow:hidden!important;
+  background:#fff!important;
+}
+.banner-trilho,
+.banner-slide{
+  width:100%!important;
+  height:100%!important;
+}
+.banner-slide.banner-art-slide{
+  padding:0!important;
+  display:block!important;
+  background:#fff!important;
+  overflow:hidden!important;
+  cursor:pointer!important;
+}
+.banner-slide.banner-art-slide:after,
+.banner-slide.banner-art-slide:before{
+  display:none!important;
+  content:none!important;
+}
+.banner-art-img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  object-position:center!important;
+  margin:0!important;
+  padding:0!important;
+  background:#fff!important;
+}
+.banner-art-slide .banner-conteudo,
+.banner-art-slide .banner-produto{
+  display:none!important;
+}
+
+@media (min-width:761px){
+  .hero-banners{
+    width:min(1280px,calc(100% - 56px))!important;
+    max-width:1280px!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:24px auto 12px!important;
+    padding:0!important;
+  }
+  .banner-janela{
+    aspect-ratio:16/9!important;
+    height:auto!important;
+    max-height:none!important;
+    border-radius:26px!important;
+    box-shadow:0 16px 40px rgba(20,20,20,.08)!important;
+  }
+  .banner-indicadores{
+    height:42px!important;
+  }
+  .produto-imagem{
+    height:235px!important;
+    padding:18px!important;
+  }
+  .detalhe-imagem{
+    min-height:390px!important;
+  }
+}
+
+@media (max-width:760px){
+  .hero-banners{
+    width:calc(100% - 24px)!important;
+    height:auto!important;
+    min-height:0!important;
+    margin:8px 12px 6px!important;
+    padding:0!important;
+  }
+  .banner-janela{
+    aspect-ratio:16/9!important;
+    height:auto!important;
+    border-radius:18px!important;
+    box-shadow:0 8px 22px rgba(20,20,20,.07)!important;
+  }
+  .banner-indicadores{
+    height:30px!important;
+  }
+  .produto-imagem{
+    height:165px!important;
+    padding:12px!important;
+  }
+  .produto-imagem>img,
+  .produto-imagem img{
+    width:92%!important;
+    height:92%!important;
+    max-width:92%!important;
+    max-height:92%!important;
+  }
+  .detalhe-imagem{
+    height:330px!important;
+    min-height:330px!important;
+  }
+}
