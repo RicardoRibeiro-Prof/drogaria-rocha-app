@@ -115,9 +115,11 @@ function render() {
       </section>
 
       <section class="beneficios-premium" aria-label="Vantagens da Drogaria Rocha">
-        <article>${icone('check')}<div><strong>Atendimento próximo</strong><small>Fale diretamente com nossa equipe</small></div></article>
-        <article>${icone('truck')}<div><strong>Entrega ou retirada</strong><small>Escolha a opção mais conveniente</small></div></article>
-        <article>${icone('pharmacist')}<div><strong>Orientação farmacêutica</strong><small>Segurança e cuidado em cada pedido</small></div></article>
+        <article>${icone('truck')}<div><strong>Entrega combinada</strong><small>Consulte a disponibilidade</small></div></article>
+        <article>${icone('home')}<div><strong>Retire na drogaria</strong><small>Reserve antes de sair</small></div></article>
+        <article>${icone('prescription')}<div><strong>Envie sua receita</strong><small>Solicite uma cotação</small></div></article>
+        <article>${icone('pharmacist')}<div><strong>Orientação farmacêutica</strong><small>Atendimento responsável</small></div></article>
+        <article>${icone('support')}<div><strong>Fale com a equipe</strong><small>Atendimento pelo WhatsApp</small></div></article>
       </section>
 
       <section class="vitrine-categorias" aria-labelledby="titulo-categorias">
@@ -139,7 +141,7 @@ function render() {
       </section>
 
       <section class="secao catalogo" id="catalogo">
-        <div class="secao-titulo"><div><span class="sobretitulo">SELEÇÃO DROGARIA ROCHA</span><h2>Ofertas do dia</h2></div><p>Escolha seus produtos. Nossa equipe confirma disponibilidade, valor final e forma de entrega.</p></div>
+        <div class="secao-titulo"><div><span class="sobretitulo">PREÇOS E DISPONIBILIDADE SOB CONSULTA</span><h2>Ofertas do dia</h2></div><button class="prateleira-link" type="button" data-show-all-top>Ver todas as ofertas</button></div>
         <label class="busca">${icone('search', 'campo-icone')}<span class="sr-only">Buscar produto</span><input id="busca" type="search" placeholder="Busque pelo nome do produto..." autocomplete="off"></label>
         <div class="categorias" role="tablist" aria-label="Categorias">
           ${CATEGORIAS.map((cat) => `<button type="button" role="tab" data-category="${cat.id}" aria-selected="${cat.id === estado.categoria}">${icone(ICONE_CATEGORIA[cat.id], 'filtro-icone')}${cat.nome}</button>`).join('')}
@@ -536,6 +538,7 @@ function ligarEventos() {
     if (campo.id === 'busca-mobile') document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
   document.querySelectorAll('[data-category]').forEach((botao) => botao.addEventListener('click', () => { estado.categoria = botao.dataset.category; document.querySelectorAll('[data-category]').forEach((item) => item.setAttribute('aria-selected', String(item.dataset.category === estado.categoria))); renderProdutos(); document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
+  document.querySelector('[data-show-all-top]')?.addEventListener('click', () => { estado.busca = ''; estado.categoria = 'todos'; estado.mostrarTodos = true; renderProdutos(); document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth' }); });
   document.querySelectorAll('[data-scroll]').forEach((botao) => botao.addEventListener('click', () => document.querySelector(`#${botao.dataset.scroll}`).scrollIntoView({ behavior: 'smooth' })));
   document.querySelectorAll('[data-open-cart]').forEach((botao) => botao.addEventListener('click', () => { renderCarrinho(); abrirModal('#modal-carrinho'); }));
   document.querySelectorAll('[data-open-prescription]').forEach((botao) => botao.addEventListener('click', () => abrirModal('#modal-receita')));
