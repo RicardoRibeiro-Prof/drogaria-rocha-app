@@ -1,20 +1,18 @@
-const CACHE = 'drogaria-rocha-v12';
+const CACHE = 'drogaria-rocha-v13';
 const BASE = '/drogaria-rocha-app/';
 const APP_SHELL = [
   BASE,
   `${BASE}index.html`,
   `${BASE}manifest.webmanifest`,
   `${BASE}icons/icon.svg`,
-  `${BASE}approved-ui.css?v=4`,
-  `${BASE}approved-responsive-v2.css?v=4`,
-  `${BASE}approved-features-v3.css?v=4`,
-  `${BASE}approved-banners-v4.css?v=4`,
-  `${BASE}approved-ui.js?v=4`,
-  `${BASE}approved-features-v3.js?v=4`,
-  `${BASE}approved-banners-v4.js?v=4`,
-  `${BASE}assets/banner-higiene-beleza.webp`,
-  `${BASE}assets/banner-vitaminas-bem-estar.webp`,
-  `${BASE}assets/banner-app-facilidade.webp`
+  `${BASE}approved-ui.css?v=5`,
+  `${BASE}approved-responsive-v2.css?v=5`,
+  `${BASE}approved-features-v3.css?v=5`,
+  `${BASE}approved-banners-v5.css?v=5`,
+  `${BASE}approved-ui.js?v=5`,
+  `${BASE}approved-features-v3.js?v=5`,
+  `${BASE}approved-banners-v5.js?v=5`,
+  `${BASE}assets/logo-rocha-oficial.webp`
 ];
 
 self.addEventListener('install', (event) => {
