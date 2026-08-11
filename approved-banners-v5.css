@@ -1,0 +1,33 @@
+/* V5 — carrossel compacto e imagens de produtos sem cortes */
+
+/* Cards de produto: sempre mostrar a embalagem inteira */
+.produto-imagem{display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;background:#fff!important;padding:18px!important}
+.produto-imagem img{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center!important;padding:0!important;margin:0!important;transform:none!important;clip-path:none!important;mix-blend-mode:normal!important}
+.detalhe-imagem{display:flex!important;align-items:center!important;justify-content:center!important;overflow:hidden!important;background:#fff!important;padding:28px!important}
+.detalhe-imagem img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;margin:0!important;padding:0!important;transform:none!important;mix-blend-mode:normal!important}
+.item-carrinho .miniatura img{width:100%!important;height:100%!important;object-fit:contain!important;object-position:center!important;padding:4px!important;margin:0!important;transform:none!important;mix-blend-mode:normal!important}
+
+/* Carrossel mais leve e proporcional */
+.hero-banners{background:#fff!important;overflow:visible!important;padding:0!important}
+.banner-janela{position:relative!important;width:100%!important;overflow:hidden!important;background:#fff!important;border-radius:22px!important}
+.banner-trilho,.banner-slide{width:100%!important;height:100%!important}
+.banner-slide.banner-art-slide{padding:0!important;display:block!important;background:#fff!important;overflow:hidden!important;cursor:pointer!important}
+.banner-slide.banner-art-slide:after,.banner-slide.banner-art-slide:before{display:none!important;content:none!important}
+.banner-art-img{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:contain!important;object-position:center!important;margin:0!important;padding:0!important;background:#fff!important}
+.banner-art-slide .banner-conteudo,.banner-art-slide .banner-produto{display:none!important}
+
+@media (min-width:761px){
+  .hero-banners{width:min(1040px,calc(100% - 72px))!important;max-width:1040px!important;height:auto!important;min-height:0!important;margin:20px auto 8px!important}
+  .banner-janela{aspect-ratio:2/1!important;height:auto!important;max-height:520px!important;border-radius:22px!important;box-shadow:0 12px 32px rgba(20,20,20,.07)!important}
+  .banner-indicadores{height:34px!important}
+  .produto-imagem{height:220px!important;padding:22px!important}
+  .detalhe-imagem{min-height:370px!important}
+}
+
+@media (max-width:760px){
+  .hero-banners{width:calc(100% - 24px)!important;height:auto!important;min-height:0!important;margin:8px 12px 4px!important}
+  .banner-janela{aspect-ratio:2/1!important;height:auto!important;border-radius:16px!important;box-shadow:0 7px 20px rgba(20,20,20,.06)!important}
+  .banner-indicadores{height:25px!important}
+  .produto-imagem{height:158px!important;padding:14px!important}
+  .detalhe-imagem{height:320px!important;min-height:320px!important;padding:22px!important}
+}
