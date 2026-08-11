@@ -11,6 +11,7 @@ const estado = {
   receita: null,
   entrega: 'entrega',
   produtos: PRODUTOS,
+  mostrarTodos: false,
   admin: null
 };
 
@@ -44,6 +45,7 @@ function render() {
       <div class="cabecalho-linha">
         <a class="marca" href="#inicio" aria-label="Drogaria Rocha - início">
           <img src="${LOGO_ROCHA}" alt="Drogaria Rocha">
+          <span class="marca-texto"><strong>Drogaria</strong><em>ROCHA</em><small>Saúde, beleza e cuidado</small></span>
         </a>
         <label class="busca busca-mobile busca-topo"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca-mobile" type="search" placeholder="Busque medicamentos, beleza e cuidados..." autocomplete="off"></label>
         <button class="localizacao" type="button" data-scroll="atendimento" aria-label="Ver informações de atendimento">
@@ -92,6 +94,12 @@ function render() {
         <div class="banner-indicadores" role="tablist" aria-label="Escolher banner"><button class="ativo" type="button" data-banner-dot="0" aria-label="Banner 1"></button><button type="button" data-banner-dot="1" aria-label="Banner 2"></button><button type="button" data-banner-dot="2" aria-label="Banner 3"></button></div>
       </section>
 
+      <section class="beneficios-premium" aria-label="Vantagens da Drogaria Rocha">
+        <article><span>✓</span><div><strong>Atendimento próximo</strong><small>Fale diretamente com nossa equipe</small></div></article>
+        <article><span>⌁</span><div><strong>Entrega ou retirada</strong><small>Escolha a opção mais conveniente</small></div></article>
+        <article><span>✚</span><div><strong>Orientação farmacêutica</strong><small>Segurança e cuidado em cada pedido</small></div></article>
+      </section>
+
       <section class="vitrine-categorias" aria-labelledby="titulo-categorias">
         <div class="vitrine-categorias-topo"><div><span>ENCONTRE MAIS RÁPIDO</span><h2 id="titulo-categorias">Compre por categoria</h2></div><button type="button" data-scroll="catalogo">Ver todos os produtos →</button></div>
         <div class="vitrine-categorias-lista">
@@ -117,6 +125,7 @@ function render() {
           ${CATEGORIAS.map((cat) => `<button type="button" role="tab" data-category="${cat.id}" aria-selected="${cat.id === estado.categoria}"><span>${cat.icone}</span>${cat.nome}</button>`).join('')}
         </div>
         <div class="grade-produtos" id="lista-produtos"></div>
+        <div class="catalogo-mais" id="catalogo-mais"></div>
       </section>
 
       <section class="faixa-atendimento" id="atendimento">
@@ -152,11 +161,20 @@ function produtosFiltrados() {
 
 function renderProdutos() {
   const lista = document.querySelector('#lista-produtos');
-  const produtos = produtosFiltrados();
+  const filtrados = produtosFiltrados();
+  const limitar = !estado.busca && estado.categoria === 'todos' && !estado.mostrarTodos;
+  const produtos = limitar ? filtrados.slice(0, 12) : filtrados;
   lista.innerHTML = produtos.length ? produtos.map((produto) => {
     const quantidade = estado.carrinho[produto.id] || 0;
-    return `<article class="produto" data-product="${produto.id}" role="button" tabindex="0" aria-label="Ver detalhes de ${produto.nome}"><div class="produto-imagem"><img src="${produto.imagem}" alt="${produto.nome}" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="produto-fallback" hidden>${produto.icone}</span>${produto.selo ? `<b>${produto.selo}</b>` : ''}</div><div class="produto-corpo"><small>${CATEGORIAS.find((cat) => cat.id === produto.categoria)?.nome}</small><h3>${produto.nome}</h3><p>${produto.descricao}</p><div class="produto-rodape"><div class="preco-info"><strong>${moeda(produto.preco)}</strong><small>Preço demonstrativo</small></div>${quantidade ? `<div class="controle"><button type="button" data-remove="${produto.id}" aria-label="Remover uma unidade">−</button><b>${quantidade}</b><button type="button" data-add="${produto.id}" aria-label="Adicionar uma unidade">＋</button></div>` : `<button class="adicionar" type="button" data-add="${produto.id}" aria-label="Adicionar ${produto.nome}">＋</button>`}</div></div></article>`;
+    const categoria = CATEGORIAS.find((cat) => cat.id === produto.categoria)?.nome;
+    return `<article class="produto" data-product="${produto.id}" role="button" tabindex="0" aria-label="Ver detalhes de ${produto.nome}"><div class="produto-imagem"><img src="${produto.imagem}" alt="${produto.nome}" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="produto-fallback" hidden>${produto.icone}</span>${produto.selo ? `<b>${produto.selo}</b>` : ''}<span class="produto-ver">Ver detalhes</span></div><div class="produto-corpo"><small>${categoria}</small><h3>${produto.nome}</h3><p>${produto.descricao}</p><div class="produto-disponibilidade"><i></i> Disponível para consulta</div><div class="produto-rodape"><div class="preco-info"><small>A partir de</small><strong>${moeda(produto.preco)}</strong></div>${quantidade ? `<div class="controle"><button type="button" data-remove="${produto.id}" aria-label="Remover uma unidade">−</button><b>${quantidade}</b><button type="button" data-add="${produto.id}" aria-label="Adicionar uma unidade">＋</button></div>` : `<button class="adicionar" type="button" data-add="${produto.id}" aria-label="Adicionar ${produto.nome}"><span>Adicionar</span><b>＋</b></button>`}</div></div></article>`;
   }).join('') : `<div class="vazio"><span>⌕</span><h3>Nenhum produto encontrado</h3><p>Tente outro nome ou escolha uma categoria diferente.</p></div>`;
+  const mais = document.querySelector('#catalogo-mais');
+  if (mais) {
+    mais.innerHTML = limitar && filtrados.length > produtos.length ? `<button type="button" data-show-all>Ver catálogo completo <span>＋${filtrados.length - produtos.length} produtos</span></button>` : estado.mostrarTodos && !estado.busca && estado.categoria === 'todos' ? `<button type="button" data-show-less>Mostrar menos produtos</button>` : '';
+    mais.querySelector('[data-show-all]')?.addEventListener('click', () => { estado.mostrarTodos = true; renderProdutos(); });
+    mais.querySelector('[data-show-less]')?.addEventListener('click', () => { estado.mostrarTodos = false; renderProdutos(); document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth' }); });
+  }
   ligarBotoesProduto();
 }
 
