@@ -1,0 +1,47 @@
+/* V15 — Home organizada em vitrines por categoria */
+#lista-produtos.rocha-sectioned{display:block!important;margin:0!important}
+.rocha-home-section{margin:0 0 42px!important;padding:0!important}
+.rocha-home-section:last-child{margin-bottom:8px!important}
+.rocha-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:0 0 16px;padding:0 2px}
+.rocha-section-copy{min-width:0}
+.rocha-section-kicker{display:block;margin:0 0 5px;color:#ff5a00;font-size:9px;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+.rocha-section-head h3{margin:0!important;color:#181818;font:800 25px/1.06 'Manrope',sans-serif!important;letter-spacing:-.035em}
+.rocha-section-head p{margin:6px 0 0!important;min-height:0!important;color:#777!important;font-size:10px!important;line-height:1.4!important;display:block!important;overflow:visible!important}
+.rocha-section-head button{flex:none;border:0;background:transparent;color:#ff5a00;padding:8px 0;font-size:10px;font-weight:800;white-space:nowrap}
+.rocha-section-head button:hover{text-decoration:underline}
+.rocha-section-row{display:grid!important;grid-auto-flow:column!important;grid-auto-columns:250px!important;grid-template-columns:none!important;gap:14px!important;overflow-x:auto!important;overflow-y:visible!important;padding:3px 2px 14px!important;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:#ddd transparent}
+.rocha-section-row::-webkit-scrollbar{height:6px}
+.rocha-section-row::-webkit-scrollbar-track{background:transparent}
+.rocha-section-row::-webkit-scrollbar-thumb{background:#dededb;border-radius:999px}
+.rocha-section-row>.produto{width:250px!important;min-width:250px!important;max-width:250px!important;scroll-snap-align:start;margin:0!important;overflow:hidden!important}
+.rocha-section-row>.produto .produto-imagem{height:205px!important;min-height:205px!important;padding:20px!important;background:#fafaf9!important;display:grid!important;place-items:center!important;overflow:hidden!important}
+.rocha-section-row>.produto .produto-imagem img{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center!important;transform:none!important}
+.rocha-section-divider{height:1px;background:#efefed;margin:0 0 36px}
+
+@media (min-width:761px){
+  .secao.catalogo.rocha-catalog-home{padding-top:28px!important}
+  .secao.catalogo.rocha-catalog-home>.secao-titulo{margin-bottom:28px!important}
+  .secao.catalogo.rocha-catalog-home>.secao-titulo h2{font-size:34px!important}
+}
+
+@media (max-width:760px){
+  .secao.catalogo.rocha-catalog-home{padding-left:12px!important;padding-right:0!important}
+  .secao.catalogo.rocha-catalog-home>.secao-titulo{padding-right:12px!important;margin-bottom:20px!important}
+  .rocha-home-section{margin-bottom:30px!important}
+  .rocha-section-head{padding-right:12px;margin-bottom:11px!important;align-items:center}
+  .rocha-section-kicker{font-size:7px}
+  .rocha-section-head h3{font-size:20px!important}
+  .rocha-section-head p{display:none!important}
+  .rocha-section-head button{font-size:9px;padding:6px 0}
+  .rocha-section-row{grid-auto-columns:168px!important;gap:9px!important;padding-right:12px!important;padding-bottom:10px!important;scrollbar-width:none}
+  .rocha-section-row::-webkit-scrollbar{display:none}
+  .rocha-section-row>.produto{width:168px!important;min-width:168px!important;max-width:168px!important}
+  .rocha-section-row>.produto .produto-imagem{height:152px!important;min-height:152px!important;padding:12px!important}
+  .rocha-section-row>.produto .produto-corpo{padding:10px!important}
+  .rocha-section-divider{margin-right:12px;margin-bottom:26px}
+}
+
+body.category-page-mode #lista-produtos,
+body.rocha-search-mode #lista-produtos{display:grid!important}
+body.category-page-mode .rocha-home-section,
+body.rocha-search-mode .rocha-home-section{display:none!important}
