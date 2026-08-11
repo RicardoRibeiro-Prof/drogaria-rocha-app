@@ -1,8 +1,10 @@
 import './styles.css';
+import './professional.css';
 import { CATEGORIAS, PRODUTOS, moeda } from './catalogo.js';
 import { supabase } from './supabase.js';
 import { IMAGENS_BANNERS } from './imagens-banners.js';
 import { IMAGEM_BANNER_MAXTON } from './imagem-banner-maxton.js';
+import LOGO_ROCHA from '../assets/logo-rocha-oficial.webp';
 
 const estado = {
   busca: '',
@@ -43,15 +45,14 @@ function render() {
     <header class="cabecalho">
       <div class="cabecalho-linha">
         <a class="marca" href="#inicio" aria-label="Drogaria Rocha - início">
-          <span class="marca-simbolo" aria-hidden="true"><i></i><b></b></span>
-          <span><strong>Drogaria</strong><em>ROCHA</em></span>
+          <img src="${LOGO_ROCHA}" alt="Drogaria Rocha">
         </a>
         <label class="busca busca-mobile busca-topo"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca-mobile" type="search" placeholder="Busque medicamentos, beleza e cuidados..." autocomplete="off"></label>
         <button class="localizacao" type="button" data-scroll="atendimento" aria-label="Ver informações de atendimento">
-          <span>Atendimento local</span><strong>Entrega e retirada</strong>
+          <span>Entregar ou retirar</span><strong>Atendimento local</strong>
         </button>
         <button class="botao-carrinho topo" type="button" data-open-cart aria-label="Abrir carrinho">
-          <span aria-hidden="true">◫</span><span class="texto-carrinho">Meu carrinho</span><b data-cart-count hidden>0</b>
+          <span class="icone-sacola" aria-hidden="true">▣</span><span class="texto-carrinho">Carrinho</span><b data-cart-count hidden>0</b>
         </button>
       </div>
     </header>
@@ -76,7 +77,7 @@ function render() {
       <section class="hero hero-banners" aria-label="Ofertas em destaque">
         <div class="banner-janela"><div class="banner-trilho">
           <article class="banner-slide ativo banner-laranja" data-banner="0">
-            <div class="banner-conteudo"><span>DESTAQUE DA SEMANA</span><h1>Cuidado facial<br>que cabe na rotina.</h1><p>Dermocosméticos selecionados com compra rápida e atendimento da Drogaria Rocha.</p><button class="botao banner-botao" type="button" data-product="1">Ver produto <b>→</b></button></div>
+            <div class="banner-conteudo"><span>CUIDADO PARA SUA PELE</span><h1>Beleza e saúde<br>todos os dias.</h1><p>Dermocosméticos selecionados para cuidar da sua rotina com praticidade.</p><button class="botao banner-botao" type="button" data-product="1">Conhecer produto <b>→</b></button></div>
             <div class="banner-produto"><span class="banner-circulo"></span><img src="${IMAGENS_BANNERS[1]}" alt="${PRODUTOS[0].nome}"><small>Glycare</small><strong>A partir de<br>${moeda(PRODUTOS[0].preco)}</strong></div>
           </article>
           <article class="banner-slide banner-preto" data-banner="1">
@@ -112,7 +113,7 @@ function render() {
       </section>
 
       <section class="secao catalogo" id="catalogo">
-        <div class="secao-titulo"><div><span class="sobretitulo">CUIDADOS PARA TODOS OS DIAS</span><h2>Ofertas e produtos para você</h2></div><p>Escolha seus itens e envie o pedido. Nossa equipe confirma preço, disponibilidade e entrega com você.</p></div>
+        <div class="secao-titulo"><div><span class="sobretitulo">SELEÇÃO DROGARIA ROCHA</span><h2>Ofertas do dia</h2></div><p>Escolha seus produtos. Nossa equipe confirma disponibilidade, valor final e forma de entrega.</p></div>
         <label class="busca"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca" type="search" placeholder="Busque pelo nome do produto..." autocomplete="off"></label>
         <div class="categorias" role="tablist" aria-label="Categorias">
           ${CATEGORIAS.map((cat) => `<button type="button" role="tab" data-category="${cat.id}" aria-selected="${cat.id === estado.categoria}"><span>${cat.icone}</span>${cat.nome}</button>`).join('')}
@@ -126,7 +127,7 @@ function render() {
       </section>
     </main>
 
-    <footer><div class="marca marca-rodape"><span class="marca-simbolo" aria-hidden="true"><i></i><b></b></span><span><strong>Drogaria</strong><em>ROCHA</em></span></div><p>Medicamentos podem exigir receita e avaliação do farmacêutico. Não se automedique.</p><div class="rodape-final"><small>© 2026 Drogaria Rocha.</small><button type="button" class="admin-link" data-open-admin>Administrar catálogo</button></div></footer>
+    <footer><div class="marca marca-rodape"><img src="${LOGO_ROCHA}" alt="Drogaria Rocha"></div><p>Medicamentos podem exigir receita e avaliação do farmacêutico. Não se automedique.</p><div class="rodape-final"><small>© 2026 Drogaria Rocha.</small><button type="button" class="admin-link" data-open-admin>Administrar catálogo</button></div></footer>
 
     <div class="modal modal-produto" id="modal-produto" aria-hidden="true"><div class="modal-fundo" data-close></div><section class="painel painel-produto" role="dialog" aria-modal="true" aria-labelledby="detalhe-nome"><button type="button" class="voltar-produto" data-close aria-label="Voltar">←</button><div id="conteudo-produto"></div></section></div>
     <div class="modal" id="modal-carrinho" aria-hidden="true"><div class="modal-fundo" data-close></div><section class="painel" role="dialog" aria-modal="true" aria-labelledby="titulo-carrinho"><header><div><span class="sobretitulo">SEU PEDIDO</span><h2 id="titulo-carrinho">Meu carrinho</h2></div><button type="button" class="fechar" data-close aria-label="Fechar">×</button></header><div id="conteudo-carrinho"></div></section></div>
