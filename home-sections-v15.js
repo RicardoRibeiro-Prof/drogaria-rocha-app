@@ -35,8 +35,7 @@
     const wrap=card.querySelector('.produto-imagem');
     if(!wrap || wrap.querySelector('.rocha-packshot-placeholder')) return;
     const name=card.querySelector('h3')?.textContent?.trim()||'Produto';
-    const brand=brandFromName(name);
-    wrap.insertAdjacentHTML('beforeend',placeholderHTML(brand,false));
+    wrap.insertAdjacentHTML('beforeend',placeholderHTML(brandFromName(name),false));
   }
 
   function polishDetail(){
@@ -45,9 +44,8 @@
     const box=document.querySelector('#conteudo-produto .detalhe-imagem');
     if(!box || box.querySelector('.rocha-detail-placeholder')) return;
     const name=document.querySelector('#detalhe-nome')?.textContent?.trim()||'Produto';
-    const brand=brandFromName(name);
     [...box.children].forEach(el=>{ if(!el.matches('b')) el.remove(); });
-    box.insertAdjacentHTML('afterbegin',placeholderHTML(brand,true));
+    box.insertAdjacentHTML('afterbegin',placeholderHTML(brandFromName(name),true));
   }
 
   function updateCatalogMode(mode){
@@ -80,8 +78,7 @@
     intro=document.createElement('section');
     intro.id='rocha-home-intro';
     intro.innerHTML=`<div class="rocha-home-intro-head"><div><span>COMPRE DO SEU JEITO</span><h2>Encontre por cuidado</h2></div><p>Uma vitrine organizada para você encontrar rápido o que precisa, sem misturar dezenas de produtos na mesma tela.</p></div><div class="rocha-brand-strip">${brands.map(b=>`<div class="rocha-brand-chip"><i>${b.charAt(0)}</i><strong>${b}</strong></div>`).join('')}</div>`;
-    const list=catalog.querySelector('#lista-produtos');
-    catalog.insertBefore(intro,list);
+    catalog.insertBefore(intro,catalog.querySelector('#lista-produtos'));
     return intro;
   }
 
@@ -108,6 +105,8 @@
     if(!list||!catalog) return;
 
     polishDetail();
+    [...list.querySelectorAll('.produto[data-product]')].forEach(polishImportedCard);
+
     const categoryMode=document.body.classList.contains('category-page-mode');
     const searching=searchActive();
     if(categoryMode||searching){
@@ -134,8 +133,7 @@
       defs.forEach((def,index)=>{
         const group=buckets.get(def.key)||[];
         if(!group.length) return;
-        const selected=group.slice(0,4);
-        fragment.appendChild(makeSection(def,selected,group.length));
+        fragment.appendChild(makeSection(def,group.slice(0,4),group.length));
         const more=defs.slice(index+1).some(next=>(buckets.get(next.key)||[]).length);
         if(more){const divider=document.createElement('div');divider.className='rocha-section-divider';fragment.appendChild(divider)}
       });
