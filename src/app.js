@@ -1,10 +1,8 @@
-import './styles.css';
-import './professional.css';
 import { CATEGORIAS, PRODUTOS, moeda } from './catalogo.js';
 import { supabase } from './supabase.js';
 import { IMAGENS_BANNERS } from './imagens-banners.js';
 import { IMAGEM_BANNER_MAXTON } from './imagem-banner-maxton.js';
-import LOGO_ROCHA from '../assets/logo-rocha-oficial.webp';
+const LOGO_ROCHA = new URL('../assets/logo-rocha-oficial.webp', import.meta.url).href;
 
 const estado = {
   busca: '',
@@ -511,7 +509,7 @@ function ligarEventos() {
   document.addEventListener('keydown', (event) => { if (event.key === 'Escape') document.querySelectorAll('.modal.aberto').forEach(fecharModal); });
 }
 
-if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`));
+if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/drogaria-rocha-app/sw.js'));
 render();
 carregarCatalogo();
 iniciarFluxoAutenticacao();
