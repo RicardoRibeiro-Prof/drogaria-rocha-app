@@ -3,6 +3,27 @@ import { supabase } from './supabase.js';
 import { BANNER_CUIDADOS, BANNER_CABELOS, BANNER_PROTECAO } from './banners-v20.js';
 const LOGO_ROCHA = new URL('../assets/logo-rocha-oficial.webp', import.meta.url).href;
 
+const ICONES = {
+  check: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>',
+  truck: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v10H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="2"/><circle cx="18" cy="18" r="2"/></svg>',
+  pharmacist: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6v4h4v6h-4v4H9v-4H5V7h4z"/><path d="M6 21h12"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.42-1.42M17.66 6.34l1.41-1.41"/></svg>',
+  droplet: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z"/><path d="M9 15c.4 1.2 1.3 2 2.5 2.2"/></svg>',
+  bubbles: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="14" r="5"/><circle cx="16.5" cy="8" r="3.5"/><circle cx="18" cy="17" r="2"/></svg>',
+  palette: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18h1.5a2 2 0 0 0 0-4H12a2 2 0 0 1 0-4h4a5 5 0 0 0 5-5c0-3-4-5-9-5Z"/><circle cx="7.5" cy="10" r=".8"/><circle cx="10" cy="6.8" r=".8"/><circle cx="14" cy="6.5" r=".8"/></svg>',
+  shampoo: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v4h4V3M8 9h8l1 3v8H7v-8z"/><path d="M9.5 15h5"/></svg>',
+  treatment: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8h12l-1 12H7zM8 4h8l2 4H6z"/><path d="M10 13h4M12 11v4"/></svg>',
+  prescription: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l3 3v15H6zM14 3v4h4M9 11h6M9 15h4"/></svg>',
+  search: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m16 16 4 4"/></svg>',
+  support: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 16 0v5a2 2 0 0 1-2 2h-2v-6h4M4 13h4v6H6a2 2 0 0 1-2-2z"/><path d="M16 19c-1 2-3 2-5 2"/></svg>',
+  home: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8"/><path d="M5 10v11h14V10M9 21v-7h6v7"/></svg>',
+  cart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h2l2 10h9l2-7H7"/><circle cx="10" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>'
+};
+
+const ICONE_CATEGORIA = { todos: 'treatment', limpeza: 'bubbles', hidratacao: 'droplet', protecao: 'sun', rejuvenescimento: 'pharmacist', coloracao: 'palette', shampoo: 'shampoo', 'tratamento-capilar': 'treatment' };
+const icone = (nome, classe = 'ui-icone') => `<span class="${classe}">${ICONES[nome]}</span>`;
+
 const estado = {
   busca: '',
   categoria: 'todos',
@@ -46,12 +67,12 @@ function render() {
           <img src="${LOGO_ROCHA}" alt="Drogaria Rocha">
           <span class="marca-texto"><strong>Drogaria</strong><em>ROCHA</em><small>Saúde, beleza e cuidado</small></span>
         </a>
-        <label class="busca busca-mobile busca-topo"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca-mobile" type="search" placeholder="Busque medicamentos, beleza e cuidados..." autocomplete="off"></label>
+        <label class="busca busca-mobile busca-topo">${icone('search', 'campo-icone')}<span class="sr-only">Buscar produto</span><input id="busca-mobile" type="search" placeholder="Busque medicamentos, beleza e cuidados..." autocomplete="off"></label>
         <button class="localizacao" type="button" data-scroll="atendimento" aria-label="Ver informações de atendimento">
           <span>Entregar ou retirar</span><strong>Atendimento local</strong>
         </button>
         <button class="botao-carrinho topo" type="button" data-open-cart aria-label="Abrir carrinho">
-          <span class="icone-sacola" aria-hidden="true">▣</span><span class="texto-carrinho">Carrinho</span><b data-cart-count hidden>0</b>
+          ${icone('cart', 'icone-sacola')}<span class="texto-carrinho">Carrinho</span><b data-cart-count hidden>0</b>
         </button>
       </div>
     </header>
@@ -94,34 +115,34 @@ function render() {
       </section>
 
       <section class="beneficios-premium" aria-label="Vantagens da Drogaria Rocha">
-        <article><span>✓</span><div><strong>Atendimento próximo</strong><small>Fale diretamente com nossa equipe</small></div></article>
-        <article><span>⌁</span><div><strong>Entrega ou retirada</strong><small>Escolha a opção mais conveniente</small></div></article>
-        <article><span>✚</span><div><strong>Orientação farmacêutica</strong><small>Segurança e cuidado em cada pedido</small></div></article>
+        <article>${icone('check')}<div><strong>Atendimento próximo</strong><small>Fale diretamente com nossa equipe</small></div></article>
+        <article>${icone('truck')}<div><strong>Entrega ou retirada</strong><small>Escolha a opção mais conveniente</small></div></article>
+        <article>${icone('pharmacist')}<div><strong>Orientação farmacêutica</strong><small>Segurança e cuidado em cada pedido</small></div></article>
       </section>
 
       <section class="vitrine-categorias" aria-labelledby="titulo-categorias">
         <div class="vitrine-categorias-topo"><div><span>ENCONTRE MAIS RÁPIDO</span><h2 id="titulo-categorias">Compre por categoria</h2></div><button type="button" data-scroll="catalogo">Ver todos os produtos →</button></div>
         <div class="vitrine-categorias-lista">
-          <button type="button" data-category="protecao"><i>☀</i><strong>Proteção solar</strong><small>Cuidados diários</small></button>
-          <button type="button" data-category="hidratacao"><i>◇</i><strong>Hidratação</strong><small>Rosto e corpo</small></button>
-          <button type="button" data-category="limpeza"><i>◌</i><strong>Limpeza facial</strong><small>Pele bem cuidada</small></button>
-          <button type="button" data-category="coloracao"><i>◆</i><strong>Coloração</strong><small>Renove o visual</small></button>
-          <button type="button" data-category="shampoo"><i>◒</i><strong>Shampoos</strong><small>Todos os tipos</small></button>
-          <button type="button" data-category="tratamento-capilar"><i>✺</i><strong>Tratamentos</strong><small>Nutrição capilar</small></button>
+          <button type="button" data-category="protecao">${icone('sun')}<strong>Proteção solar</strong><small>Cuidados diários</small></button>
+          <button type="button" data-category="hidratacao">${icone('droplet')}<strong>Hidratação</strong><small>Rosto e corpo</small></button>
+          <button type="button" data-category="limpeza">${icone('bubbles')}<strong>Limpeza facial</strong><small>Pele bem cuidada</small></button>
+          <button type="button" data-category="coloracao">${icone('palette')}<strong>Coloração</strong><small>Renove o visual</small></button>
+          <button type="button" data-category="shampoo">${icone('shampoo')}<strong>Shampoos</strong><small>Todos os tipos</small></button>
+          <button type="button" data-category="tratamento-capilar">${icone('treatment')}<strong>Tratamentos</strong><small>Nutrição capilar</small></button>
         </div>
       </section>
 
       <section class="atalhos" aria-label="Serviços rápidos">
-        <button type="button" data-open-prescription><span class="atalho-icone">▤</span><span><strong>Envie sua receita</strong><small>Fotografe e solicite uma cotação</small></span><b>›</b></button>
-        <button type="button" data-scroll="catalogo"><span class="atalho-icone">⌕</span><span><strong>Busque um produto</strong><small>Consulte o catálogo rapidamente</small></span><b>›</b></button>
-        <button type="button" data-scroll="atendimento"><span class="atalho-icone">♡</span><span><strong>Fale com a equipe</strong><small>Tire dúvidas antes de pedir</small></span><b>›</b></button>
+        <button type="button" data-open-prescription>${icone('prescription', 'ui-icone atalho-icone')}<span><strong>Envie sua receita</strong><small>Fotografe e solicite uma cotação</small></span>${icone('arrow', 'atalho-seta')}</button>
+        <button type="button" data-scroll="catalogo">${icone('search', 'ui-icone atalho-icone')}<span><strong>Busque um produto</strong><small>Consulte o catálogo rapidamente</small></span>${icone('arrow', 'atalho-seta')}</button>
+        <button type="button" data-scroll="atendimento">${icone('support', 'ui-icone atalho-icone')}<span><strong>Fale com a equipe</strong><small>Tire dúvidas antes de pedir</small></span>${icone('arrow', 'atalho-seta')}</button>
       </section>
 
       <section class="secao catalogo" id="catalogo">
         <div class="secao-titulo"><div><span class="sobretitulo">SELEÇÃO DROGARIA ROCHA</span><h2>Ofertas do dia</h2></div><p>Escolha seus produtos. Nossa equipe confirma disponibilidade, valor final e forma de entrega.</p></div>
-        <label class="busca"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar produto</span><input id="busca" type="search" placeholder="Busque pelo nome do produto..." autocomplete="off"></label>
+        <label class="busca">${icone('search', 'campo-icone')}<span class="sr-only">Buscar produto</span><input id="busca" type="search" placeholder="Busque pelo nome do produto..." autocomplete="off"></label>
         <div class="categorias" role="tablist" aria-label="Categorias">
-          ${CATEGORIAS.map((cat) => `<button type="button" role="tab" data-category="${cat.id}" aria-selected="${cat.id === estado.categoria}"><span>${cat.icone}</span>${cat.nome}</button>`).join('')}
+          ${CATEGORIAS.map((cat) => `<button type="button" role="tab" data-category="${cat.id}" aria-selected="${cat.id === estado.categoria}">${icone(ICONE_CATEGORIA[cat.id], 'filtro-icone')}${cat.nome}</button>`).join('')}
         </div>
         <div class="grade-produtos" id="lista-produtos"></div>
         <div class="catalogo-mais" id="catalogo-mais"></div>
@@ -142,10 +163,10 @@ function render() {
     <div class="toast" role="status" aria-live="polite"></div>
     <button class="carrinho-flutuante" type="button" data-open-cart><span>Ver carrinho</span><strong><b data-cart-count hidden>0</b> itens</strong></button>
     <nav class="navegacao-mobile" aria-label="Navegação principal">
-      <button class="ativo" type="button" data-scroll="inicio"><span aria-hidden="true">⌂</span><small>Início</small></button>
-      <button type="button" data-scroll="catalogo"><span aria-hidden="true">⌕</span><small>Produtos</small></button>
-      <button type="button" data-open-prescription><span aria-hidden="true">▤</span><small>Receita</small></button>
-      <button type="button" data-open-cart><span aria-hidden="true">◫</span><small>Carrinho</small><b data-cart-count hidden>0</b></button>
+      <button class="ativo" type="button" data-scroll="inicio">${icone('home', 'nav-icone')}<small>Início</small></button>
+      <button type="button" data-scroll="catalogo">${icone('search', 'nav-icone')}<small>Produtos</small></button>
+      <button type="button" data-open-prescription>${icone('prescription', 'nav-icone')}<small>Receita</small></button>
+      <button type="button" data-open-cart>${icone('cart', 'nav-icone')}<small>Carrinho</small><b data-cart-count hidden>0</b></button>
     </nav>
   `;
   renderProdutos();
@@ -167,7 +188,7 @@ function renderProdutos() {
     const quantidade = estado.carrinho[produto.id] || 0;
     const categoria = CATEGORIAS.find((cat) => cat.id === produto.categoria)?.nome;
     return `<article class="produto" data-product="${produto.id}" role="button" tabindex="0" aria-label="Ver detalhes de ${produto.nome}"><div class="produto-imagem"><img src="${produto.imagem}" alt="${produto.nome}" loading="lazy" referrerpolicy="no-referrer" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span class="produto-fallback" hidden>${produto.icone}</span>${produto.selo ? `<b>${produto.selo}</b>` : ''}<span class="produto-ver">Ver detalhes</span></div><div class="produto-corpo"><small>${categoria}</small><h3>${produto.nome}</h3><p>${produto.descricao}</p><div class="produto-disponibilidade"><i></i> Disponível para consulta</div><div class="produto-rodape"><div class="preco-info"><small>A partir de</small><strong>${moeda(produto.preco)}</strong></div>${quantidade ? `<div class="controle"><button type="button" data-remove="${produto.id}" aria-label="Remover uma unidade">−</button><b>${quantidade}</b><button type="button" data-add="${produto.id}" aria-label="Adicionar uma unidade">＋</button></div>` : `<button class="adicionar" type="button" data-add="${produto.id}" aria-label="Adicionar ${produto.nome}"><span>Adicionar</span><b>＋</b></button>`}</div></div></article>`;
-  }).join('') : `<div class="vazio"><span>⌕</span><h3>Nenhum produto encontrado</h3><p>Tente outro nome ou escolha uma categoria diferente.</p></div>`;
+  }).join('') : `<div class="vazio">${icone('search')}<h3>Nenhum produto encontrado</h3><p>Tente outro nome ou escolha uma categoria diferente.</p></div>`;
   const mais = document.querySelector('#catalogo-mais');
   if (mais) {
     mais.innerHTML = limitar && filtrados.length > produtos.length ? `<button type="button" data-show-all>Ver catálogo completo <span>＋${filtrados.length - produtos.length} produtos</span></button>` : estado.mostrarTodos && !estado.busca && estado.categoria === 'todos' ? `<button type="button" data-show-less>Mostrar menos produtos</button>` : '';
@@ -237,7 +258,7 @@ function renderCarrinho() {
   const conteudo = document.querySelector('#conteudo-carrinho');
   const itens = estado.produtos.filter((produto) => estado.carrinho[produto.id]);
   if (!itens.length) {
-    conteudo.innerHTML = `<div class="vazio carrinho-vazio"><span>◫</span><h3>Seu carrinho está vazio</h3><p>Escolha os produtos que deseja solicitar.</p><button class="botao primario" type="button" data-go-products>Ver produtos</button></div>`;
+    conteudo.innerHTML = `<div class="vazio carrinho-vazio">${icone('cart')}<h3>Seu carrinho está vazio</h3><p>Escolha os produtos que deseja solicitar.</p><button class="botao primario" type="button" data-go-products>Ver produtos</button></div>`;
     conteudo.querySelector('[data-go-products]').addEventListener('click', () => { fecharModal(document.querySelector('#modal-carrinho')); document.querySelector('#catalogo').scrollIntoView({ behavior: 'smooth' }); });
     return;
   }
