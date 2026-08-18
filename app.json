@@ -5,6 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "backgroundColor": "#FFFFFF",
+    "primaryColor": "#F47A1F",
     "scheme": "drogariarocha",
     "android": {
       "package": "com.ativadigitalon.drogariarocha",

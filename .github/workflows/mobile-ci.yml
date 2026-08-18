@@ -2,7 +2,7 @@ name: Validar app mobile Expo
 
 on:
   push:
-    branches: [expo-native-rebuild]
+    branches: [main, identidade-admin-v1]
   pull_request:
     branches: [main]
 
@@ -12,10 +12,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Node 20
+      - name: Node 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20.19.4
+          node-version: 22
       - name: Instalar dependências
         run: npm install
       - name: Validar TypeScript
