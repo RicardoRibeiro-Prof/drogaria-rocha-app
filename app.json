@@ -8,10 +8,7 @@
     "scheme": "drogariarocha",
     "android": {
       "package": "com.ativadigitalon.drogariarocha",
-      "versionCode": 1,
-      "adaptiveIcon": {
-        "backgroundColor": "#0B5D4B"
-      }
+      "versionCode": 1
     },
     "ios": {
       "bundleIdentifier": "com.ativadigitalon.drogariarocha",
