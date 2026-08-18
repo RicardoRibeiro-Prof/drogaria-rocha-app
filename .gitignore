@@ -1,9 +1,11 @@
 node_modules/
+.expo/
 dist/
-.vite/
-*.zip
-*.log
-.DS_Store
+web-build/
 .env
 .env.*
 !.env.example
+*.log
+.DS_Store
+android/
+ios/

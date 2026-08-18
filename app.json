@@ -17,14 +17,6 @@
       "bundleIdentifier": "com.ativadigitalon.drogariarocha",
       "buildNumber": "1.0.0",
       "supportsTablet": true
-    },
-    "plugins": [
-      "expo-status-bar"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": ""
-      }
     }
   }
 }
