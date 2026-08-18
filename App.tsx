@@ -1,20 +1,25 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-
-const TEST_KEY = '@drogaria-rocha/teste';
+import { supabase } from './src/lib/supabase';
 
 export default function App() {
-  const [storageOk, setStorageOk] = useState(false);
+  const [status, setStatus] = useState('Conectando ao Supabase...');
 
   useEffect(() => {
+    let mounted = true;
     (async () => {
-      await AsyncStorage.setItem(TEST_KEY, 'ok');
-      const value = await AsyncStorage.getItem(TEST_KEY);
-      setStorageOk(value === 'ok');
+      try {
+        const { data, error } = await supabase.from('stores').select('id,name').limit(1);
+        if (!mounted) return;
+        if (error) setStatus(`Supabase carregou. Consulta retornou: ${error.message}`);
+        else setStatus(`Supabase funcionando. ${data?.length || 0} loja(s) encontrada(s).`);
+      } catch (error: any) {
+        if (mounted) setStatus(`Erro: ${error?.message || String(error)}`);
+      }
     })();
+    return () => { mounted = false; };
   }, []);
 
   return (
@@ -23,11 +28,11 @@ export default function App() {
         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
         <View style={styles.container}>
           <View style={styles.iconBox}>
-            <Ionicons name="shield-checkmark" size={44} color="#F47A1F" />
+            <Ionicons name="cloud-done-outline" size={44} color="#F47A1F" />
           </View>
           <Text style={styles.title}>Drogaria Rocha</Text>
-          <Text style={styles.text}>Teste 3: Safe Area + AsyncStorage</Text>
-          <Text style={styles.status}>{storageOk ? 'Funcionando corretamente' : 'Testando armazenamento...'}</Text>
+          <Text style={styles.text}>Teste 4: Supabase</Text>
+          <Text style={styles.status}>{status}</Text>
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
@@ -40,5 +45,5 @@ const styles = StyleSheet.create({
   iconBox: { width: 84, height: 84, borderRadius: 24, backgroundColor: '#FFF1E6', alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
   title: { fontSize: 28, fontWeight: '900', color: '#111111' },
   text: { marginTop: 10, fontSize: 15, color: '#666666', textAlign: 'center' },
-  status: { marginTop: 12, fontSize: 15, fontWeight: '800', color: '#F47A1F' },
+  status: { marginTop: 12, fontSize: 15, fontWeight: '800', color: '#F47A1F', textAlign: 'center' },
 });
