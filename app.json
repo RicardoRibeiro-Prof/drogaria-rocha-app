@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Drogaria Rocha",
+    "slug": "drogaria-rocha",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "drogariarocha",
+    "android": {
+      "package": "com.ativadigitalon.drogariarocha",
+      "versionCode": 1
+    },
+    "ios": {
+      "bundleIdentifier": "com.ativadigitalon.drogariarocha",
+      "buildNumber": "1.0.0",
+      "supportsTablet": true
+    }
+  }
+}
