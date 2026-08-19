@@ -1,6 +1,7 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AdminApp from './src/AdminApp';
 import AppV2 from './src/AppV2';
 import { supabase } from './src/lib/supabase';
@@ -73,10 +74,44 @@ function RoleRouter() {
     return <AdminApp session={session} profile={profile} />;
   }
 
+  return <ClientShell />;
+}
+
+function ClientShell() {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={styles.clientSafeArea} edges={['bottom']}>
-      <AppV2 />
-    </SafeAreaView>
+    <View style={styles.clientRoot}>
+      <SafeAreaView style={styles.clientSafeArea} edges={['bottom']}>
+        <AppV2 />
+      </SafeAreaView>
+
+      <View
+        pointerEvents="none"
+        style={[
+          styles.clientHeaderOverlay,
+          {
+            height: 68 + insets.top,
+            paddingTop: insets.top,
+          },
+        ]}
+      >
+        <View style={styles.clientBrand}>
+          <View style={styles.clientLogoBox}>
+            <Image
+              source={require('./assets/logo-rocha-oficial.webp')}
+              style={styles.clientLogo}
+              resizeMode="contain"
+            />
+          </View>
+          <Text style={styles.clientBrandName}>Drogaria Rocha</Text>
+        </View>
+
+        <View style={styles.clientCartVisual}>
+          <Ionicons name="bag-handle-outline" size={25} color="#F47A1F" />
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -84,5 +119,51 @@ const styles = StyleSheet.create({
   loading: { flex: 1, backgroundColor: '#FFFFFF' },
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
   loadingText: { color: '#666666', fontSize: 13, fontWeight: '700' },
+  clientRoot: { flex: 1, backgroundColor: '#F47A1F' },
   clientSafeArea: { flex: 1, backgroundColor: '#FFFFFF' },
+  clientHeaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 999,
+    elevation: 20,
+    backgroundColor: '#F47A1F',
+    paddingHorizontal: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  clientBrand: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  clientLogoBox: {
+    width: 54,
+    height: 54,
+    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  clientLogo: { width: 50, height: 50 },
+  clientBrandName: {
+    flexShrink: 1,
+    color: '#FFFFFF',
+    fontSize: 23,
+    lineHeight: 27,
+    fontWeight: '900',
+    letterSpacing: -0.4,
+  },
+  clientCartVisual: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 });
