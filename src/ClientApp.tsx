@@ -25,7 +25,6 @@ type PaymentMethod = { code: string; label: string; instructions: string; pix_ke
 type Order = { id?: string; code: string; store_id: number; fulfillment: string; payment_method: string; total: number; status: string; created_at: string };
 
 const CART_KEY = '@drogaria-rocha/cart-live';
-const LOCAL_ORDERS_KEY = '@drogaria-rocha/orders-live';
 const C = { orange:'#F47A1F', orangeDark:'#D95F09', orangeSoft:'#FFF1E6', black:'#111111', white:'#FFFFFF', muted:'#727272', border:'#E8E8E8', bg:'#F7F7F7' };
 const money = (v:number) => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const digits = (v:string) => v.replace(/\D/g,'');
@@ -68,8 +67,7 @@ export default function ClientApp() {
     if(!session?.user){ setOrders([]); return; }
     const {data,error} = await supabase.from('orders').select('id,code,store_id,fulfillment,payment_method,total,status,created_at').eq('user_id',session.user.id).order('created_at',{ascending:false});
     if(error){
-      const localRaw = await AsyncStorage.getItem(LOCAL_ORDERS_KEY);
-      setOrders(localRaw ? JSON.parse(localRaw) : []);
+      setOrders([]);
       return;
     }
     setOrders((data||[]).map((x:any)=>({...x,total:Number(x.total||0)})));
@@ -112,7 +110,7 @@ export default function ClientApp() {
   return <View style={s.app}>
     <View style={{height:68+insets.top}} />
     <View style={s.content}>
-      {tab==='home'&&<Home products={products.slice(0,6)} loading={loading} add={add} openProduct={setSelectedProduct} session={session} profile={profile} catalog={(cat?:string)=>{if(cat)setCategory(cat);setTab('catalog');}}/>}
+      {tab==='home'&&<Home products={products.slice(0,6)} loading={loading} add={add} openProduct={setSelectedProduct} catalog={(cat?:string)=>{if(cat)setCategory(cat);setTab('catalog');}}/>}
       {tab==='catalog'&&<Catalog products={filtered} loading={loading} search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={categories} add={add} openProduct={setSelectedProduct}/>} 
       {tab==='cart'&&<Cart items={cartItems} total={total} qty={qty} catalog={()=>setTab('catalog')} checkout={requestCheckout} session={session} account={()=>setTab('account')}/>} 
       {tab==='orders'&&<Orders orders={orders} session={session} account={()=>setTab('account')}/>} 
@@ -124,14 +122,8 @@ export default function ClientApp() {
   </View>;
 }
 
-function LoggedBanner({session,profile}:any){
-  if(!session?.user) return null;
-  return <View style={s.loggedBanner}><Ionicons name="person-circle-outline" size={22} color={C.orange}/><View style={{flex:1}}><Text style={s.loggedTitle}>Conta conectada</Text><Text style={s.loggedText} numberOfLines={1}>{profile?.name || 'Cliente'} • {session.user.email}</Text></View></View>;
-}
-
-function Home({products,loading,add,openProduct,session,profile,catalog}:any){
+function Home({products,loading,add,openProduct,catalog}:any){
   return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
-    <LoggedBanner session={session} profile={profile}/>
     <View style={s.hero}><View style={{flex:1}}><Text style={s.heroSmall}>DROGARIA ROCHA</Text><Text style={s.heroTitle}>Cuidado e praticidade na palma da sua mão.</Text><Text style={s.heroText}>Compre e acompanhe seus pedidos pelo aplicativo.</Text><Pressable style={s.heroBtn} onPress={()=>catalog()}><Text style={s.heroBtnText}>Ver produtos</Text></Pressable></View><Ionicons name="medkit" size={70} color={C.orange}/></View>
     <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="medical-outline" text="Medicamentos" onPress={()=>catalog('Medicamentos')}/><Quick icon="sparkles-outline" text="Beleza" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="shield-checkmark-outline" text="Higiene" onPress={()=>catalog('Higiene')}/><Quick icon="nutrition-outline" text="Vitaminas" onPress={()=>catalog('Vitaminas')}/></View>
     <Text style={s.section}>Destaques</Text>{loading?<ActivityIndicator color={C.orange}/>:<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:10}}>{products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)} compact/>)}</ScrollView>}
@@ -149,7 +141,19 @@ function ProductImage({uri,style}:any){
   return <Image source={{uri}} style={style} resizeMode="contain" onError={()=>setFailed(true)}/>;
 }
 
-function ProductCard({p,add,open,compact}:any){return <Pressable style={[s.product,compact&&{width:175}]} onPress={open}><View style={s.productImg}><ProductImage uri={p.image_url} style={s.productImageReal}/></View>{p.badge?<Text style={s.badge}>{p.badge}</Text>:null}<Text style={s.productName} numberOfLines={2}>{p.name}</Text><Text style={s.productDesc} numberOfLines={2}>{p.description}</Text><View style={s.productBottom}><Text style={s.price}>{money(p.price)}</Text><Pressable style={s.add} onPress={add}><Ionicons name="add" size={21} color={C.white}/></Pressable></View><Text style={s.detailsHint}>Toque para ver detalhes</Text></Pressable>}
+function ProductCard({p,add,open,compact}:any){
+  return <Pressable style={[s.product,compact&&{width:175}]} onPress={open}>
+    <View style={s.productImg}><ProductImage uri={p.image_url} style={s.productImageReal}/></View>
+    {p.badge?<Text style={s.badge}>{p.badge}</Text>:null}
+    <Text style={s.productName} numberOfLines={2}>{p.name}</Text>
+    <Text style={s.productDesc} numberOfLines={2}>{p.description}</Text>
+    <View style={s.productBottom}>
+      <Text style={s.price}>{money(p.price)}</Text>
+      <Pressable style={s.add} onPress={(event)=>{event.stopPropagation();add();}}><Ionicons name="add" size={21} color={C.white}/></Pressable>
+    </View>
+    <Text style={s.detailsHint}>Toque para ver detalhes</Text>
+  </Pressable>;
+}
 
 function ProductDetail({visible,product,onClose,add}:any){
   if(!product) return null;
@@ -184,17 +188,51 @@ function Account({session,profile}:any){
 
 function Checkout({visible,onClose,items,total,session,profile,done}:any){
   const[name,setName]=useState('');const[phone,setPhone]=useState('');const[address,setAddress]=useState('');const[store,setStore]=useState(1);const[fulfillment,setFulfillment]=useState<'delivery'|'pickup'>('delivery');const[methods,setMethods]=useState<PaymentMethod[]>([]);const[payment,setPayment]=useState('');const[changeFor,setChangeFor]=useState('');const[busy,setBusy]=useState(false);
-  useEffect(()=>{if(!visible)return;if(!session?.user){onClose();return;}setName(profile?.name||session.user.user_metadata?.name||'');setPhone(profile?.phone||session.user.user_metadata?.phone||'');(async()=>{const{data,error}=await supabase.from('payment_methods').select('code,label,instructions,pix_key,sort_order').eq('active',true).order('sort_order');const list=!error&&data?.length?data as PaymentMethod[]:[{code:'pix',label:'PIX',instructions:'',sort_order:1},{code:'cash',label:'Dinheiro',instructions:'',sort_order:2},{code:'credit',label:'Crédito',instructions:'',sort_order:3},{code:'debit',label:'Débito',instructions:'',sort_order:4}];setMethods(list);setPayment(list[0]?.code||'');})();},[visible,profile,session,onClose]);
+  useEffect(()=>{
+    if(!visible||!session?.user)return;
+    setName(profile?.name||session.user.user_metadata?.name||'');
+    setPhone(profile?.phone||session.user.user_metadata?.phone||'');
+    (async()=>{
+      const{data,error}=await supabase.from('payment_methods').select('code,label,instructions,pix_key,sort_order').eq('active',true).order('sort_order');
+      const list=!error&&data?.length?data as PaymentMethod[]:[{code:'pix',label:'PIX',instructions:'',sort_order:1},{code:'cash',label:'Dinheiro',instructions:'',sort_order:2},{code:'credit',label:'Crédito',instructions:'',sort_order:3},{code:'debit',label:'Débito',instructions:'',sort_order:4}];
+      setMethods(list);setPayment(list[0]?.code||'');
+    })();
+  },[visible,profile,session]);
+
   const selected=methods.find(m=>m.code===payment);
   const submit=async()=>{
     if(!session?.user)return Alert.alert('Login obrigatório','Entre na sua conta para comprar.');
-    if(!name.trim()||digits(phone).length<10)return Alert.alert('Confira os dados','Informe nome e telefone.');if(fulfillment==='delivery'&&!address.trim())return Alert.alert('Endereço','Informe o endereço.');if(!payment)return Alert.alert('Pagamento','Escolha uma forma de pagamento.');
-    const change=payment==='cash'&&changeFor.trim()?Number(changeFor.replace(',','.')):null;if(payment==='cash'&&change!==null&&(!Number.isFinite(change)||change<total))return Alert.alert('Troco','O valor para troco precisa ser maior ou igual ao total.');
-    setBusy(true);const code=orderCode();const payload={code,user_id:session.user.id,customer_name:name.trim(),phone:phone.trim(),email:session.user.email||null,store_id:store,fulfillment,address:fulfillment==='delivery'?address.trim():null,payment_method:payment,change_for:change,notes:selected?.instructions||null,subtotal:total,delivery_fee:0,total,status:'received'};
+    if(!name.trim()||digits(phone).length<10)return Alert.alert('Confira os dados','Informe nome e telefone.');
+    if(fulfillment==='delivery'&&!address.trim())return Alert.alert('Endereço','Informe o endereço.');
+    if(!payment)return Alert.alert('Pagamento','Escolha uma forma de pagamento.');
+
+    const change=payment==='cash'&&changeFor.trim()?Number(changeFor.replace(',','.')):null;
+    if(payment==='cash'&&change!==null&&(!Number.isFinite(change)||change<total))return Alert.alert('Troco','O valor para troco precisa ser maior ou igual ao total.');
+
+    setBusy(true);
+    const code=orderCode();
+    const payload={code,user_id:session.user.id,customer_name:name.trim(),phone:phone.trim(),email:session.user.email||null,store_id:store,fulfillment,address:fulfillment==='delivery'?address.trim():null,payment_method:payment,change_for:change,notes:selected?.instructions||null,subtotal:total,delivery_fee:0,total,status:'received'};
     const{data:order,error}=await supabase.from('orders').insert(payload).select('id').single();
-    if(!error&&order?.id){await supabase.from('order_items').insert(items.map((x:any)=>({order_id:order.id,product_id:x.id,product_name:x.name,quantity:x.quantity,unit_price:x.price,total:x.price*x.quantity})));}else{const raw=await AsyncStorage.getItem(LOCAL_ORDERS_KEY);const local=raw?JSON.parse(raw):[];local.unshift({...payload,created_at:new Date().toISOString(),local:true});await AsyncStorage.setItem(LOCAL_ORDERS_KEY,JSON.stringify(local.slice(0,50)));}
-    setBusy(false);let msg=`Número ${code}`;if(payment==='pix'&&selected?.pix_key)msg+=`\n\nChave PIX: ${selected.pix_key}`;if(selected?.instructions)msg+=`\n${selected.instructions}`;Alert.alert('Pedido recebido',msg);done();
+
+    if(error||!order?.id){
+      setBusy(false);
+      return Alert.alert('Pedido não enviado','Não foi possível registrar o pedido agora. Confira sua internet e tente novamente.');
+    }
+
+    const{error:itemError}=await supabase.from('order_items').insert(items.map((x:any)=>({order_id:order.id,product_id:x.id,product_name:x.name,quantity:x.quantity,unit_price:x.price,total:x.price*x.quantity})));
+    if(itemError){
+      setBusy(false);
+      return Alert.alert('Pedido incompleto','O pedido foi criado, mas houve falha ao registrar os itens. Entre em contato com a Drogaria Rocha informando o número '+code+'.');
+    }
+
+    setBusy(false);
+    let msg=`Número ${code}`;
+    if(payment==='pix'&&selected?.pix_key)msg+=`\n\nChave PIX: ${selected.pix_key}`;
+    if(selected?.instructions)msg+=`\n${selected.instructions}`;
+    Alert.alert('Pedido recebido',msg);
+    done();
   };
+
   return <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><SafeAreaView style={s.modal} edges={['top','bottom']}><View style={s.modalHeader}><Text style={s.modalTitle}>Finalizar pedido</Text><Pressable onPress={onClose}><Ionicons name="close" size={26}/></Pressable></View><ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled"><View style={s.checkoutAccount}><Ionicons name="person-circle" size={24} color={C.orange}/><View><Text style={s.checkoutAccountTitle}>Comprando como</Text><Text style={s.checkoutAccountText}>{profile?.name||'Cliente'} • {session?.user?.email||''}</Text></View></View><Field label="Nome" value={name} onChangeText={setName}/><Field label="Telefone" value={phone} onChangeText={setPhone} keyboardType="phone-pad"/><Text style={s.fieldLabel}>Loja</Text><Options options={[["1","Loja 1"],["2","Loja 2"]]} value={String(store)} onChange={(v:string)=>setStore(Number(v))}/><Text style={s.fieldLabel}>Recebimento</Text><Options options={[["delivery","Entrega"],["pickup","Retirada"]]} value={fulfillment} onChange={(v:string)=>setFulfillment(v as any)}/>{fulfillment==='delivery'?<Field label="Endereço" value={address} onChangeText={setAddress}/>:null}<Text style={s.fieldLabel}>Pagamento</Text><View style={s.paymentList}>{methods.map(m=><Pressable key={m.code} style={[s.paymentOption,payment===m.code&&s.paymentOn]} onPress={()=>setPayment(m.code)}><Ionicons name={m.code==='pix'?'qr-code-outline':m.code==='cash'?'cash-outline':'card-outline'} size={21} color={payment===m.code?C.white:C.orange}/><Text style={[s.paymentLabel,payment===m.code&&{color:C.white}]}>{m.label}</Text></Pressable>)}</View>{selected?.instructions?<View style={s.instructions}><Text style={s.instructionsText}>{selected.instructions}</Text>{payment==='pix'&&selected.pix_key?<Text style={s.pixKey}>Chave PIX: {selected.pix_key}</Text>:null}</View>:null}{payment==='cash'?<Field label="Troco para quanto? (opcional)" value={changeFor} onChangeText={setChangeFor} keyboardType="decimal-pad" placeholder={money(total)}/>:null}<View style={s.checkoutTotal}><Text>Total</Text><Text style={s.checkoutValue}>{money(total)}</Text></View><Pressable style={s.primary} onPress={submit} disabled={busy}>{busy?<ActivityIndicator color={C.white}/>:<Text style={s.primaryText}>Confirmar pedido</Text>}</Pressable></ScrollView></SafeAreaView></Modal>;
 }
 
@@ -204,7 +242,6 @@ function Bottom({tab,setTab,count}:any){const inset=useSafeAreaInsets();const it
 
 const s=StyleSheet.create({
   app:{flex:1,backgroundColor:C.bg},content:{flex:1},page:{padding:18,paddingBottom:36},title:{fontSize:28,fontWeight:'900',color:C.black,marginBottom:16},
-  loggedBanner:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:14,padding:11,marginBottom:12,flexDirection:'row',alignItems:'center',gap:8},loggedTitle:{fontSize:10,fontWeight:'900',color:C.orangeDark},loggedText:{fontSize:11,fontWeight:'700',color:C.black,marginTop:2},
   hero:{backgroundColor:C.black,borderRadius:23,padding:20,minHeight:205,flexDirection:'row',alignItems:'center',gap:10},heroSmall:{color:C.orange,fontSize:11,fontWeight:'900'},heroTitle:{color:C.white,fontSize:24,lineHeight:29,fontWeight:'900',marginTop:7},heroText:{color:'#CCC',fontSize:13,lineHeight:18,marginTop:7},heroBtn:{marginTop:14,alignSelf:'flex-start',backgroundColor:C.orange,borderRadius:12,paddingHorizontal:15,paddingVertical:11},heroBtnText:{color:C.white,fontWeight:'900'},
   section:{fontSize:19,fontWeight:'900',marginTop:22,marginBottom:11,color:C.black},quick:{flexDirection:'row',flexWrap:'wrap',gap:9},quickItem:{width:'48%',backgroundColor:C.white,borderRadius:16,borderWidth:1,borderColor:C.border,padding:13,flexDirection:'row',alignItems:'center',gap:8},quickIcon:{width:40,height:40,borderRadius:12,backgroundColor:C.orangeSoft,alignItems:'center',justifyContent:'center'},quickText:{fontWeight:'800',fontSize:12,flex:1},
   search:{height:50,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:8},chip:{height:36,paddingHorizontal:12,borderRadius:18,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipOn:{backgroundColor:C.black,borderColor:C.black},chipText:{fontSize:11,fontWeight:'800'},grid:{flexDirection:'row',flexWrap:'wrap',gap:10},
