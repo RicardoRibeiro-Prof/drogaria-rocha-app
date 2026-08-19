@@ -8,9 +8,14 @@
     "backgroundColor": "#FFFFFF",
     "primaryColor": "#F47A1F",
     "scheme": "drogariarocha",
+    "icon": "./assets/icon.png",
     "android": {
       "package": "com.ativadigitalon.drogariarocha",
-      "versionCode": 1
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F47A1F"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.ativadigitalon.drogariarocha",
