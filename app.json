@@ -16,6 +16,11 @@
       "bundleIdentifier": "com.ativadigitalon.drogariarocha",
       "buildNumber": "1.0.0",
       "supportsTablet": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1136251a-1bad-414b-a8ef-803462164948"
+      }
     }
   }
 }
