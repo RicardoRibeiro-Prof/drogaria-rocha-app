@@ -9,14 +9,7 @@
     "primaryColor": "#F47A1F",
     "scheme": "drogariarocha",
     "icon": "./assets/icon.png",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
-    "updates": {
-      "url": "https://u.expo.dev/1136251a-1bad-414b-a8ef-803462164948"
-    },
     "plugins": [
-      "expo-system-ui",
       [
         "expo-image-picker",
         {
