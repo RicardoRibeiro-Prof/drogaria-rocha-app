@@ -24,6 +24,8 @@ npx eas-cli build --platform android
 npx eas-cli build --platform ios
 ```
 
+Build Android atual: versão 1.0.2 (versionCode 3), perfil `preview` em APK.
+
 ## Estrutura inicial
 
 - Início
