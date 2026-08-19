@@ -1,0 +1,15 @@
+node_modules/
+.expo/
+dist/
+web-build/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+ios/
+
+# A pasta android é gerada localmente para contornar falha remota de Prebuild.
+# Ela deve ser enviada ao EAS mesmo sem estar versionada no Git.
+!android/
+!android/**
