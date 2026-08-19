@@ -2,8 +2,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Image, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import AdminApp from './src/AdminApp';
-import AppV2 from './src/AppV2';
+import AdminRoot from './src/AdminRoot';
+import ClientApp from './src/ClientApp';
 import { supabase } from './src/lib/supabase';
 
 export default function App() {
@@ -34,11 +34,7 @@ function RoleRouter() {
     const user = nextSession.user;
     const [{ data: adminData }, { data: profileData }] = await Promise.all([
       supabase.rpc('is_admin'),
-      supabase
-        .from('profiles')
-        .select('name,phone,cpf,birth_date')
-        .eq('user_id', user.id)
-        .maybeSingle(),
+      supabase.from('profiles').select('name,phone,cpf,birth_date').eq('user_id', user.id).maybeSingle(),
     ]);
 
     setProfile(profileData || {
@@ -51,11 +47,7 @@ function RoleRouter() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => resolveRole(data.session));
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      resolveRole(nextSession);
-    });
-
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => resolveRole(nextSession));
     return () => listener.subscription.unsubscribe();
   }, [resolveRole]);
 
@@ -71,7 +63,7 @@ function RoleRouter() {
   }
 
   if (session && isAdmin) {
-    return <AdminApp session={session} profile={profile} />;
+    return <AdminRoot session={session} profile={profile} />;
   }
 
   return <ClientShell />;
@@ -82,27 +74,18 @@ function ClientShell() {
 
   return (
     <View style={styles.clientRoot}>
-      <SafeAreaView style={styles.clientSafeArea} edges={['bottom']}>
-        <AppV2 />
-      </SafeAreaView>
+      <ClientApp />
 
       <View
         pointerEvents="none"
         style={[
           styles.clientHeaderOverlay,
-          {
-            height: 68 + insets.top,
-            paddingTop: insets.top,
-          },
+          { height: 68 + insets.top, paddingTop: insets.top },
         ]}
       >
         <View style={styles.clientBrand}>
           <View style={styles.clientLogoBox}>
-            <Image
-              source={require('./assets/logo-rocha-oficial.webp')}
-              style={styles.clientLogo}
-              resizeMode="contain"
-            />
+            <Image source={require('./assets/logo-rocha-oficial.webp')} style={styles.clientLogo} resizeMode="contain" />
           </View>
           <Text style={styles.clientBrandName}>Drogaria Rocha</Text>
         </View>
@@ -120,7 +103,6 @@ const styles = StyleSheet.create({
   loadingBox: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10 },
   loadingText: { color: '#666666', fontSize: 13, fontWeight: '700' },
   clientRoot: { flex: 1, backgroundColor: '#F47A1F' },
-  clientSafeArea: { flex: 1, backgroundColor: '#FFFFFF' },
   clientHeaderOverlay: {
     position: 'absolute',
     top: 0,
@@ -134,12 +116,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  clientBrand: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
+  clientBrand: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   clientLogoBox: {
     width: 54,
     height: 54,
