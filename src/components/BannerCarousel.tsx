@@ -11,14 +11,34 @@ import {
 
 type Banner = {
   id: string;
-  image: any;
+  image?: any;
+  resizeMode?: 'cover' | 'contain';
+  backgroundColor?: string;
 };
 
 const BANNERS: Banner[] = [
-  { id: 'farmacia', image: require('../../assets/banners/banner-farmacia.jpg') },
-  { id: 'laboratorios', image: require('../../assets/banners/banner-laboratorios.jpg') },
-  { id: 'produtos', image: require('../../assets/banners/banner-produtos.jpg') },
+  { id: 'hero' },
+  {
+    id: 'farmacia',
+    image: require('../../assets/banners/banner-farmacia.jpg'),
+    resizeMode: 'cover',
+    backgroundColor: '#FFFFFF',
+  },
+  {
+    id: 'laboratorios',
+    image: require('../../assets/banners/banner-laboratorios.jpg'),
+    resizeMode: 'contain',
+    backgroundColor: '#FFFFFF',
+  },
+  {
+    id: 'produtos',
+    image: require('../../assets/banners/banner-produtos.jpg'),
+    resizeMode: 'contain',
+    backgroundColor: '#FFFFFF',
+  },
 ];
+
+const BANNER_HEIGHT = 205;
 
 export default function BannerCarousel() {
   const { width } = useWindowDimensions();
@@ -33,7 +53,7 @@ export default function BannerCarousel() {
         listRef.current?.scrollToOffset({ offset: next * cardWidth, animated: true });
         return next;
       });
-    }, 4500);
+    }, 5000);
 
     return () => clearInterval(timer);
   }, [cardWidth]);
@@ -50,6 +70,7 @@ export default function BannerCarousel() {
         data={BANNERS}
         horizontal
         pagingEnabled
+        pointerEvents={index === 0 ? 'box-none' : 'auto'}
         showsHorizontalScrollIndicator={false}
         keyExtractor={(item) => item.id}
         onMomentumScrollEnd={onMomentumScrollEnd}
@@ -58,14 +79,36 @@ export default function BannerCarousel() {
           offset: cardWidth * itemIndex,
           index: itemIndex,
         })}
-        renderItem={({ item }) => (
-          <View style={[styles.banner, { width: cardWidth }]}>
-            <Image source={item.image} style={styles.image} resizeMode="cover" />
-          </View>
-        )}
+        renderItem={({ item }) => {
+          if (item.id === 'hero') {
+            return <View pointerEvents="none" style={[styles.heroPlaceholder, { width: cardWidth }]} />;
+          }
+
+          const isPharmacy = item.id === 'farmacia';
+          const isContain = item.resizeMode === 'contain';
+
+          return (
+            <View
+              style={[
+                styles.banner,
+                { width: cardWidth, backgroundColor: item.backgroundColor || '#FFFFFF' },
+              ]}
+            >
+              <Image
+                source={item.image}
+                resizeMode={item.resizeMode || 'cover'}
+                style={[
+                  styles.image,
+                  isPharmacy && styles.pharmacyImage,
+                  isContain && styles.containImage,
+                ]}
+              />
+            </View>
+          );
+        }}
       />
 
-      <View style={styles.dots}>
+      <View pointerEvents="none" style={styles.dots}>
         {BANNERS.map((banner, dotIndex) => (
           <View key={banner.id} style={[styles.dot, dotIndex === index && styles.dotActive]} />
         ))}
@@ -75,16 +118,34 @@ export default function BannerCarousel() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { marginTop: 14 },
+  wrapper: {
+    marginTop: -BANNER_HEIGHT,
+  },
+  heroPlaceholder: {
+    height: BANNER_HEIGHT,
+    backgroundColor: 'transparent',
+  },
   banner: {
-    height: 185,
-    borderRadius: 20,
+    height: BANNER_HEIGHT,
+    borderRadius: 23,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E8E8E8',
-    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  image: { width: '100%', height: '100%' },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  pharmacyImage: {
+    width: '160%',
+    marginLeft: '-30%',
+  },
+  containImage: {
+    width: '94%',
+    height: '88%',
+  },
   dots: {
     marginTop: 9,
     flexDirection: 'row',
