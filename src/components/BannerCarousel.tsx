@@ -12,36 +12,18 @@ import {
 type Banner = {
   id: string;
   image: any;
-  resizeMode: 'cover' | 'contain';
-  backgroundColor: string;
 };
 
 const BANNERS: Banner[] = [
-  {
-    id: 'farmacia',
-    image: require('../../assets/banners/banner-farmacia.jpg'),
-    resizeMode: 'cover',
-    backgroundColor: '#F4F4F4',
-  },
-  {
-    id: 'laboratorios',
-    image: require('../../assets/banners/banner-laboratorios.png'),
-    resizeMode: 'contain',
-    backgroundColor: '#FFFFFF',
-  },
-  {
-    id: 'produtos',
-    image: require('../../assets/banners/banner-produtos.jpg'),
-    resizeMode: 'contain',
-    backgroundColor: '#FFFFFF',
-  },
+  { id: 'farmacia', image: require('../../assets/banners/banner-farmacia.jpg') },
+  { id: 'laboratorios', image: require('../../assets/banners/banner-laboratorios.jpg') },
+  { id: 'produtos', image: require('../../assets/banners/banner-produtos.jpg') },
 ];
 
 export default function BannerCarousel() {
   const { width } = useWindowDimensions();
   const listRef = useRef<FlatList<Banner>>(null);
   const [index, setIndex] = useState(0);
-
   const cardWidth = Math.max(280, width - 36);
 
   useEffect(() => {
@@ -77,8 +59,8 @@ export default function BannerCarousel() {
           index: itemIndex,
         })}
         renderItem={({ item }) => (
-          <View style={[styles.banner, { width: cardWidth, backgroundColor: item.backgroundColor }]}>
-            <Image source={item.image} style={styles.image} resizeMode={item.resizeMode} />
+          <View style={[styles.banner, { width: cardWidth }]}>
+            <Image source={item.image} style={styles.image} resizeMode="cover" />
           </View>
         )}
       />
@@ -93,24 +75,18 @@ export default function BannerCarousel() {
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    marginTop: 16,
-  },
+  wrapper: { marginTop: 14 },
   banner: {
     height: 185,
     borderRadius: 20,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: '#E8E8E8',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
-  image: {
-    width: '100%',
-    height: '100%',
-  },
+  image: { width: '100%', height: '100%' },
   dots: {
-    marginTop: 10,
+    marginTop: 9,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
