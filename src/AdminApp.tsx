@@ -1,0 +1,135 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Product } from './data/demoProducts';
+import { supabase } from './lib/supabase';
+
+type AdminTab = 'dashboard' | 'orders' | 'products' | 'customers' | 'promotions' | 'settings';
+type AdminOrder = { id: string; code: string; customer_name: string; phone: string; store_id: number; fulfillment: 'delivery' | 'pickup'; payment_method: string; total: number; status: string; created_at: string; };
+type Customer = { user_id: string; name?: string | null; phone?: string | null; birth_date?: string | null; marketing_consent?: boolean; created_at?: string; };
+type ProductForm = { id?: number; name: string; description: string; category: string; price: string; badge: string; image_url: string; active: boolean; };
+
+const C = { orange: '#F47A1F', orangeDark: '#D95F09', orangeSoft: '#FFF1E6', black: '#111111', dark: '#171717', graphite: '#282828', muted: '#777777', white: '#FFFFFF', bg: '#F4F4F4', border: '#E5E5E5', success: '#177A3F', danger: '#B42318' };
+const STATUS: Record<string, string> = { received: 'Recebido', confirmed: 'Confirmado', separating: 'Em separação', ready: 'Pronto p/ retirada', out_for_delivery: 'Saiu p/ entrega', delivered: 'Entregue', cancelled: 'Cancelado' };
+const PAYMENT: Record<string, string> = { pix: 'PIX', cash: 'Dinheiro', credit: 'Crédito', debit: 'Débito' };
+const money = (v: number) => Number(v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+export default function AdminApp({ session, profile, onProductsChanged }: { session: any; profile: any; onProductsChanged?: () => void | Promise<void> }) {
+  const [tab, setTab] = useState<AdminTab>('dashboard');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    const [p, o, c] = await Promise.all([
+      supabase.from('products').select('id,name,description,category,price,badge,image_url,active').order('id', { ascending: false }),
+      supabase.from('orders').select('id,code,customer_name,phone,store_id,fulfillment,payment_method,total,status,created_at').order('created_at', { ascending: false }).limit(200),
+      supabase.from('profiles').select('user_id,name,phone,birth_date,marketing_consent,created_at').order('created_at', { ascending: false }).limit(300),
+    ]);
+    const error = p.error || o.error || c.error;
+    if (error) Alert.alert('Painel administrativo', error.message);
+    setProducts((p.data || []).map((x: any) => ({ ...x, id: Number(x.id), price: Number(x.price || 0) })));
+    setOrders((o.data || []).map((x: any) => ({ ...x, total: Number(x.total || 0) })));
+    setCustomers(c.data || []);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const today = new Date().toLocaleDateString('pt-BR');
+  const todayOrders = orders.filter(o => new Date(o.created_at).toLocaleDateString('pt-BR') === today);
+  const todayValue = todayOrders.filter(o => o.status !== 'cancelled').reduce((s, o) => s + o.total, 0);
+  const openOrders = orders.filter(o => !['delivered', 'cancelled'].includes(o.status));
+
+  const setStatus = async (order: AdminOrder, status: string) => {
+    const old = order.status;
+    setOrders(x => x.map(o => o.id === order.id ? { ...o, status } : o));
+    const { error } = await supabase.from('orders').update({ status }).eq('id', order.id);
+    if (error) {
+      setOrders(x => x.map(o => o.id === order.id ? { ...o, status: old } : o));
+      Alert.alert('Pedido', error.message);
+    }
+  };
+
+  const setBadge = async (product: Product, badge: string) => {
+    const { error } = await supabase.from('products').update({ badge }).eq('id', product.id);
+    if (error) return Alert.alert('Promoção', error.message);
+    setProducts(x => x.map(p => p.id === product.id ? { ...p, badge } : p));
+    await onProductsChanged?.();
+  };
+
+  if (loading) return <SafeAreaView style={s.loading} edges={['top','bottom']}><Ionicons name="shield-checkmark" size={44} color={C.orange}/><Text style={s.loadingText}>Painel Drogaria Rocha</Text><ActivityIndicator color={C.orange}/></SafeAreaView>;
+
+  return <SafeAreaView style={s.safe} edges={['top','bottom','left','right']}>
+    <View style={s.header}><View><Text style={s.eyebrow}>DROGARIA ROCHA</Text><Text style={s.headerTitle}>Painel Administrativo</Text></View><Pressable style={s.refresh} onPress={load}><Ionicons name="refresh" size={20} color={C.white}/></Pressable></View>
+    <AdminMenu tab={tab} setTab={setTab}/>
+    <View style={s.content}>
+      {tab === 'dashboard' && <Dashboard orders={orders} todayOrders={todayOrders.length} todayValue={todayValue} openOrders={openOrders.length} products={products.filter(p => p.active !== false).length} customers={customers.length} go={setTab}/>} 
+      {tab === 'orders' && <Orders orders={orders} setStatus={setStatus}/>} 
+      {tab === 'products' && <Products products={products} onNew={() => { setEditing(null); setFormOpen(true); }} onEdit={p => { setEditing(p); setFormOpen(true); }}/>} 
+      {tab === 'customers' && <Customers customers={customers}/>} 
+      {tab === 'promotions' && <Promotions products={products} setBadge={setBadge}/>} 
+      {tab === 'settings' && <Settings session={session} profile={profile}/>} 
+    </View>
+    <ProductModal visible={formOpen} product={editing} onClose={() => setFormOpen(false)} onSaved={async () => { setFormOpen(false); await load(); await onProductsChanged?.(); }}/>
+  </SafeAreaView>;
+}
+
+function AdminMenu({ tab, setTab }: { tab: AdminTab; setTab: (x: AdminTab) => void }) {
+  const items: [AdminTab,string,React.ComponentProps<typeof Ionicons>['name']][] = [['dashboard','Visão geral','grid-outline'],['orders','Pedidos','receipt-outline'],['products','Produtos','cube-outline'],['customers','Clientes','people-outline'],['promotions','Promoções','pricetag-outline'],['settings','Configurações','settings-outline']];
+  return <ScrollView horizontal showsHorizontalScrollIndicator={false} style={s.menuWrap} contentContainerStyle={s.menu}>{items.map(([id,label,icon]) => <Pressable key={id} onPress={() => setTab(id)} style={[s.menuItem, tab === id && s.menuActive]}><Ionicons name={icon} size={17} color={tab === id ? C.white : C.graphite}/><Text style={[s.menuText, tab === id && s.menuTextActive]}>{label}</Text></Pressable>)}</ScrollView>;
+}
+
+function Dashboard({ orders, todayOrders, todayValue, openOrders, products, customers, go }: any) {
+  return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Visão geral</Text><Text style={s.subtitle}>A operação do aplicativo em um só lugar.</Text><View style={s.stats}><Stat icon="receipt-outline" label="Pedidos hoje" value={todayOrders}/><Stat icon="cash-outline" label="Valor hoje" value={money(todayValue)}/><Stat icon="time-outline" label="Em andamento" value={openOrders}/><Stat icon="cube-outline" label="Produtos ativos" value={products}/><Stat icon="people-outline" label="Clientes" value={customers}/></View><View style={s.sectionRow}><Text style={s.sectionTitle}>Pedidos recentes</Text><Pressable onPress={() => go('orders')}><Text style={s.link}>Ver todos</Text></Pressable></View>{orders.slice(0,6).map((o: AdminOrder) => <View key={o.id} style={s.compact}><View style={{flex:1}}><Text style={s.bold}>{o.code}</Text><Text style={s.meta}>{o.customer_name} • Loja {o.store_id}</Text></View><View style={{alignItems:'flex-end'}}><Text style={s.bold}>{money(o.total)}</Text><Text style={s.orangeText}>{STATUS[o.status] || o.status}</Text></View></View>)}</ScrollView>;
+}
+
+function Stat({ icon, label, value }: any) { return <View style={s.stat}><View style={s.statIcon}><Ionicons name={icon} size={21} color={C.orange}/></View><Text style={s.statValue}>{value}</Text><Text style={s.meta}>{label}</Text></View>; }
+
+function Orders({ orders, setStatus }: { orders: AdminOrder[]; setStatus: (o: AdminOrder, status: string) => void }) {
+  const [filter, setFilter] = useState('open');
+  const list = orders.filter(o => filter === 'all' ? true : filter === 'open' ? !['delivered','cancelled'].includes(o.status) : o.status === filter);
+  const filters = [['open','Em andamento'],['received','Recebidos'],['separating','Separação'],['out_for_delivery','Entrega'],['ready','Retirada'],['delivered','Entregues'],['all','Todos']];
+  const flow = [['received','Recebido'],['confirmed','Confirmado'],['separating','Separação'],['ready','Pronto'],['out_for_delivery','Saiu p/ entrega'],['delivered','Entregue'],['cancelled','Cancelar']];
+  return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Pedidos</Text><Text style={s.subtitle}>Acompanhe e altere o status dos pedidos.</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filters}>{filters.map(([id,label]) => <Pressable key={id} onPress={() => setFilter(id)} style={[s.chip,filter===id&&s.chipActive]}><Text style={[s.chipText,filter===id&&s.chipTextActive]}>{label}</Text></Pressable>)}</ScrollView>{list.map(o => <View key={o.id} style={s.card}><View style={s.row}><View style={{flex:1}}><Text style={s.bold}>{o.code}</Text><Text style={s.customer}>{o.customer_name}</Text><Text style={s.meta}>{new Date(o.created_at).toLocaleString('pt-BR')}</Text></View><View style={{alignItems:'flex-end'}}><Text style={s.value}>{money(o.total)}</Text><Text style={s.meta}>Loja {o.store_id}</Text></View></View><Text style={s.meta}>{o.phone} • {o.fulfillment === 'delivery' ? 'Entrega' : 'Retirada'} • {PAYMENT[o.payment_method] || o.payment_method}</Text><Text style={s.status}>Status: {STATUS[o.status] || o.status}</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.statusRow}>{flow.map(([id,label]) => <Pressable key={id} onPress={() => setStatus(o,id)} style={[s.statusBtn,o.status===id&&s.statusBtnActive,id==='cancelled'&&s.cancelBtn]}><Text style={[s.statusBtnText,o.status===id&&s.statusBtnTextActive,id==='cancelled'&&{color:C.danger}]}>{label}</Text></Pressable>)}</ScrollView></View>)}</ScrollView>;
+}
+
+function Products({ products, onNew, onEdit }: { products: Product[]; onNew: () => void; onEdit: (p: Product) => void }) {
+  const [q,setQ] = useState('');
+  const list = useMemo(() => { const t=q.trim().toLowerCase(); return t ? products.filter(p => `${p.name} ${p.category}`.toLowerCase().includes(t)) : products; }, [q,products]);
+  return <ScrollView contentContainerStyle={s.page}><View style={s.row}><View style={{flex:1}}><Text style={s.title}>Produtos</Text><Text style={s.subtitle}>{products.length} cadastrado(s).</Text></View><Pressable style={s.newBtn} onPress={onNew}><Ionicons name="add" size={18} color={C.white}/><Text style={s.newText}>Novo</Text></Pressable></View><Search value={q} setValue={setQ} placeholder="Buscar produto..."/>{list.map(p => <Pressable key={p.id} style={s.listRow} onPress={() => onEdit(p)}><View style={s.iconBox}><Ionicons name="cube-outline" size={24} color={C.orange}/></View><View style={{flex:1}}><Text style={s.bold}>{p.name}</Text><Text style={s.meta}>{p.category} • {money(p.price)}</Text><Text style={{fontSize:10,fontWeight:'900',color:p.active===false?C.danger:C.success}}>{p.active===false?'Inativo':'Ativo'}{p.badge?` • ${p.badge}`:''}</Text></View><Ionicons name="create-outline" size={21} color={C.graphite}/></Pressable>)}</ScrollView>;
+}
+
+function Customers({ customers }: { customers: Customer[] }) {
+  const [q,setQ] = useState('');
+  const list = useMemo(() => { const t=q.trim().toLowerCase(); return t ? customers.filter(c => `${c.name||''} ${c.phone||''}`.toLowerCase().includes(t)) : customers; }, [q,customers]);
+  return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Clientes</Text><Text style={s.subtitle}>{customers.length} cliente(s) cadastrado(s).</Text><Search value={q} setValue={setQ} placeholder="Buscar cliente..."/>{list.map(c => <View key={c.user_id} style={s.listRow}><View style={s.iconBox}><Ionicons name="person" size={22} color={C.orange}/></View><View style={{flex:1}}><Text style={s.bold}>{c.name || 'Cliente sem nome'}</Text><Text style={s.meta}>{c.phone || 'Telefone não informado'}</Text>{c.birth_date?<Text style={s.meta}>Nascimento: {c.birth_date}</Text>:null}</View>{c.marketing_consent?<Text style={s.consent}>Marketing OK</Text>:null}</View>)}</ScrollView>;
+}
+
+function Promotions({ products, setBadge }: { products: Product[]; setBadge: (p: Product,badge:string) => void }) {
+  return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Promoções</Text><Text style={s.subtitle}>Controle o destaque exibido no catálogo.</Text><View style={s.notice}><Ionicons name="information-circle-outline" size={21} color={C.orange}/><Text style={s.noticeText}>Nesta etapa, a promoção é o selo do produto: Oferta, Destaque ou nenhum selo.</Text></View>{products.map(p => <View key={p.id} style={s.card}><Text style={s.bold}>{p.name}</Text><Text style={s.meta}>{money(p.price)} • {p.category}</Text><Text style={s.orangeText}>Selo atual: {p.badge || 'Nenhum'}</Text><View style={s.promoRow}><Pressable style={s.darkBtn} onPress={() => setBadge(p,'Oferta')}><Text style={s.darkBtnText}>Oferta</Text></Pressable><Pressable style={s.darkBtn} onPress={() => setBadge(p,'Destaque')}><Text style={s.darkBtnText}>Destaque</Text></Pressable><Pressable style={s.clearBtn} onPress={() => setBadge(p,'')}><Ionicons name="close" size={18} color={C.danger}/></Pressable></View></View>)}</ScrollView>;
+}
+
+function Settings({ session, profile }: any) {
+  return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Configurações</Text><Text style={s.subtitle}>Regras operacionais do aplicativo.</Text><View style={s.card}><Setting icon="cube-outline" title="Estoque" text="Estoque único. Não existe separação de estoque por loja no aplicativo."/><Setting icon="bicycle-outline" title="Entrega" text="Sem cálculo automático de taxa ou distância. A entrega é tratada pela drogaria."/><Setting icon="storefront-outline" title="Lojas" text="Loja 1 e Loja 2 servem apenas para direcionar o pedido."/></View><View style={s.card}><Text style={s.bold}>Administrador conectado</Text><Text style={s.customer}>{profile?.name || 'Administrador'}</Text><Text style={s.meta}>{session?.user?.email || ''}</Text></View><Pressable style={s.logout} onPress={() => Alert.alert('Sair do painel','Deseja encerrar a sessão?', [{text:'Cancelar',style:'cancel'},{text:'Sair',style:'destructive',onPress:()=>supabase.auth.signOut()}])}><Ionicons name="log-out-outline" size={20} color={C.danger}/><Text style={s.logoutText}>Sair do painel administrativo</Text></Pressable></ScrollView>;
+}
+
+function Setting({ icon, title, text }: any) { return <View style={s.setting}><View style={s.iconBox}><Ionicons name={icon} size={21} color={C.orange}/></View><View style={{flex:1}}><Text style={s.bold}>{title}</Text><Text style={s.meta}>{text}</Text></View></View>; }
+function Search({ value, setValue, placeholder }: any) { return <View style={s.search}><Ionicons name="search-outline" size={18} color={C.muted}/><TextInput value={value} onChangeText={setValue} placeholder={placeholder} placeholderTextColor="#999" style={s.searchInput}/></View>; }
+
+function ProductModal({ visible, product, onClose, onSaved }: any) {
+  const empty: ProductForm = { name:'',description:'',category:'',price:'',badge:'',image_url:'',active:true };
+  const [form,setForm] = useState<ProductForm>(empty); const [busy,setBusy] = useState(false);
+  useEffect(() => { if (!visible) return; setForm(product ? { id:product.id,name:product.name||'',description:product.description||'',category:product.category||'',price:String(product.price??''),badge:product.badge||'',image_url:product.image_url||'',active:product.active!==false } : empty); }, [visible,product]);
+  const set = (k:keyof ProductForm,v:any) => setForm(x => ({...x,[k]:v}));
+  const save = async () => { const price=Number(form.price.replace(',','.')); if(!form.name.trim()||!form.category.trim()||!Number.isFinite(price)) return Alert.alert('Produto','Informe nome, categoria e preço.'); setBusy(true); const payload={name:form.name.trim(),description:form.description.trim(),category:form.category.trim(),price,badge:form.badge.trim(),image_url:form.image_url.trim()||null,active:form.active}; const {error}=form.id?await supabase.from('products').update(payload).eq('id',form.id):await supabase.from('products').insert(payload); setBusy(false); if(error)return Alert.alert('Produto',error.message); onSaved(); };
+  return <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><SafeAreaView style={s.modal} edges={['top','bottom']}><View style={s.modalHeader}><View><Text style={s.eyebrow}>PAINEL ADMINISTRATIVO</Text><Text style={s.headerTitle}>{form.id?'Editar produto':'Novo produto'}</Text></View><Pressable onPress={onClose}><Ionicons name="close" size={25} color={C.white}/></Pressable></View><ScrollView contentContainerStyle={s.page}><Field label="Nome" value={form.name} onChangeText={(v:string)=>set('name',v)}/><Field label="Descrição" value={form.description} onChangeText={(v:string)=>set('description',v)} multiline/><Field label="Categoria" value={form.category} onChangeText={(v:string)=>set('category',v)}/><Field label="Preço" value={form.price} onChangeText={(v:string)=>set('price',v)} keyboardType="decimal-pad"/><Field label="Selo" value={form.badge} onChangeText={(v:string)=>set('badge',v)} placeholder="Oferta, Destaque..."/><Field label="URL da imagem" value={form.image_url} onChangeText={(v:string)=>set('image_url',v)} autoCapitalize="none"/><View style={s.switchRow}><View style={{flex:1}}><Text style={s.fieldLabel}>Produto ativo</Text><Text style={s.meta}>Desative para ocultar do cliente.</Text></View><Switch value={form.active} onValueChange={v=>set('active',v)}/></View><Pressable style={s.save} onPress={save} disabled={busy}>{busy?<ActivityIndicator color={C.white}/>:<Text style={s.saveText}>Salvar produto</Text>}</Pressable></ScrollView></SafeAreaView></Modal>;
+}
+function Field({ label, multiline, ...props }: any) { return <View style={{marginBottom:12}}><Text style={s.fieldLabel}>{label}</Text><TextInput {...props} multiline={multiline} placeholderTextColor="#999" style={[s.input,multiline&&{minHeight:90,textAlignVertical:'top',paddingTop:12}]}/></View>; }
+
+const s = StyleSheet.create({ safe:{flex:1,backgroundColor:C.dark},loading:{flex:1,backgroundColor:C.dark,alignItems:'center',justifyContent:'center',gap:12},loadingText:{color:C.white,fontWeight:'900',fontSize:18},header:{minHeight:76,backgroundColor:C.dark,paddingHorizontal:16,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},eyebrow:{color:C.orange,fontWeight:'900',fontSize:10,letterSpacing:1.1},headerTitle:{color:C.white,fontSize:19,fontWeight:'900',marginTop:2},refresh:{width:42,height:42,borderRadius:13,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},menuWrap:{backgroundColor:C.white,maxHeight:60},menu:{padding:10,gap:7},menuItem:{height:40,paddingHorizontal:12,borderRadius:12,backgroundColor:'#EFEFEF',flexDirection:'row',alignItems:'center',gap:5},menuActive:{backgroundColor:C.graphite},menuText:{fontSize:11,fontWeight:'800',color:C.graphite},menuTextActive:{color:C.white},content:{flex:1,backgroundColor:C.bg},page:{padding:16,paddingBottom:34},title:{fontSize:27,fontWeight:'900',color:C.black},subtitle:{fontSize:13,color:C.muted,marginTop:4,marginBottom:14},stats:{flexDirection:'row',flexWrap:'wrap',gap:9},stat:{width:'48%',minHeight:125,padding:13,borderRadius:16,backgroundColor:C.white,borderWidth:1,borderColor:C.border},statIcon:{width:39,height:39,borderRadius:12,backgroundColor:C.orangeSoft,alignItems:'center',justifyContent:'center'},statValue:{fontSize:20,fontWeight:'900',color:C.black,marginTop:11},meta:{fontSize:10,color:C.muted,marginTop:3,lineHeight:15},sectionRow:{marginTop:20,marginBottom:9,flexDirection:'row',justifyContent:'space-between'},sectionTitle:{fontSize:17,fontWeight:'900',color:C.black},link:{color:C.orangeDark,fontSize:11,fontWeight:'900'},compact:{padding:13,backgroundColor:C.white,borderRadius:14,borderWidth:1,borderColor:C.border,marginBottom:8,flexDirection:'row',gap:8},bold:{fontSize:13,fontWeight:'900',color:C.black},orangeText:{fontSize:10,fontWeight:'900',color:C.orangeDark,marginTop:4},filters:{gap:6,paddingBottom:12},chip:{height:35,paddingHorizontal:11,borderRadius:18,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipActive:{backgroundColor:C.graphite,borderColor:C.graphite},chipText:{fontSize:10,fontWeight:'800',color:C.graphite},chipTextActive:{color:C.white},card:{padding:13,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,marginBottom:9},row:{flexDirection:'row',alignItems:'center',gap:9},customer:{fontSize:12,fontWeight:'700',color:C.graphite,marginTop:3},value:{fontSize:16,fontWeight:'900',color:C.black},status:{fontSize:11,fontWeight:'900',color:C.graphite,marginTop:10},statusRow:{gap:6,paddingTop:8},statusBtn:{height:33,paddingHorizontal:9,borderRadius:10,borderWidth:1,borderColor:C.border,justifyContent:'center'},statusBtnActive:{backgroundColor:C.orange,borderColor:C.orange},cancelBtn:{borderColor:'#F4C7C3'},statusBtnText:{fontSize:9,fontWeight:'800',color:C.graphite},statusBtnTextActive:{color:C.white},newBtn:{height:42,paddingHorizontal:12,borderRadius:12,backgroundColor:C.orange,flexDirection:'row',alignItems:'center',gap:4},newText:{color:C.white,fontWeight:'900'},search:{height:47,borderRadius:13,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:12,flexDirection:'row',alignItems:'center',gap:7,marginBottom:12},searchInput:{flex:1,color:C.black},listRow:{padding:12,borderRadius:14,backgroundColor:C.white,borderWidth:1,borderColor:C.border,marginBottom:8,flexDirection:'row',alignItems:'center',gap:9},iconBox:{width:44,height:44,borderRadius:13,backgroundColor:C.orangeSoft,alignItems:'center',justifyContent:'center'},consent:{fontSize:8,fontWeight:'900',color:C.success,backgroundColor:'#E9F7EF',padding:5,borderRadius:7},notice:{padding:12,borderRadius:13,backgroundColor:C.orangeSoft,flexDirection:'row',gap:8,marginBottom:12},noticeText:{flex:1,fontSize:10,color:C.graphite,lineHeight:15},promoRow:{flexDirection:'row',gap:6,marginTop:9},darkBtn:{height:33,paddingHorizontal:10,borderRadius:9,backgroundColor:C.graphite,justifyContent:'center'},darkBtnText:{color:C.white,fontSize:9,fontWeight:'900'},clearBtn:{width:33,height:33,borderRadius:9,backgroundColor:'#FDECEC',alignItems:'center',justifyContent:'center'},setting:{flexDirection:'row',alignItems:'center',gap:9,paddingVertical:7},logout:{height:48,borderRadius:14,backgroundColor:'#FDECEC',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:6},logoutText:{color:C.danger,fontWeight:'900',fontSize:12},modal:{flex:1,backgroundColor:C.bg},modalHeader:{minHeight:74,backgroundColor:C.dark,paddingHorizontal:16,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},fieldLabel:{fontSize:11,fontWeight:'900',color:C.black,marginBottom:6},input:{minHeight:47,borderRadius:12,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:12,color:C.black},switchRow:{padding:12,borderRadius:13,backgroundColor:C.white,borderWidth:1,borderColor:C.border,flexDirection:'row',alignItems:'center',gap:8},save:{height:50,borderRadius:13,backgroundColor:C.orange,alignItems:'center',justifyContent:'center',marginTop:14},saveText:{color:C.white,fontWeight:'900'} });
