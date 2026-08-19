@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AdminApp from './AdminApp';
+import BulkImportModal from './BulkImportModal';
 import { supabase } from './lib/supabase';
 
 type PaymentMethod = {
@@ -28,14 +29,28 @@ const C = {
 
 export default function AdminRoot({ session, profile }: { session: any; profile: any }) {
   const [open, setOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [adminKey, setAdminKey] = useState(0);
 
   return (
     <View style={{ flex: 1 }}>
-      <AdminApp session={session} profile={profile} />
+      <AdminApp key={adminKey} session={session} profile={profile} />
+
+      <Pressable style={s.importButton} onPress={() => setImportOpen(true)}>
+        <Ionicons name="cloud-upload-outline" size={20} color={C.white} />
+        <Text style={s.paymentButtonText}>Importar produtos</Text>
+      </Pressable>
+
       <Pressable style={s.paymentButton} onPress={() => setOpen(true)}>
         <Ionicons name="card-outline" size={20} color={C.white} />
         <Text style={s.paymentButtonText}>Pagamentos</Text>
       </Pressable>
+
+      <BulkImportModal
+        visible={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={() => setAdminKey((value) => value + 1)}
+      />
       <PaymentMethodsModal visible={open} onClose={() => setOpen(false)} />
     </View>
   );
@@ -209,6 +224,7 @@ function PaymentMethodsModal({ visible, onClose }: { visible: boolean; onClose: 
 }
 
 const s = StyleSheet.create({
+  importButton: { position: 'absolute', right: 16, bottom: 74, height: 46, borderRadius: 23, paddingHorizontal: 16, backgroundColor: '#177A3F', flexDirection: 'row', alignItems: 'center', gap: 7, elevation: 8 },
   paymentButton: { position: 'absolute', right: 16, bottom: 18, height: 46, borderRadius: 23, paddingHorizontal: 16, backgroundColor: C.orange, flexDirection: 'row', alignItems: 'center', gap: 7, elevation: 8 },
   paymentButtonText: { color: C.white, fontWeight: '900', fontSize: 12 },
   modal: { flex: 1, backgroundColor: C.bg },
