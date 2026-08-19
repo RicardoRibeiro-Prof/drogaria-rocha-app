@@ -66,10 +66,10 @@ function RoleRouter() {
     return <AdminRoot session={session} profile={profile} />;
   }
 
-  return <ClientShell />;
+  return <ClientShell session={session} profile={profile} />;
 }
 
-function ClientShell() {
+function ClientShell({ session, profile }: { session: any; profile: any }) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -87,7 +87,14 @@ function ClientShell() {
           <View style={styles.clientLogoBox}>
             <Image source={require('./assets/logo-rocha-oficial.webp')} style={styles.clientLogo} resizeMode="contain" />
           </View>
-          <Text style={styles.clientBrandName}>Drogaria Rocha</Text>
+          <View style={styles.clientBrandText}>
+            <Text style={styles.clientBrandName}>Drogaria Rocha</Text>
+            {session?.user ? (
+              <Text style={styles.clientAccount} numberOfLines={1}>
+                {profile?.name || 'Cliente'} • {session.user.email}
+              </Text>
+            ) : null}
+          </View>
         </View>
 
         <View style={styles.clientCartVisual}>
@@ -127,13 +134,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   clientLogo: { width: 50, height: 50 },
+  clientBrandText: { flex: 1, minWidth: 0 },
   clientBrandName: {
-    flexShrink: 1,
     color: '#FFFFFF',
-    fontSize: 23,
-    lineHeight: 27,
+    fontSize: 22,
+    lineHeight: 25,
     fontWeight: '900',
     letterSpacing: -0.4,
+  },
+  clientAccount: {
+    color: '#FFF2E8',
+    fontSize: 9,
+    lineHeight: 12,
+    fontWeight: '800',
+    marginTop: 1,
+    paddingRight: 8,
   },
   clientCartVisual: {
     width: 44,
