@@ -9,6 +9,15 @@
     "primaryColor": "#F47A1F",
     "scheme": "drogariarocha",
     "icon": "./assets/icon.png",
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permita acesso às fotos para cadastrar imagens dos produtos da Drogaria Rocha.",
+          "microphonePermission": false
+        }
+      ]
+    ],
     "android": {
       "package": "com.ativadigitalon.drogariarocha",
       "versionCode": 1,
