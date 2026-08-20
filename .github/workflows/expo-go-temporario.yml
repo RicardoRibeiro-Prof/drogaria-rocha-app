@@ -40,32 +40,35 @@ jobs:
           echo $! > expo.pid
           for i in {1..36}; do
             sleep 5
-            if grep -q 'Tunnel ready' expo.log; then
-              break
-            fi
+            grep -q 'Tunnel ready' expo.log && break
           done
           cat expo.log
           grep -q 'Tunnel ready' expo.log
-          for i in {1..12}; do
-            curl -fsS 'http://127.0.0.1:8081/_expo/open?platform=android&runtime=expo' -o expo-open.json && break || true
-            sleep 3
-          done
-          cat expo-open.json
-          node - <<'NODE'
+
+          curl -sS -D expo-link-headers.txt -o expo-link-body.txt 'http://127.0.0.1:8081/_expo/link' || true
+          cat expo-link-headers.txt || true
+          cat expo-link-body.txt || true
+
+          LINK=$(tr -d '\r' < expo-link-headers.txt | awk 'BEGIN{IGNORECASE=1} /^location:/ {sub(/^location:[[:space:]]*/,""); print; exit}')
+
+          if [ -z "$LINK" ]; then
+            curl -fsS 'http://127.0.0.1:4040/api/tunnels' -o ngrok-tunnels.json
+            cat ngrok-tunnels.json
+            LINK=$(node - <<'NODE'
           const fs=require('fs');
-          const raw=fs.readFileSync('expo-open.json','utf8');
-          const data=JSON.parse(raw);
-          const find=(v)=>{
-            if(typeof v==='string' && v.startsWith('exp://')) return v;
-            if(Array.isArray(v)) for(const x of v){const r=find(x);if(r)return r;}
-            if(v&&typeof v==='object') for(const x of Object.values(v)){const r=find(x);if(r)return r;}
-            return null;
-          };
-          const link=find(data);
-          if(!link) throw new Error('Link exp:// não encontrado');
-          fs.writeFileSync('expo-go-link.txt',link+'\n');
-          console.log(link);
+          const data=JSON.parse(fs.readFileSync('ngrok-tunnels.json','utf8'));
+          const urls=(data.tunnels||[]).map(t=>t.public_url).filter(Boolean);
+          let u=urls.find(x=>x.includes('exp.direct')) || urls.find(x=>x.startsWith('https://')) || urls[0];
+          if(!u) process.exit(1);
+          const parsed=new URL(u);
+          process.stdout.write(`exp://${parsed.hostname}:80`);
           NODE
+          )
+          fi
+
+          echo "$LINK" > expo-go-link.txt
+          echo "EXPO_GO_LINK=$LINK"
+          grep -q '^exp://' expo-go-link.txt
       - name: Publicar link
         uses: actions/upload-artifact@v4
         with:
