@@ -1,0 +1,57 @@
+name: Expo Go temporario
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  expo-go:
+    if: contains(github.event.head_commit.message, '[expo-go]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar dependencias
+        run: npm install
+      - name: Preparar Expo Go
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='app.json';
+          const j=JSON.parse(fs.readFileSync(p,'utf8'));
+          delete j.expo.icon;
+          if(j.expo.android){
+            delete j.expo.android.icon;
+            delete j.expo.android.adaptiveIcon;
+          }
+          fs.writeFileSync(p,JSON.stringify(j,null,2));
+          NODE
+          npm install --no-save @expo/ngrok
+      - name: Iniciar tunnel
+        env:
+          CI: '1'
+        run: |
+          nohup npx expo start --tunnel > expo.log 2>&1 &
+          echo $! > expo.pid
+          for i in {1..24}; do
+            sleep 5
+            grep -Eo 'exp://[^[:space:]]+|https://[^[:space:]]+\.exp\.direct[^[:space:]]*' expo.log | head -1 > expo-go-link.txt || true
+            [ -s expo-go-link.txt ] && break
+          done
+          cat expo.log
+          echo LINK_EXPO_GO
+          cat expo-go-link.txt || true
+          test -s expo-go-link.txt
+      - name: Publicar link
+        uses: actions/upload-artifact@v4
+        with:
+          name: expo-go-link
+          path: expo-go-link.txt
+          retention-days: 1
+      - name: Manter tunnel ativo
+        run: sleep 1500
