@@ -24,18 +24,52 @@ import { supabase } from './lib/supabase';
 type Tab = 'home' | 'catalog' | 'cart' | 'account';
 type Cart = Record<number, number>;
 type SortMode = 'featured' | 'priceAsc' | 'priceDesc' | 'az';
+type AppProduct = Product & { code?: string | null };
+type Review = {
+  id: number;
+  product_id: number;
+  user_id: string;
+  reviewer_name: string;
+  rating: number;
+  comment: string;
+  created_at: string;
+};
 
 const CART_KEY = '@drogaria-rocha/cart-live';
 const WHATSAPP_NUMBER = '5589981485863';
-const C = { orange:'#F47A1F', orangeDark:'#D95F09', orangeSoft:'#FFF1E6', black:'#111111', white:'#FFFFFF', muted:'#727272', border:'#E8E8E8', bg:'#F7F7F7', whatsapp:'#198754' };
-const CATEGORY_ORDER = ['Todos','Dermocosméticos','Protetores Solares','Hidratantes','Sabonetes e Limpeza','Higiene Pessoal','Cabelos','Perfumaria','Repelentes','Medicamentos'];
+const C = {
+  orange:'#F47A1F',
+  orangeDark:'#D95F09',
+  orangeSoft:'#FFF1E6',
+  black:'#111111',
+  white:'#FFFFFF',
+  muted:'#727272',
+  border:'#E8E8E8',
+  bg:'#F7F7F7',
+  whatsapp:'#198754',
+  star:'#F6B800',
+  green:'#198754',
+};
+const CATEGORY_ORDER = [
+  'Todos','Dermocosméticos','Protetores Solares','Hidratantes','Sabonetes e Limpeza',
+  'Higiene Bucal','Higiene Pessoal','Infantil','Cuidados Femininos','Desodorantes',
+  'Cabelos','Perfumaria','Repelentes','Vitaminas','Primeiros Socorros','Medicamentos',
+];
 const money = (v:number) => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const digits = (v:string) => v.replace(/\D/g,'');
+const shortReviewerName = (name:string) => {
+  const parts=String(name||'Cliente').trim().split(/\s+/).filter(Boolean);
+  if(parts.length<=1)return parts[0]||'Cliente';
+  return `${parts[0]} ${parts[parts.length-1].charAt(0).toUpperCase()}.`;
+};
+const reviewDate = (iso:string) => {
+  try{return new Date(iso).toLocaleDateString('pt-BR',{day:'2-digit',month:'short',year:'numeric'});}catch{return '';}
+};
 
 export default function ClientApp() {
   const insets = useSafeAreaInsets();
   const [tab,setTab] = useState<Tab>('home');
-  const [products,setProducts] = useState<Product[]>(DEMO_PRODUCTS);
+  const [products,setProducts] = useState<AppProduct[]>(DEMO_PRODUCTS);
   const [loading,setLoading] = useState(true);
   const [search,setSearch] = useState('');
   const [category,setCategory] = useState('Todos');
@@ -43,11 +77,15 @@ export default function ClientApp() {
   const [cart,setCart] = useState<Cart>({});
   const [session,setSession] = useState<any>(null);
   const [profile,setProfile] = useState<any>(null);
-  const [selectedProduct,setSelectedProduct] = useState<Product|null>(null);
+  const [selectedProduct,setSelectedProduct] = useState<AppProduct|null>(null);
 
   const loadProducts = useCallback(async()=>{
     setLoading(true);
-    const {data,error} = await supabase.from('products').select('id,name,description,category,price,badge,image_url,active').eq('active',true).order('id');
+    const {data,error} = await supabase
+      .from('products')
+      .select('id,name,description,category,price,badge,image_url,active,code')
+      .eq('active',true)
+      .order('id');
     if(!error && data?.length) setProducts(data.map((x:any)=>({...x,id:Number(x.id),price:Number(x.price||0)})));
     else setProducts(DEMO_PRODUCTS);
     setLoading(false);
@@ -88,7 +126,7 @@ export default function ClientApp() {
   const cartItems = useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({...p,quantity:cart[p.id]})),[products,cart]);
   const count = cartItems.reduce((s,x)=>s+x.quantity,0);
   const total = cartItems.reduce((s,x)=>s+x.price*x.quantity,0);
-  const add = (p:Product)=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}));
+  const add = (p:AppProduct)=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}));
   const qty = (id:number,delta:number)=>setCart(c=>{ const n=Math.max(0,(c[id]||0)+delta); const u={...c,[id]:n}; if(!n) delete u[id]; return u; });
 
   const openCatalog = (cat='Todos') => {
@@ -131,21 +169,30 @@ export default function ClientApp() {
       {tab==='account'&&<Account session={session} profile={profile}/>} 
     </View>
     <Bottom tab={tab} setTab={setTab} count={count}/>
-    <ProductDetail visible={!!selectedProduct} product={selectedProduct} onClose={()=>setSelectedProduct(null)} add={(p:Product)=>{add(p);setSelectedProduct(null);}}/>
+    <ProductDetail
+      visible={!!selectedProduct}
+      product={selectedProduct}
+      session={session}
+      profile={profile}
+      cartCount={count}
+      onClose={()=>setSelectedProduct(null)}
+      add={(p:AppProduct)=>add(p)}
+    />
   </View>;
 }
 
 function Home({products,loading,add,openProduct,catalog}:any){
   const featured=useMemo(()=>{
-    const marked=products.filter((p:Product)=>Boolean(p.badge));
+    const marked=products.filter((p:AppProduct)=>Boolean(p.badge));
     const newest=[...products].reverse();
-    const ids=new Set(marked.map((p:Product)=>p.id));
-    return [...marked,...newest.filter((p:Product)=>!ids.has(p.id))].slice(0,8);
+    const ids=new Set(marked.map((p:AppProduct)=>p.id));
+    return [...marked,...newest.filter((p:AppProduct)=>!ids.has(p.id))].slice(0,8);
   },[products]);
 
   const sections=[
-    ['Protetores Solares','Protetores Solares'],
+    ['Infantil','Infantil'],
     ['Dermocosméticos','Dermocosméticos'],
+    ['Protetores Solares','Protetores Solares'],
     ['Hidratantes','Hidratantes'],
     ['Sabonetes e Limpeza','Sabonetes e Limpeza'],
     ['Cuidados com os Cabelos','Cabelos'],
@@ -154,11 +201,11 @@ function Home({products,loading,add,openProduct,catalog}:any){
 
   return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
     <View style={s.hero}><View style={{flex:1}}><Text style={s.heroSmall}>DROGARIA ROCHA</Text><Text style={s.heroTitle}>Cuidado e praticidade na palma da sua mão.</Text><Text style={s.heroText}>Escolha seus produtos e finalize a compra pelo WhatsApp.</Text><Pressable style={s.heroBtn} onPress={()=>catalog('Todos')}><Text style={s.heroBtnText}>Ver produtos</Text></Pressable></View><Ionicons name="medkit" size={70} color={C.orange}/></View>
-    <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="sparkles-outline" text="Dermocosméticos" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="sunny-outline" text="Protetores" onPress={()=>catalog('Protetores Solares')}/><Quick icon="water-outline" text="Hidratantes" onPress={()=>catalog('Hidratantes')}/><Quick icon="shield-checkmark-outline" text="Sabonetes" onPress={()=>catalog('Sabonetes e Limpeza')}/></View>
+    <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="happy-outline" text="Infantil" onPress={()=>catalog('Infantil')}/><Quick icon="sparkles-outline" text="Dermocosméticos" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="sunny-outline" text="Protetores" onPress={()=>catalog('Protetores Solares')}/><Quick icon="water-outline" text="Hidratantes" onPress={()=>catalog('Hidratantes')}/></View>
     {loading?<ActivityIndicator style={{marginTop:26}} color={C.orange}/>:<>
       <HomeSection title="Destaques" products={featured} onMore={()=>catalog('Todos')} add={add} openProduct={openProduct}/>
       {sections.map(([title,cat])=>{
-        const list=products.filter((p:Product)=>p.category===cat).slice(0,8);
+        const list=products.filter((p:AppProduct)=>p.category===cat).slice(0,8);
         return <HomeSection key={cat} title={title} products={list} onMore={()=>catalog(cat)} add={add} openProduct={openProduct}/>;
       })}
     </>}
@@ -173,7 +220,7 @@ function HomeSection({title,products,onMore,add,openProduct}:any){
       <Pressable style={s.seeMore} onPress={onMore}><Text style={s.seeMoreText}>Ver mais</Text><Ionicons name="chevron-forward" size={15} color={C.orangeDark}/></Pressable>
     </View>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.homeCarousel}>
-      {products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)} compact/>)}
+      {products.map((p:AppProduct)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)} compact/>)}
     </ScrollView>
   </View>;
 }
@@ -191,7 +238,7 @@ function Catalog({products,loading,search,setSearch,category,setCategory,categor
     <Text style={s.filterLabel}>Ordenar</Text>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.sortRow}>{sorts.map(([id,label])=><Pressable key={id} style={[s.sortChip,sort===id&&s.sortChipOn]} onPress={()=>setSort(id)}><Text style={[s.sortText,sort===id&&{color:C.orangeDark}]}>{label}</Text></Pressable>)}</ScrollView>
     <View style={s.catalogSummary}><Text style={s.resultCount}>{loading?'Carregando...':`${products.length} ${products.length===1?'produto':'produtos'}`}</Text>{hasFilters?<Pressable onPress={()=>{setCategory('Todos');setSearch('');setSort('featured');}}><Text style={s.clearFilters}>Limpar filtros</Text></Pressable>:null}</View>
-    {loading?<ActivityIndicator color={C.orange}/>:products.length?<View style={s.grid}>{products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)}/>)}</View>:<View style={s.emptyCatalog}><Ionicons name="search-outline" size={42} color={C.orange}/><Text style={s.emptyTitle}>Nenhum produto encontrado</Text><Text style={s.muted}>Tente outra categoria ou limpe os filtros.</Text></View>}
+    {loading?<ActivityIndicator color={C.orange}/>:products.length?<View style={s.grid}>{products.map((p:AppProduct)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)}/>)}</View>:<View style={s.emptyCatalog}><Ionicons name="search-outline" size={42} color={C.orange}/><Text style={s.emptyTitle}>Nenhum produto encontrado</Text><Text style={s.muted}>Tente outra categoria ou limpe os filtros.</Text></View>}
   </ScrollView>;
 }
 
@@ -216,12 +263,156 @@ function ProductCard({p,add,open,compact}:any){
   </Pressable>;
 }
 
-function ProductDetail({visible,product,onClose,add}:any){
+function Stars({value,size=18,onChange}:any){
+  return <View style={s.starsRow}>{[1,2,3,4,5].map(n=>{
+    const icon=n<=Math.round(Number(value)||0)?'star':'star-outline';
+    if(onChange)return <Pressable key={n} onPress={()=>onChange(n)} hitSlop={5}><Ionicons name={icon} size={size} color={C.star}/></Pressable>;
+    return <Ionicons key={n} name={icon} size={size} color={C.star}/>;
+  })}</View>;
+}
+
+function ProductDetail({visible,product,onClose,add,session,profile,cartCount}:any){
   const[detailImageFailed,setDetailImageFailed]=useState(false);
-  useEffect(()=>setDetailImageFailed(false),[product?.id,product?.image_url,visible]);
-  if(!product) return null;
-  const detailImageUri = product.image_url ? `${product.image_url}${product.image_url.includes('?')?'&':'?'}detail=${product.id}` : '';
-  return <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}><SafeAreaView style={s.modal} edges={['top','bottom','left','right']}><View style={s.detailHeader}><Pressable style={s.backBtn} onPress={onClose}><Ionicons name="arrow-back" size={24} color={C.black}/></Pressable><Text style={s.detailHeaderTitle}>Detalhes do produto</Text><View style={{width:42}}/></View><ScrollView contentContainerStyle={s.detailPage}><View style={s.detailImageBox}>{detailImageUri&&!detailImageFailed?<Image key={`${product.id}-${detailImageUri}`} source={{uri:detailImageUri}} style={s.detailImage} resizeMode="contain" onError={()=>setDetailImageFailed(true)}/>:<View style={[s.detailImage,s.imageFallback]}><Ionicons name="medical-outline" size={58} color={C.orange}/></View>}</View>{product.badge?<Text style={s.detailBadge}>{product.badge}</Text>:null}<Text style={s.detailName}>{product.name}</Text><Text style={s.detailCategory}>{product.category}</Text><Text style={s.detailPrice}>{money(product.price)}</Text><View style={s.detailSection}><Text style={s.detailSectionTitle}>Descrição</Text><Text style={s.detailDescription}>{product.description?.trim() || 'Descrição não informada.'}</Text></View><View style={s.detailInfo}><Ionicons name="information-circle-outline" size={21} color={C.orange}/><Text style={s.detailInfoText}>Em caso de medicamentos, a dispensação segue as exigências legais e pode depender de análise de receita.</Text></View><Pressable style={s.primary} onPress={()=>add(product)}><Ionicons name="bag-add-outline" size={20} color={C.white}/><Text style={s.primaryText}>Adicionar ao carrinho</Text></Pressable></ScrollView></SafeAreaView></Modal>;
+  const[reviews,setReviews]=useState<Review[]>([]);
+  const[reviewsLoading,setReviewsLoading]=useState(false);
+  const[reviewRating,setReviewRating]=useState(0);
+  const[reviewComment,setReviewComment]=useState('');
+  const[savingReview,setSavingReview]=useState(false);
+
+  const loadReviews=useCallback(async()=>{
+    if(!product?.id)return;
+    setReviewsLoading(true);
+    const{data,error}=await supabase
+      .from('product_reviews')
+      .select('id,product_id,user_id,reviewer_name,rating,comment,created_at')
+      .eq('product_id',product.id)
+      .order('created_at',{ascending:false});
+    const list=!error&&data?data.map((x:any)=>({...x,id:Number(x.id),product_id:Number(x.product_id),rating:Number(x.rating)})):[];
+    setReviews(list);
+    const mine=session?.user?.id?list.find((x:Review)=>x.user_id===session.user.id):null;
+    setReviewRating(mine?.rating||0);
+    setReviewComment(mine?.comment||'');
+    setReviewsLoading(false);
+  },[product?.id,session?.user?.id]);
+
+  useEffect(()=>{
+    setDetailImageFailed(false);
+    if(visible&&product?.id)loadReviews();
+  },[product?.id,product?.image_url,visible,loadReviews]);
+
+  const saveReview=async()=>{
+    if(!session?.user)return Alert.alert('Entre na sua conta','É necessário estar logado para avaliar um produto.');
+    if(reviewRating<1)return Alert.alert('Avaliação','Escolha de 1 a 5 estrelas.');
+    setSavingReview(true);
+    const rawName=profile?.name||session.user.user_metadata?.name||'Cliente';
+    const payload={
+      product_id:product.id,
+      user_id:session.user.id,
+      reviewer_name:shortReviewerName(rawName),
+      rating:reviewRating,
+      comment:reviewComment.trim(),
+      updated_at:new Date().toISOString(),
+    };
+    const{error}=await supabase.from('product_reviews').upsert(payload,{onConflict:'product_id,user_id'});
+    setSavingReview(false);
+    if(error)return Alert.alert('Avaliação','Não foi possível salvar sua avaliação agora.');
+    await loadReviews();
+    Alert.alert('Obrigado!','Sua avaliação foi salva.');
+  };
+
+  if(!product)return null;
+
+  const average=reviews.length?reviews.reduce((sum,x)=>sum+x.rating,0)/reviews.length:0;
+  const recommend=reviews.length?Math.round((reviews.filter(x=>x.rating>=4).length/reviews.length)*100):0;
+  const detailImageUri=product.image_url?`${product.image_url}${product.image_url.includes('?')?'&':'?'}detail=${product.id}`:'';
+
+  return <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
+    <SafeAreaView style={s.modal} edges={['top','bottom','left','right']}>
+      <View style={s.detailHeader}>
+        <Pressable style={s.backBtn} onPress={onClose}><Ionicons name="arrow-back" size={25} color={C.black}/></Pressable>
+        <Text style={s.detailHeaderTitle}>Detalhes do produto</Text>
+        <View style={s.detailCartIcon}><Ionicons name="bag-handle-outline" size={25} color={C.black}/>{cartCount>0?<View style={s.detailCartBadge}><Text style={s.detailCartBadgeText}>{cartCount}</Text></View>:null}</View>
+      </View>
+
+      <ScrollView style={{flex:1}} contentContainerStyle={s.detailPage} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        <View style={s.detailImageBox}>
+          {detailImageUri&&!detailImageFailed?<Image key={`${product.id}-${detailImageUri}`} source={{uri:detailImageUri}} style={s.detailImage} resizeMode="contain" onError={()=>setDetailImageFailed(true)}/>:<View style={[s.detailImage,s.imageFallback]}><Ionicons name="medical-outline" size={58} color={C.orange}/></View>}
+        </View>
+
+        <View style={s.detailMetaRow}>
+          <Text style={s.detailCategory}>{product.category}</Text>
+          {product.code?<Text style={s.detailSku}>SKU: {product.code}</Text>:null}
+        </View>
+        {product.badge?<Text style={s.detailBadge}>{product.badge}</Text>:null}
+        <Text style={s.detailName}>{product.name}</Text>
+        <Text style={s.detailSeller}>Vendido por <Text style={{fontWeight:'900'}}>Drogaria Rocha</Text></Text>
+        <Text style={s.detailDescriptionTop}>{product.description?.trim()||'Informações do produto disponíveis no atendimento da Drogaria Rocha.'}</Text>
+
+        <View style={s.priceCard}>
+          <View><Text style={s.priceCardLabel}>Preço no aplicativo</Text><Text style={s.priceCardValue}>{money(product.price)}</Text></View>
+          <View style={s.priceCardTag}><Ionicons name="checkmark-circle" size={16} color={C.green}/><Text style={s.priceCardTagText}>Preço do pedido</Text></View>
+        </View>
+
+        <View style={s.detailSection}>
+          <Text style={s.detailSectionTitle}>Descrição</Text>
+          <Text style={s.detailDescription}>{product.description?.trim() || 'Descrição não informada.'}</Text>
+        </View>
+
+        {product.category==='Medicamentos'?<View style={s.detailInfo}><Ionicons name="information-circle-outline" size={21} color={C.orange}/><Text style={s.detailInfoText}>A dispensação de medicamentos segue as exigências legais e pode depender de análise de receita.</Text></View>:null}
+
+        <View style={s.reviewSection}>
+          <Text style={s.reviewTitle}>Avaliações dos clientes</Text>
+          {reviewsLoading?<ActivityIndicator color={C.orange} style={{marginVertical:24}}/>:<>
+            {reviews.length?<>
+              <View style={s.reviewSummary}>
+                <View style={{flex:1}}><View style={s.reviewScoreLine}><Text style={s.reviewScore}>{average.toFixed(1)}</Text><Stars value={average} size={25}/></View><Text style={s.reviewBased}>Baseado em {reviews.length} {reviews.length===1?'avaliação':'avaliações'}</Text></View>
+                <View style={s.recommendCircle}><Text style={s.recommendNumber}>{recommend}%</Text><Text style={s.recommendLabel}>recomendam</Text></View>
+              </View>
+              <View style={s.histogram}>
+                {[5,4,3,2,1].map(star=>{
+                  const amount=reviews.filter(x=>x.rating===star).length;
+                  const pct=reviews.length?(amount/reviews.length)*100:0;
+                  return <View key={star} style={s.histRow}><View style={s.histStars}><Text style={s.histNumber}>{star}</Text><Ionicons name="star" size={14} color={C.star}/></View><View style={s.histTrack}><View style={[s.histFill,{width:`${pct}%`}]} /></View><Text style={s.histCount}>{amount}</Text></View>;
+                })}
+              </View>
+            </>:<View style={s.noReviews}><Ionicons name="chatbox-ellipses-outline" size={36} color={C.orange}/><Text style={s.noReviewsTitle}>Ainda sem avaliações</Text><Text style={s.noReviewsText}>Se você já conhece este produto, seja o primeiro a avaliá-lo.</Text></View>}
+
+            <View style={s.reviewForm}>
+              <Text style={s.reviewFormTitle}>{session?.user?'Sua avaliação':'Quer avaliar este produto?'}</Text>
+              {session?.user?<>
+                <Text style={s.reviewFormHint}>Toque nas estrelas para dar sua nota.</Text>
+                <Stars value={reviewRating} size={31} onChange={setReviewRating}/>
+                <TextInput
+                  value={reviewComment}
+                  onChangeText={setReviewComment}
+                  placeholder="Conte como foi sua experiência com o produto..."
+                  placeholderTextColor="#999"
+                  multiline
+                  maxLength={1000}
+                  style={s.reviewInput}
+                />
+                <Pressable style={s.reviewButton} onPress={saveReview} disabled={savingReview}>{savingReview?<ActivityIndicator color={C.white}/>:<Text style={s.reviewButtonText}>Salvar avaliação</Text>}</Pressable>
+              </>:<View style={s.reviewLoginNote}><Ionicons name="person-circle-outline" size={22} color={C.orange}/><Text style={s.reviewLoginText}>Entre na sua conta para publicar uma avaliação.</Text></View>}
+            </View>
+
+            {reviews.length?<View style={s.reviewList}>
+              <Text style={s.reviewListTitle}>Principais avaliações</Text>
+              {reviews.map(r=><View key={r.id} style={s.reviewCard}>
+                <View style={s.reviewCardTop}><Text style={s.reviewerName}>{r.reviewer_name||'Cliente'}</Text><Text style={s.reviewDate}>{reviewDate(r.created_at)}</Text></View>
+                <Stars value={r.rating} size={19}/>
+                {r.comment?<Text style={s.reviewComment}>{r.comment}</Text>:<Text style={s.reviewCommentMuted}>O cliente avaliou o produto sem deixar comentário.</Text>}
+              </View>)}
+            </View>:null}
+          </>}
+        </View>
+      </ScrollView>
+
+      <View style={s.detailBottomBar}>
+        <View style={{flex:1}}><Text style={s.detailBottomLabel}>Preço</Text><Text style={s.detailBottomPrice}>{money(product.price)}</Text></View>
+        <Pressable style={s.detailBuyButton} onPress={()=>{add(product);Alert.alert('Carrinho','Produto adicionado ao carrinho.');}}><Ionicons name="bag-add-outline" size={22} color={C.white}/><Text style={s.detailBuyText}>Adicionar</Text></Pressable>
+      </View>
+    </SafeAreaView>
+  </Modal>;
 }
 
 function Cart({items,total,qty,catalog,checkout,session,account}:any){
@@ -268,7 +459,13 @@ const s=StyleSheet.create({
   homeSection:{marginTop:26},homeSectionHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:11},homeSectionTitle:{fontSize:20,fontWeight:'900',color:C.black,flex:1},seeMore:{flexDirection:'row',alignItems:'center',paddingVertical:6,paddingLeft:12},seeMoreText:{fontSize:12,fontWeight:'900',color:C.orangeDark},homeCarousel:{gap:10,paddingRight:6},
   search:{height:50,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:8},filterLabel:{fontSize:12,fontWeight:'900',color:C.black,marginTop:14,marginBottom:8},chip:{height:38,paddingHorizontal:13,borderRadius:19,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipOn:{backgroundColor:C.black,borderColor:C.black},chipText:{fontSize:11,fontWeight:'800'},sortRow:{gap:7,paddingBottom:10},sortChip:{height:34,paddingHorizontal:11,borderRadius:11,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},sortChipOn:{backgroundColor:C.orangeSoft,borderColor:C.orange},sortText:{fontSize:10,fontWeight:'900',color:C.muted},catalogSummary:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginTop:4,marginBottom:12},resultCount:{fontSize:12,fontWeight:'900',color:C.black},clearFilters:{fontSize:11,fontWeight:'900',color:C.orangeDark},grid:{flexDirection:'row',flexWrap:'wrap',gap:10},emptyCatalog:{alignItems:'center',justifyContent:'center',paddingVertical:50},
   product:{width:'48%',minHeight:265,backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:12},productCompact:{width:152,minHeight:255},productImg:{height:104,borderRadius:14,backgroundColor:C.white,borderWidth:1,borderColor:'#EFEFEF',overflow:'hidden',alignItems:'center',justifyContent:'center'},productImageReal:{width:'100%',height:'100%'},imageFallback:{alignItems:'center',justifyContent:'center',backgroundColor:C.orangeSoft},badge:{alignSelf:'flex-start',marginTop:7,fontSize:9,fontWeight:'900',color:C.orangeDark,backgroundColor:C.orangeSoft,paddingHorizontal:7,paddingVertical:3,borderRadius:6},productName:{fontSize:14,fontWeight:'900',color:C.black,marginTop:7},productDesc:{fontSize:11,color:C.muted,marginTop:3},productBottom:{marginTop:'auto',paddingTop:9,flexDirection:'row',alignItems:'center'},price:{fontWeight:'900',fontSize:15,flex:1},add:{width:34,height:34,borderRadius:11,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailsHint:{fontSize:9,color:C.orangeDark,fontWeight:'800',marginTop:7},
-  detailHeader:{height:62,backgroundColor:C.white,borderBottomWidth:1,borderBottomColor:C.border,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},backBtn:{width:42,height:42,borderRadius:13,backgroundColor:C.bg,alignItems:'center',justifyContent:'center'},detailHeaderTitle:{fontSize:17,fontWeight:'900'},detailPage:{padding:18,paddingBottom:38},detailImageBox:{height:290,width:'100%',borderRadius:22,backgroundColor:C.white,borderWidth:1,borderColor:C.border,overflow:'hidden',alignItems:'center',justifyContent:'center'},detailImage:{width:'100%',height:'100%'},detailBadge:{alignSelf:'flex-start',marginTop:16,backgroundColor:C.orangeSoft,color:C.orangeDark,fontWeight:'900',fontSize:11,paddingHorizontal:10,paddingVertical:6,borderRadius:8},detailName:{fontSize:27,fontWeight:'900',color:C.black,marginTop:14},detailCategory:{fontSize:12,color:C.muted,fontWeight:'800',marginTop:4},detailPrice:{fontSize:26,fontWeight:'900',color:C.orange,marginTop:14},detailSection:{marginTop:22,paddingTop:18,borderTopWidth:1,borderTopColor:C.border},detailSectionTitle:{fontSize:16,fontWeight:'900',marginBottom:8},detailDescription:{fontSize:14,color:'#444',lineHeight:21},detailInfo:{marginTop:18,backgroundColor:C.orangeSoft,borderRadius:14,padding:12,flexDirection:'row',gap:8},detailInfoText:{flex:1,fontSize:11,color:'#333',lineHeight:16},
+
+  detailHeader:{height:62,backgroundColor:C.white,borderBottomWidth:1,borderBottomColor:C.border,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},backBtn:{width:42,height:42,borderRadius:13,backgroundColor:C.bg,alignItems:'center',justifyContent:'center'},detailHeaderTitle:{fontSize:18,fontWeight:'900',color:C.black},detailCartIcon:{width:42,height:42,alignItems:'center',justifyContent:'center'},detailCartBadge:{position:'absolute',right:0,top:0,minWidth:18,height:18,borderRadius:9,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailCartBadgeText:{color:C.white,fontSize:9,fontWeight:'900'},detailPage:{padding:18,paddingBottom:35},detailImageBox:{height:330,width:'100%',backgroundColor:C.white,alignItems:'center',justifyContent:'center',overflow:'hidden'},detailImage:{width:'100%',height:'100%'},detailMetaRow:{marginTop:16,flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10},detailCategory:{fontSize:14,color:C.orangeDark,fontWeight:'900',flex:1},detailSku:{fontSize:11,color:C.muted,fontWeight:'700'},detailBadge:{alignSelf:'flex-start',marginTop:12,backgroundColor:C.orangeSoft,color:C.orangeDark,fontWeight:'900',fontSize:11,paddingHorizontal:10,paddingVertical:6,borderRadius:8},detailName:{fontSize:28,lineHeight:34,fontWeight:'900',color:C.black,marginTop:12},detailSeller:{fontSize:13,color:'#555',marginTop:9},detailDescriptionTop:{fontSize:14,color:C.muted,lineHeight:20,marginTop:13},priceCard:{marginTop:20,borderRadius:18,borderWidth:2,borderColor:C.orange,padding:16,backgroundColor:C.white,flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:12},priceCardLabel:{fontSize:11,color:C.muted,fontWeight:'800'},priceCardValue:{fontSize:28,fontWeight:'900',color:C.black,marginTop:3},priceCardTag:{flexDirection:'row',alignItems:'center',gap:5,backgroundColor:'#EAF8EF',paddingHorizontal:9,paddingVertical:7,borderRadius:9},priceCardTagText:{fontSize:10,fontWeight:'900',color:C.green},detailSection:{marginTop:24,paddingTop:19,borderTopWidth:1,borderTopColor:C.border},detailSectionTitle:{fontSize:18,fontWeight:'900',marginBottom:9},detailDescription:{fontSize:14,color:'#444',lineHeight:21},detailInfo:{marginTop:18,backgroundColor:C.orangeSoft,borderRadius:14,padding:12,flexDirection:'row',gap:8},detailInfoText:{flex:1,fontSize:11,color:'#333',lineHeight:16},
+
+  reviewSection:{marginTop:28,paddingTop:23,borderTopWidth:1,borderTopColor:C.border},reviewTitle:{fontSize:22,fontWeight:'900',color:C.black,marginBottom:17},starsRow:{flexDirection:'row',alignItems:'center',gap:3},reviewSummary:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:17,flexDirection:'row',alignItems:'center',gap:14},reviewScoreLine:{flexDirection:'row',alignItems:'center',gap:10},reviewScore:{fontSize:38,fontWeight:'900',color:C.black},reviewBased:{fontSize:12,color:C.muted,marginTop:5},recommendCircle:{width:84,height:84,borderRadius:42,borderWidth:5,borderColor:C.green,alignItems:'center',justifyContent:'center'},recommendNumber:{fontSize:19,fontWeight:'900',color:C.green},recommendLabel:{fontSize:9,color:C.muted,fontWeight:'800'},histogram:{marginTop:16,backgroundColor:C.white,borderRadius:16,borderWidth:1,borderColor:C.border,padding:14,gap:8},histRow:{flexDirection:'row',alignItems:'center',gap:8},histStars:{width:35,flexDirection:'row',alignItems:'center',gap:3},histNumber:{fontSize:11,fontWeight:'900'},histTrack:{height:9,backgroundColor:'#ECEFF1',borderRadius:6,overflow:'hidden',flex:1},histFill:{height:'100%',backgroundColor:C.star,borderRadius:6},histCount:{width:20,textAlign:'right',fontSize:11,color:C.muted,fontWeight:'800'},noReviews:{alignItems:'center',backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:22},noReviewsTitle:{fontSize:17,fontWeight:'900',marginTop:8},noReviewsText:{fontSize:12,color:C.muted,textAlign:'center',lineHeight:18,marginTop:5},reviewForm:{marginTop:17,backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:16},reviewFormTitle:{fontSize:17,fontWeight:'900'},reviewFormHint:{fontSize:11,color:C.muted,marginTop:5,marginBottom:10},reviewInput:{minHeight:95,marginTop:14,borderWidth:1,borderColor:C.border,borderRadius:13,padding:12,textAlignVertical:'top',color:C.black,backgroundColor:'#FAFAFA'},reviewButton:{height:48,marginTop:11,borderRadius:13,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},reviewButtonText:{color:C.white,fontWeight:'900'},reviewLoginNote:{marginTop:10,flexDirection:'row',alignItems:'center',gap:7,backgroundColor:C.orangeSoft,borderRadius:12,padding:11},reviewLoginText:{flex:1,fontSize:11,color:'#444',fontWeight:'700'},reviewList:{marginTop:23},reviewListTitle:{fontSize:19,fontWeight:'900',marginBottom:11},reviewCard:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:16,padding:15,marginBottom:10},reviewCardTop:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',gap:10,marginBottom:7},reviewerName:{fontSize:14,fontWeight:'900',color:C.black},reviewDate:{fontSize:10,color:C.muted},reviewComment:{fontSize:13,color:'#333',lineHeight:19,marginTop:10},reviewCommentMuted:{fontSize:12,color:C.muted,lineHeight:18,marginTop:10,fontStyle:'italic'},
+
+  detailBottomBar:{minHeight:78,backgroundColor:C.white,borderTopWidth:1,borderTopColor:C.border,paddingHorizontal:18,paddingVertical:10,flexDirection:'row',alignItems:'center',gap:14},detailBottomLabel:{fontSize:10,color:C.muted,fontWeight:'800'},detailBottomPrice:{fontSize:25,fontWeight:'900',color:C.black,marginTop:2},detailBuyButton:{minWidth:158,height:54,borderRadius:14,backgroundColor:C.orange,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8,paddingHorizontal:17},detailBuyText:{color:C.white,fontSize:15,fontWeight:'900'},
+
   empty:{flex:1,alignItems:'center',justifyContent:'center',padding:25},emptyTitle:{fontSize:19,fontWeight:'900',marginTop:10},primary:{minHeight:50,borderRadius:14,backgroundColor:C.orange,alignItems:'center',justifyContent:'center',paddingHorizontal:18,marginTop:13,flexDirection:'row',gap:7},primaryText:{color:C.white,fontWeight:'900'},cartItem:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:16,padding:13,marginBottom:9,flexDirection:'row',alignItems:'center'},muted:{fontSize:12,color:C.muted,marginTop:4},qty:{flexDirection:'row',alignItems:'center',gap:7},total:{backgroundColor:C.black,borderRadius:16,padding:17,flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginTop:7},totalValue:{color:C.orange,fontWeight:'900',fontSize:21},loginRequired:{marginTop:12,padding:12,borderRadius:14,backgroundColor:C.orangeSoft,flexDirection:'row',alignItems:'center',gap:8},loginRequiredTitle:{fontSize:12,fontWeight:'900'},loginRequiredText:{fontSize:10,color:C.muted,marginTop:2},whatsappNotice:{marginTop:12,padding:12,borderRadius:14,backgroundColor:'#EAF8EF',borderWidth:1,borderColor:'#CBEBD7',flexDirection:'row',alignItems:'center',gap:9},whatsappNoticeText:{flex:1,fontSize:11,color:'#23452E',lineHeight:16,fontWeight:'700'},whatsappButton:{minHeight:52,borderRadius:14,backgroundColor:C.whatsapp,alignItems:'center',justifyContent:'center',paddingHorizontal:16,marginTop:14,flexDirection:'row',gap:8},
   account:{backgroundColor:C.black,borderRadius:20,padding:17,flexDirection:'row',alignItems:'center',gap:11},avatar:{width:50,height:50,borderRadius:16,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},accountName:{color:C.white,fontWeight:'900',fontSize:17},accountEmail:{color:'#CCC',fontSize:12,marginTop:3},accountActive:{color:C.orange,fontSize:10,fontWeight:'900',marginTop:5},secondary:{minHeight:48,borderRadius:14,borderWidth:1,borderColor:C.border,backgroundColor:C.white,alignItems:'center',justifyContent:'center',marginTop:13},secondaryText:{fontWeight:'900'},authTabs:{flexDirection:'row',backgroundColor:'#EEE',padding:4,borderRadius:13,marginBottom:14},authTab:{flex:1,height:40,alignItems:'center',justifyContent:'center',borderRadius:10},authOn:{backgroundColor:C.white},fieldLabel:{fontSize:12,fontWeight:'900',marginBottom:6},input:{minHeight:48,borderRadius:13,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:12,color:C.black},
   modal:{flex:1,backgroundColor:C.bg},
