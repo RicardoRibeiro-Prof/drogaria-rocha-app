@@ -17,16 +17,18 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CATEGORIES, DEMO_PRODUCTS, Product } from './data/demoProducts';
+import { DEMO_PRODUCTS, Product } from './data/demoProducts';
 import { supabase } from './lib/supabase';
 
 type Tab = 'home' | 'catalog' | 'cart' | 'orders' | 'account';
 type Cart = Record<number, number>;
+type SortMode = 'featured' | 'priceAsc' | 'priceDesc' | 'az';
 type PaymentMethod = { code: string; label: string; instructions: string; pix_key?: string | null; sort_order: number };
 type Order = { id?: string; code: string; store_id: number; fulfillment: string; payment_method: string; total: number; status: string; created_at: string };
 
 const CART_KEY = '@drogaria-rocha/cart-live';
 const C = { orange:'#F47A1F', orangeDark:'#D95F09', orangeSoft:'#FFF1E6', black:'#111111', white:'#FFFFFF', muted:'#727272', border:'#E8E8E8', bg:'#F7F7F7' };
+const CATEGORY_ORDER = ['Todos','Dermocosméticos','Protetores Solares','Hidratantes','Sabonetes e Limpeza','Higiene Pessoal','Cabelos','Perfumaria','Repelentes','Medicamentos'];
 const money = (v:number) => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const digits = (v:string) => v.replace(/\D/g,'');
 const STATUS: Record<string,string> = { received:'Pedido recebido', confirmed:'Confirmado', separating:'Em separação', ready:'Pronto para retirada', out_for_delivery:'Saiu para entrega', delivered:'Entregue', cancelled:'Cancelado' };
@@ -43,6 +45,7 @@ export default function ClientApp() {
   const [loading,setLoading] = useState(true);
   const [search,setSearch] = useState('');
   const [category,setCategory] = useState('Todos');
+  const [sort,setSort] = useState<SortMode>('featured');
   const [cart,setCart] = useState<Cart>({});
   const [session,setSession] = useState<any>(null);
   const [profile,setProfile] = useState<any>(null);
@@ -82,11 +85,22 @@ export default function ClientApp() {
   useEffect(()=>{ AsyncStorage.setItem(CART_KEY,JSON.stringify(cart)); },[cart]);
   useEffect(()=>{ if(tab==='orders') loadOrders(); },[tab,loadOrders]);
 
-  const categories = useMemo(()=>Array.from(new Set([...CATEGORIES,...products.map(p=>p.category).filter(Boolean)])),[products]);
-  const filtered = useMemo(()=>products.filter(p=>{
+  const categories = useMemo(()=>{
+    const available = new Set(products.map(p=>p.category).filter(Boolean));
+    const ordered = CATEGORY_ORDER.filter(x=>x==='Todos'||available.has(x));
+    const extras = Array.from(available).filter(x=>!CATEGORY_ORDER.includes(x)).sort();
+    return [...ordered,...extras];
+  },[products]);
+
+  const filtered = useMemo(()=>{
     const t=search.trim().toLowerCase();
-    return (category==='Todos'||p.category===category) && (!t || `${p.name} ${p.description} ${p.category}`.toLowerCase().includes(t));
-  }),[products,search,category]);
+    const list=products.filter(p=>(category==='Todos'||p.category===category) && (!t || `${p.name} ${p.description} ${p.category}`.toLowerCase().includes(t)));
+    if(sort==='priceAsc') return [...list].sort((a,b)=>a.price-b.price);
+    if(sort==='priceDesc') return [...list].sort((a,b)=>b.price-a.price);
+    if(sort==='az') return [...list].sort((a,b)=>a.name.localeCompare(b.name,'pt-BR'));
+    return list;
+  },[products,search,category,sort]);
+
   const cartItems = useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({...p,quantity:cart[p.id]})),[products,cart]);
   const count = cartItems.reduce((s,x)=>s+x.quantity,0);
   const total = cartItems.reduce((s,x)=>s+x.price*x.quantity,0);
@@ -109,7 +123,7 @@ export default function ClientApp() {
     <View style={{height:68+insets.top}} />
     <View style={s.content}>
       {tab==='home'&&<Home products={products.slice(0,6)} loading={loading} add={add} openProduct={setSelectedProduct} catalog={(cat?:string)=>{if(cat)setCategory(cat);setTab('catalog');}}/>}
-      {tab==='catalog'&&<Catalog products={filtered} loading={loading} search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={categories} add={add} openProduct={setSelectedProduct}/>} 
+      {tab==='catalog'&&<Catalog products={filtered} loading={loading} search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={categories} sort={sort} setSort={setSort} add={add} openProduct={setSelectedProduct}/>} 
       {tab==='cart'&&<Cart items={cartItems} total={total} qty={qty} catalog={()=>setTab('catalog')} checkout={requestCheckout} session={session} account={()=>setTab('account')}/>} 
       {tab==='orders'&&<Orders orders={orders} session={session} account={()=>setTab('account')}/>} 
       {tab==='account'&&<Account session={session} profile={profile}/>} 
@@ -123,14 +137,27 @@ export default function ClientApp() {
 function Home({products,loading,add,openProduct,catalog}:any){
   return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
     <View style={s.hero}><View style={{flex:1}}><Text style={s.heroSmall}>DROGARIA ROCHA</Text><Text style={s.heroTitle}>Cuidado e praticidade na palma da sua mão.</Text><Text style={s.heroText}>Compre e acompanhe seus pedidos pelo aplicativo.</Text><Pressable style={s.heroBtn} onPress={()=>catalog()}><Text style={s.heroBtnText}>Ver produtos</Text></Pressable></View><Ionicons name="medkit" size={70} color={C.orange}/></View>
-    <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="medical-outline" text="Medicamentos" onPress={()=>catalog('Medicamentos')}/><Quick icon="sparkles-outline" text="Beleza" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="shield-checkmark-outline" text="Higiene" onPress={()=>catalog('Higiene')}/><Quick icon="nutrition-outline" text="Vitaminas" onPress={()=>catalog('Vitaminas')}/></View>
+    <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="sparkles-outline" text="Dermocosméticos" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="sunny-outline" text="Protetores" onPress={()=>catalog('Protetores Solares')}/><Quick icon="water-outline" text="Hidratantes" onPress={()=>catalog('Hidratantes')}/><Quick icon="shield-checkmark-outline" text="Sabonetes" onPress={()=>catalog('Sabonetes e Limpeza')}/></View>
     <Text style={s.section}>Destaques</Text>{loading?<ActivityIndicator color={C.orange}/>:<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:10}}>{products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)} compact/>)}</ScrollView>}
   </ScrollView>;
 }
 
 function Quick({icon,text,onPress}:any){return <Pressable style={s.quickItem} onPress={onPress}><View style={s.quickIcon}><Ionicons name={icon} size={25} color={C.orange}/></View><Text style={s.quickText}>{text}</Text></Pressable>}
 
-function Catalog({products,loading,search,setSearch,category,setCategory,categories,add,openProduct}:any){return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Catálogo</Text><View style={s.search}><Ionicons name="search-outline" size={20} color={C.muted}/><TextInput value={search} onChangeText={setSearch} placeholder="Buscar produto..." placeholderTextColor="#999" style={{flex:1}}/></View><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:7,paddingVertical:12}}>{categories.map((x:string)=><Pressable key={x} style={[s.chip,category===x&&s.chipOn]} onPress={()=>setCategory(x)}><Text style={[s.chipText,category===x&&{color:C.white}]}>{x}</Text></Pressable>)}</ScrollView>{loading?<ActivityIndicator color={C.orange}/>:<View style={s.grid}>{products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)}/>)}</View>}</ScrollView>}
+function Catalog({products,loading,search,setSearch,category,setCategory,categories,sort,setSort,add,openProduct}:any){
+  const sorts:[SortMode,string][]=[['featured','Padrão'],['priceAsc','Menor preço'],['priceDesc','Maior preço'],['az','A–Z']];
+  const hasFilters=category!=='Todos'||search.trim()||sort!=='featured';
+  return <ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled">
+    <Text style={s.title}>Catálogo</Text>
+    <View style={s.search}><Ionicons name="search-outline" size={20} color={C.muted}/><TextInput value={search} onChangeText={setSearch} placeholder="Buscar produto..." placeholderTextColor="#999" style={{flex:1}}/>{search?<Pressable onPress={()=>setSearch('')}><Ionicons name="close-circle" size={20} color={C.muted}/></Pressable>:null}</View>
+    <Text style={s.filterLabel}>Categorias</Text>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:7,paddingBottom:10}}>{categories.map((x:string)=><Pressable key={x} style={[s.chip,category===x&&s.chipOn]} onPress={()=>setCategory(x)}><Text style={[s.chipText,category===x&&{color:C.white}]}>{x}</Text></Pressable>)}</ScrollView>
+    <Text style={s.filterLabel}>Ordenar</Text>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.sortRow}>{sorts.map(([id,label])=><Pressable key={id} style={[s.sortChip,sort===id&&s.sortChipOn]} onPress={()=>setSort(id)}><Text style={[s.sortText,sort===id&&{color:C.orangeDark}]}>{label}</Text></Pressable>)}</ScrollView>
+    <View style={s.catalogSummary}><Text style={s.resultCount}>{loading?'Carregando...':`${products.length} ${products.length===1?'produto':'produtos'}`}</Text>{hasFilters?<Pressable onPress={()=>{setCategory('Todos');setSearch('');setSort('featured');}}><Text style={s.clearFilters}>Limpar filtros</Text></Pressable>:null}</View>
+    {loading?<ActivityIndicator color={C.orange}/>:products.length?<View style={s.grid}>{products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)}/>)}</View>:<View style={s.emptyCatalog}><Ionicons name="search-outline" size={42} color={C.orange}/><Text style={s.emptyTitle}>Nenhum produto encontrado</Text><Text style={s.muted}>Tente outra categoria ou limpe os filtros.</Text></View>}
+  </ScrollView>;
+}
 
 function ProductImage({uri,style}:any){
   const[failed,setFailed]=useState(false);
@@ -245,7 +272,7 @@ const s=StyleSheet.create({
   app:{flex:1,backgroundColor:C.bg},content:{flex:1},page:{padding:18,paddingBottom:36},title:{fontSize:28,fontWeight:'900',color:C.black,marginBottom:16},
   hero:{backgroundColor:C.black,borderRadius:23,padding:20,minHeight:205,flexDirection:'row',alignItems:'center',gap:10},heroSmall:{color:C.orange,fontSize:11,fontWeight:'900'},heroTitle:{color:C.white,fontSize:24,lineHeight:29,fontWeight:'900',marginTop:7},heroText:{color:'#CCC',fontSize:13,lineHeight:18,marginTop:7},heroBtn:{marginTop:14,alignSelf:'flex-start',backgroundColor:C.orange,borderRadius:12,paddingHorizontal:15,paddingVertical:11},heroBtnText:{color:C.white,fontWeight:'900'},
   section:{fontSize:19,fontWeight:'900',marginTop:22,marginBottom:11,color:C.black},quick:{flexDirection:'row',flexWrap:'wrap',gap:9},quickItem:{width:'48%',backgroundColor:C.white,borderRadius:16,borderWidth:1,borderColor:C.border,padding:13,flexDirection:'row',alignItems:'center',gap:8},quickIcon:{width:40,height:40,borderRadius:12,backgroundColor:C.orangeSoft,alignItems:'center',justifyContent:'center'},quickText:{fontWeight:'800',fontSize:12,flex:1},
-  search:{height:50,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:8},chip:{height:36,paddingHorizontal:12,borderRadius:18,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipOn:{backgroundColor:C.black,borderColor:C.black},chipText:{fontSize:11,fontWeight:'800'},grid:{flexDirection:'row',flexWrap:'wrap',gap:10},
+  search:{height:50,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:8},filterLabel:{fontSize:12,fontWeight:'900',color:C.black,marginTop:14,marginBottom:8},chip:{height:38,paddingHorizontal:13,borderRadius:19,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipOn:{backgroundColor:C.black,borderColor:C.black},chipText:{fontSize:11,fontWeight:'800'},sortRow:{gap:7,paddingBottom:10},sortChip:{height:34,paddingHorizontal:11,borderRadius:11,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},sortChipOn:{backgroundColor:C.orangeSoft,borderColor:C.orange},sortText:{fontSize:10,fontWeight:'900',color:C.muted},catalogSummary:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginTop:4,marginBottom:12},resultCount:{fontSize:12,fontWeight:'900',color:C.black},clearFilters:{fontSize:11,fontWeight:'900',color:C.orangeDark},grid:{flexDirection:'row',flexWrap:'wrap',gap:10},emptyCatalog:{alignItems:'center',justifyContent:'center',paddingVertical:50},
   product:{width:'48%',minHeight:265,backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:12},productImg:{height:104,borderRadius:14,backgroundColor:C.white,borderWidth:1,borderColor:'#EFEFEF',overflow:'hidden',alignItems:'center',justifyContent:'center'},productImageReal:{width:'100%',height:'100%'},imageFallback:{alignItems:'center',justifyContent:'center',backgroundColor:C.orangeSoft},badge:{alignSelf:'flex-start',marginTop:7,fontSize:9,fontWeight:'900',color:C.orangeDark,backgroundColor:C.orangeSoft,paddingHorizontal:7,paddingVertical:3,borderRadius:6},productName:{fontSize:14,fontWeight:'900',color:C.black,marginTop:7},productDesc:{fontSize:11,color:C.muted,marginTop:3},productBottom:{marginTop:'auto',paddingTop:9,flexDirection:'row',alignItems:'center'},price:{fontWeight:'900',fontSize:15,flex:1},add:{width:34,height:34,borderRadius:11,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailsHint:{fontSize:9,color:C.orangeDark,fontWeight:'800',marginTop:7},
   detailHeader:{height:62,backgroundColor:C.white,borderBottomWidth:1,borderBottomColor:C.border,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},backBtn:{width:42,height:42,borderRadius:13,backgroundColor:C.bg,alignItems:'center',justifyContent:'center'},detailHeaderTitle:{fontSize:17,fontWeight:'900'},detailPage:{padding:18,paddingBottom:38},detailImageBox:{height:290,width:'100%',borderRadius:22,backgroundColor:C.white,borderWidth:1,borderColor:C.border,overflow:'hidden',alignItems:'center',justifyContent:'center'},detailImage:{width:'100%',height:'100%'},detailBadge:{alignSelf:'flex-start',marginTop:16,backgroundColor:C.orangeSoft,color:C.orangeDark,fontWeight:'900',fontSize:11,paddingHorizontal:10,paddingVertical:6,borderRadius:8},detailName:{fontSize:27,fontWeight:'900',color:C.black,marginTop:14},detailCategory:{fontSize:12,color:C.muted,fontWeight:'800',marginTop:4},detailPrice:{fontSize:26,fontWeight:'900',color:C.orange,marginTop:14},detailSection:{marginTop:22,paddingTop:18,borderTopWidth:1,borderTopColor:C.border},detailSectionTitle:{fontSize:16,fontWeight:'900',marginBottom:8},detailDescription:{fontSize:14,color:'#444',lineHeight:21},detailInfo:{marginTop:18,backgroundColor:C.orangeSoft,borderRadius:14,padding:12,flexDirection:'row',gap:8},detailInfoText:{flex:1,fontSize:11,color:'#333',lineHeight:16},
   empty:{flex:1,alignItems:'center',justifyContent:'center',padding:25},emptyInline:{alignItems:'center',padding:30},emptyTitle:{fontSize:19,fontWeight:'900',marginTop:10},primary:{minHeight:50,borderRadius:14,backgroundColor:C.orange,alignItems:'center',justifyContent:'center',paddingHorizontal:18,marginTop:13,flexDirection:'row',gap:7},primaryText:{color:C.white,fontWeight:'900'},cartItem:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:16,padding:13,marginBottom:9,flexDirection:'row',alignItems:'center'},muted:{fontSize:12,color:C.muted,marginTop:4},qty:{flexDirection:'row',alignItems:'center',gap:7},total:{backgroundColor:C.black,borderRadius:16,padding:17,flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginTop:7},totalValue:{color:C.orange,fontWeight:'900',fontSize:21},loginRequired:{marginTop:12,padding:12,borderRadius:14,backgroundColor:C.orangeSoft,flexDirection:'row',alignItems:'center',gap:8},loginRequiredTitle:{fontSize:12,fontWeight:'900'},loginRequiredText:{fontSize:10,color:C.muted,marginTop:2},
