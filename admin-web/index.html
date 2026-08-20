@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#f47a1f" />
+  <title>Drogaria Rocha | Painel Administrativo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <section id="loginView" class="login-view">
+    <div class="login-card">
+      <div class="brand-mark">✚</div>
+      <div class="login-copy">
+        <span class="eyebrow">DROGARIA ROCHA</span>
+        <h1>Painel Administrativo</h1>
+        <p>Gerencie produtos, ofertas, banners e avaliações pelo computador.</p>
+      </div>
+      <form id="loginForm" class="form-stack">
+        <label>E-mail<input id="loginEmail" type="email" autocomplete="email" required placeholder="seu@email.com"></label>
+        <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required minlength="6" placeholder="••••••••"></label>
+        <button class="btn primary full" type="submit" id="loginButton">Entrar no painel</button>
+      </form>
+      <p class="login-note">Somente usuários autorizados como administradores podem acessar.</p>
+    </div>
+  </section>
+
+  <div id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark small">✚</div>
+        <div><strong>Drogaria Rocha</strong><span>Administração</span></div>
+      </div>
+      <nav id="navMenu" class="nav-menu">
+        <button class="nav-item active" data-page="dashboard"><span>▦</span>Visão geral</button>
+        <button class="nav-item" data-page="products"><span>□</span>Produtos</button>
+        <button class="nav-item" data-page="offers"><span>%</span>Ofertas</button>
+        <button class="nav-item" data-page="banners"><span>▣</span>Banners</button>
+        <button class="nav-item" data-page="reviews"><span>★</span>Avaliações</button>
+        <button class="nav-item" data-page="customers"><span>◉</span>Clientes</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="admin-user"><span id="adminInitial">A</span><div><strong id="adminName">Administrador</strong><small id="adminEmail"></small></div></div>
+        <button id="logoutBtn" class="btn ghost full">Sair</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">PAINEL WEB</span><h2 id="pageTitle">Visão geral</h2></div>
+        <div class="topbar-actions"><span id="syncStatus">Atualizado agora</span><button id="refreshBtn" class="btn secondary">↻ Atualizar</button></div>
+      </header>
+
+      <section id="dashboardPage" class="page active-page">
+        <div id="statsGrid" class="stats-grid"></div>
+        <div class="two-cols">
+          <div class="panel"><div class="panel-head"><div><h3>Produtos recentes</h3><p>Últimos itens cadastrados no catálogo.</p></div><button class="link-btn" data-go="products">Ver produtos</button></div><div id="recentProducts" class="mini-list"></div></div>
+          <div class="panel"><div class="panel-head"><div><h3>Avaliações recentes</h3><p>Últimas opiniões enviadas pelos clientes.</p></div><button class="link-btn" data-go="reviews">Ver avaliações</button></div><div id="recentReviews" class="mini-list"></div></div>
+        </div>
+      </section>
+
+      <section id="productsPage" class="page">
+        <div class="page-actions"><div class="search-box">⌕ <input id="productSearch" placeholder="Buscar produto, categoria ou código..."></div><button id="newProductBtn" class="btn primary">+ Novo produto</button></div>
+        <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Status</th><th></th></tr></thead><tbody id="productsTable"></tbody></table></div></div>
+      </section>
+
+      <section id="offersPage" class="page">
+        <div class="page-actions"><div><h3>Ofertas</h3><p class="muted">Defina o preço promocional sem alterar o preço normal do produto.</p></div><div class="search-box compact">⌕ <input id="offerSearch" placeholder="Buscar produto..."></div></div>
+        <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Produto</th><th>Preço normal</th><th>Preço oferta</th><th>Desconto</th><th>Ativa</th><th></th></tr></thead><tbody id="offersTable"></tbody></table></div></div>
+      </section>
+
+      <section id="bannersPage" class="page">
+        <div class="page-actions"><div><h3>Banners da Home</h3><p class="muted">A ordem aqui é a mesma ordem exibida no carrossel do aplicativo.</p></div><button id="newBannerBtn" class="btn primary">+ Novo banner</button></div>
+        <div id="bannerGrid" class="banner-grid"></div>
+      </section>
+
+      <section id="reviewsPage" class="page">
+        <div class="page-actions"><div><h3>Avaliações</h3><p class="muted">Acompanhe e modere comentários publicados no aplicativo.</p></div><div class="search-box compact">⌕ <input id="reviewSearch" placeholder="Buscar avaliação..."></div></div>
+        <div id="reviewsList" class="review-list"></div>
+      </section>
+
+      <section id="customersPage" class="page">
+        <div class="page-actions"><div><h3>Clientes</h3><p class="muted">Clientes cadastrados no aplicativo.</p></div><div class="search-box compact">⌕ <input id="customerSearch" placeholder="Buscar nome ou telefone..."></div></div>
+        <div class="panel table-panel"><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Telefone</th><th>Nascimento</th><th>Cadastro</th></tr></thead><tbody id="customersTable"></tbody></table></div></div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="productDialog" class="dialog">
+    <form id="productForm" class="dialog-card">
+      <div class="dialog-head"><div><span class="eyebrow">CATÁLOGO</span><h3 id="productDialogTitle">Novo produto</h3></div><button type="button" class="icon-btn" data-close="productDialog">×</button></div>
+      <div class="form-grid">
+        <label class="span-2">Nome<input id="pName" required></label>
+        <label>Código/SKU<input id="pCode"></label>
+        <label>Categoria<select id="pCategory" required></select></label>
+        <label>Preço<input id="pPrice" type="number" min="0" step="0.01" required></label>
+        <label>Selo<input id="pBadge" placeholder="Oferta, Destaque..."></label>
+        <label class="span-2">Descrição<textarea id="pDescription" rows="3"></textarea></label>
+        <label class="span-2">Imagem do produto<input id="pImageFile" type="file" accept="image/*"></label>
+        <div id="pImagePreviewWrap" class="image-preview span-2"><img id="pImagePreview" alt="Prévia do produto"><span>Sem imagem</span></div>
+        <label class="toggle-row span-2"><div><strong>Produto ativo</strong><small>Desative para ocultar no aplicativo.</small></div><input id="pActive" type="checkbox" checked></label>
+      </div>
+      <div class="dialog-actions"><button type="button" class="btn secondary" data-close="productDialog">Cancelar</button><button type="submit" id="saveProductBtn" class="btn primary">Salvar produto</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="bannerDialog" class="dialog">
+    <form id="bannerForm" class="dialog-card">
+      <div class="dialog-head"><div><span class="eyebrow">HOME</span><h3 id="bannerDialogTitle">Novo banner</h3></div><button type="button" class="icon-btn" data-close="bannerDialog">×</button></div>
+      <div class="form-grid">
+        <label>Chamada<input id="bEyebrow" placeholder="DROGARIA ROCHA"></label>
+        <label>Ordem<input id="bOrder" type="number" min="1" step="1" value="1"></label>
+        <label class="span-2">Título<input id="bTitle" required></label>
+        <label class="span-2">Texto<textarea id="bSubtitle" rows="2"></textarea></label>
+        <label>Texto do botão<input id="bButtonText" value="Ver produtos"></label>
+        <label>Destino<select id="bTargetType"><option value="all">Todos os produtos</option><option value="category">Categoria</option><option value="search">Busca</option></select></label>
+        <label class="span-2">Valor do destino<input id="bTargetValue" placeholder="Ex.: Infantil ou Principia"></label>
+        <label class="span-2">Imagem do banner<input id="bImageFile" type="file" accept="image/*"></label>
+        <div id="bImagePreviewWrap" class="banner-preview span-2"><img id="bImagePreview" alt="Prévia do banner"><div class="banner-placeholder">Imagem opcional</div></div>
+        <label class="toggle-row span-2"><div><strong>Banner ativo</strong><small>Quando desativado, não aparece no aplicativo.</small></div><input id="bActive" type="checkbox" checked></label>
+      </div>
+      <div class="dialog-actions"><button type="button" class="btn secondary" data-close="bannerDialog">Cancelar</button><button type="submit" id="saveBannerBtn" class="btn primary">Salvar banner</button></div>
+    </form>
+  </dialog>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
