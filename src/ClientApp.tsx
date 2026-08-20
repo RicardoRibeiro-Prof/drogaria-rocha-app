@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DEMO_PRODUCTS, Product } from './data/demoProducts';
+import HomeBannerCarousel from './HomeBannerCarousel';
 import { supabase } from './lib/supabase';
 
 type Tab = 'home' | 'catalog' | 'cart' | 'account';
@@ -129,8 +130,8 @@ export default function ClientApp() {
   const add = (p:AppProduct)=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}));
   const qty = (id:number,delta:number)=>setCart(c=>{ const n=Math.max(0,(c[id]||0)+delta); const u={...c,[id]:n}; if(!n) delete u[id]; return u; });
 
-  const openCatalog = (cat='Todos') => {
-    setSearch('');
+  const openCatalog = (cat='Todos',query='') => {
+    setSearch(query || '');
     setSort('featured');
     setCategory(cat || 'Todos');
     setTab('catalog');
@@ -200,7 +201,7 @@ function Home({products,loading,add,openProduct,catalog}:any){
   ];
 
   return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
-    <HeroCarousel catalog={catalog}/>
+    <HomeBannerCarousel catalog={catalog}/>
     <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="happy-outline" text="Infantil" onPress={()=>catalog('Infantil')}/><Quick icon="sparkles-outline" text="Dermocosméticos" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="sunny-outline" text="Protetores" onPress={()=>catalog('Protetores Solares')}/><Quick icon="water-outline" text="Hidratantes" onPress={()=>catalog('Hidratantes')}/></View>
     {loading?<ActivityIndicator style={{marginTop:26}} color={C.orange}/>:<>
       <HomeSection title="Destaques" products={featured} onMore={()=>catalog('Todos')} add={add} openProduct={openProduct}/>
