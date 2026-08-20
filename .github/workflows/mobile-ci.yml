@@ -41,8 +41,24 @@ jobs:
           java-version: '17'
       - name: Instalar dependências
         run: npm install
+      - name: Preparar configuração temporária da build
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const p='app.json';
+          const j=JSON.parse(fs.readFileSync(p,'utf8'));
+          delete j.expo.icon;
+          if(j.expo.android){
+            delete j.expo.android.icon;
+            delete j.expo.android.adaptiveIcon;
+            j.expo.android.package='com.ativadigitalon.drogariarocha.preview';
+          }
+          fs.writeFileSync(p,JSON.stringify(j,null,2));
+          NODE
       - name: Gerar projeto Android
-        run: npx expo prebuild --platform android --non-interactive
+        env:
+          CI: '1'
+        run: npx expo prebuild --platform android
       - name: Gerar APK debug
         run: |
           cd android
