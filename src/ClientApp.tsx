@@ -107,6 +107,13 @@ export default function ClientApp() {
   const add = (p:Product)=>setCart(c=>({...c,[p.id]:(c[p.id]||0)+1}));
   const qty = (id:number,delta:number)=>setCart(c=>{ const n=Math.max(0,(c[id]||0)+delta); const u={...c,[id]:n}; if(!n) delete u[id]; return u; });
 
+  const openCatalog = (cat='Todos') => {
+    setSearch('');
+    setSort('featured');
+    setCategory(cat || 'Todos');
+    setTab('catalog');
+  };
+
   const requestCheckout = () => {
     if(!cartItems.length) return Alert.alert('Carrinho vazio','Adicione produtos antes de finalizar.');
     if(!session?.user){
@@ -122,9 +129,9 @@ export default function ClientApp() {
   return <View style={s.app}>
     <View style={{height:68+insets.top}} />
     <View style={s.content}>
-      {tab==='home'&&<Home products={products.slice(0,6)} loading={loading} add={add} openProduct={setSelectedProduct} catalog={(cat?:string)=>{if(cat)setCategory(cat);setTab('catalog');}}/>}
+      {tab==='home'&&<Home products={products} loading={loading} add={add} openProduct={setSelectedProduct} catalog={openCatalog}/>}
       {tab==='catalog'&&<Catalog products={filtered} loading={loading} search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={categories} sort={sort} setSort={setSort} add={add} openProduct={setSelectedProduct}/>} 
-      {tab==='cart'&&<Cart items={cartItems} total={total} qty={qty} catalog={()=>setTab('catalog')} checkout={requestCheckout} session={session} account={()=>setTab('account')}/>} 
+      {tab==='cart'&&<Cart items={cartItems} total={total} qty={qty} catalog={()=>openCatalog('Todos')} checkout={requestCheckout} session={session} account={()=>setTab('account')}/>} 
       {tab==='orders'&&<Orders orders={orders} session={session} account={()=>setTab('account')}/>} 
       {tab==='account'&&<Account session={session} profile={profile}/>} 
     </View>
@@ -135,11 +142,46 @@ export default function ClientApp() {
 }
 
 function Home({products,loading,add,openProduct,catalog}:any){
+  const featured=useMemo(()=>{
+    const marked=products.filter((p:Product)=>Boolean(p.badge));
+    const newest=[...products].reverse();
+    const ids=new Set(marked.map((p:Product)=>p.id));
+    return [...marked,...newest.filter((p:Product)=>!ids.has(p.id))].slice(0,8);
+  },[products]);
+
+  const sections=[
+    ['Protetores Solares','Protetores Solares'],
+    ['Dermocosméticos','Dermocosméticos'],
+    ['Hidratantes','Hidratantes'],
+    ['Sabonetes e Limpeza','Sabonetes e Limpeza'],
+    ['Cuidados com os Cabelos','Cabelos'],
+    ['Perfumaria','Perfumaria'],
+  ];
+
   return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
-    <View style={s.hero}><View style={{flex:1}}><Text style={s.heroSmall}>DROGARIA ROCHA</Text><Text style={s.heroTitle}>Cuidado e praticidade na palma da sua mão.</Text><Text style={s.heroText}>Compre e acompanhe seus pedidos pelo aplicativo.</Text><Pressable style={s.heroBtn} onPress={()=>catalog()}><Text style={s.heroBtnText}>Ver produtos</Text></Pressable></View><Ionicons name="medkit" size={70} color={C.orange}/></View>
+    <View style={s.hero}><View style={{flex:1}}><Text style={s.heroSmall}>DROGARIA ROCHA</Text><Text style={s.heroTitle}>Cuidado e praticidade na palma da sua mão.</Text><Text style={s.heroText}>Compre e acompanhe seus pedidos pelo aplicativo.</Text><Pressable style={s.heroBtn} onPress={()=>catalog('Todos')}><Text style={s.heroBtnText}>Ver produtos</Text></Pressable></View><Ionicons name="medkit" size={70} color={C.orange}/></View>
     <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="sparkles-outline" text="Dermocosméticos" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="sunny-outline" text="Protetores" onPress={()=>catalog('Protetores Solares')}/><Quick icon="water-outline" text="Hidratantes" onPress={()=>catalog('Hidratantes')}/><Quick icon="shield-checkmark-outline" text="Sabonetes" onPress={()=>catalog('Sabonetes e Limpeza')}/></View>
-    <Text style={s.section}>Destaques</Text>{loading?<ActivityIndicator color={C.orange}/>:<ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{gap:10}}>{products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)} compact/>)}</ScrollView>}
+    {loading?<ActivityIndicator style={{marginTop:26}} color={C.orange}/>:<>
+      <HomeSection title="Destaques" products={featured} onMore={()=>catalog('Todos')} add={add} openProduct={openProduct}/>
+      {sections.map(([title,cat])=>{
+        const list=products.filter((p:Product)=>p.category===cat).slice(0,8);
+        return <HomeSection key={cat} title={title} products={list} onMore={()=>catalog(cat)} add={add} openProduct={openProduct}/>;
+      })}
+    </>}
   </ScrollView>;
+}
+
+function HomeSection({title,products,onMore,add,openProduct}:any){
+  if(!products?.length)return null;
+  return <View style={s.homeSection}>
+    <View style={s.homeSectionHeader}>
+      <Text style={s.homeSectionTitle}>{title}</Text>
+      <Pressable style={s.seeMore} onPress={onMore}><Text style={s.seeMoreText}>Ver mais</Text><Ionicons name="chevron-forward" size={15} color={C.orangeDark}/></Pressable>
+    </View>
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.homeCarousel}>
+      {products.map((p:Product)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)} compact/>)}
+    </ScrollView>
+  </View>;
 }
 
 function Quick({icon,text,onPress}:any){return <Pressable style={s.quickItem} onPress={onPress}><View style={s.quickIcon}><Ionicons name={icon} size={25} color={C.orange}/></View><Text style={s.quickText}>{text}</Text></Pressable>}
@@ -167,7 +209,7 @@ function ProductImage({uri,style}:any){
 }
 
 function ProductCard({p,add,open,compact}:any){
-  return <Pressable style={[s.product,compact&&{width:175}]} onPress={open}>
+  return <Pressable style={[s.product,compact&&s.productCompact]} onPress={open}>
     <View style={s.productImg}><ProductImage uri={p.image_url} style={s.productImageReal}/></View>
     {p.badge?<Text style={s.badge}>{p.badge}</Text>:null}
     <Text style={s.productName} numberOfLines={2}>{p.name}</Text>
@@ -272,8 +314,9 @@ const s=StyleSheet.create({
   app:{flex:1,backgroundColor:C.bg},content:{flex:1},page:{padding:18,paddingBottom:36},title:{fontSize:28,fontWeight:'900',color:C.black,marginBottom:16},
   hero:{backgroundColor:C.black,borderRadius:23,padding:20,minHeight:205,flexDirection:'row',alignItems:'center',gap:10},heroSmall:{color:C.orange,fontSize:11,fontWeight:'900'},heroTitle:{color:C.white,fontSize:24,lineHeight:29,fontWeight:'900',marginTop:7},heroText:{color:'#CCC',fontSize:13,lineHeight:18,marginTop:7},heroBtn:{marginTop:14,alignSelf:'flex-start',backgroundColor:C.orange,borderRadius:12,paddingHorizontal:15,paddingVertical:11},heroBtnText:{color:C.white,fontWeight:'900'},
   section:{fontSize:19,fontWeight:'900',marginTop:22,marginBottom:11,color:C.black},quick:{flexDirection:'row',flexWrap:'wrap',gap:9},quickItem:{width:'48%',backgroundColor:C.white,borderRadius:16,borderWidth:1,borderColor:C.border,padding:13,flexDirection:'row',alignItems:'center',gap:8},quickIcon:{width:40,height:40,borderRadius:12,backgroundColor:C.orangeSoft,alignItems:'center',justifyContent:'center'},quickText:{fontWeight:'800',fontSize:12,flex:1},
+  homeSection:{marginTop:26},homeSectionHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:11},homeSectionTitle:{fontSize:20,fontWeight:'900',color:C.black,flex:1},seeMore:{flexDirection:'row',alignItems:'center',paddingVertical:6,paddingLeft:12},seeMoreText:{fontSize:12,fontWeight:'900',color:C.orangeDark},homeCarousel:{gap:10,paddingRight:6},
   search:{height:50,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:8},filterLabel:{fontSize:12,fontWeight:'900',color:C.black,marginTop:14,marginBottom:8},chip:{height:38,paddingHorizontal:13,borderRadius:19,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipOn:{backgroundColor:C.black,borderColor:C.black},chipText:{fontSize:11,fontWeight:'800'},sortRow:{gap:7,paddingBottom:10},sortChip:{height:34,paddingHorizontal:11,borderRadius:11,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},sortChipOn:{backgroundColor:C.orangeSoft,borderColor:C.orange},sortText:{fontSize:10,fontWeight:'900',color:C.muted},catalogSummary:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginTop:4,marginBottom:12},resultCount:{fontSize:12,fontWeight:'900',color:C.black},clearFilters:{fontSize:11,fontWeight:'900',color:C.orangeDark},grid:{flexDirection:'row',flexWrap:'wrap',gap:10},emptyCatalog:{alignItems:'center',justifyContent:'center',paddingVertical:50},
-  product:{width:'48%',minHeight:265,backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:12},productImg:{height:104,borderRadius:14,backgroundColor:C.white,borderWidth:1,borderColor:'#EFEFEF',overflow:'hidden',alignItems:'center',justifyContent:'center'},productImageReal:{width:'100%',height:'100%'},imageFallback:{alignItems:'center',justifyContent:'center',backgroundColor:C.orangeSoft},badge:{alignSelf:'flex-start',marginTop:7,fontSize:9,fontWeight:'900',color:C.orangeDark,backgroundColor:C.orangeSoft,paddingHorizontal:7,paddingVertical:3,borderRadius:6},productName:{fontSize:14,fontWeight:'900',color:C.black,marginTop:7},productDesc:{fontSize:11,color:C.muted,marginTop:3},productBottom:{marginTop:'auto',paddingTop:9,flexDirection:'row',alignItems:'center'},price:{fontWeight:'900',fontSize:15,flex:1},add:{width:34,height:34,borderRadius:11,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailsHint:{fontSize:9,color:C.orangeDark,fontWeight:'800',marginTop:7},
+  product:{width:'48%',minHeight:265,backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:12},productCompact:{width:152,minHeight:255},productImg:{height:104,borderRadius:14,backgroundColor:C.white,borderWidth:1,borderColor:'#EFEFEF',overflow:'hidden',alignItems:'center',justifyContent:'center'},productImageReal:{width:'100%',height:'100%'},imageFallback:{alignItems:'center',justifyContent:'center',backgroundColor:C.orangeSoft},badge:{alignSelf:'flex-start',marginTop:7,fontSize:9,fontWeight:'900',color:C.orangeDark,backgroundColor:C.orangeSoft,paddingHorizontal:7,paddingVertical:3,borderRadius:6},productName:{fontSize:14,fontWeight:'900',color:C.black,marginTop:7},productDesc:{fontSize:11,color:C.muted,marginTop:3},productBottom:{marginTop:'auto',paddingTop:9,flexDirection:'row',alignItems:'center'},price:{fontWeight:'900',fontSize:15,flex:1},add:{width:34,height:34,borderRadius:11,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailsHint:{fontSize:9,color:C.orangeDark,fontWeight:'800',marginTop:7},
   detailHeader:{height:62,backgroundColor:C.white,borderBottomWidth:1,borderBottomColor:C.border,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},backBtn:{width:42,height:42,borderRadius:13,backgroundColor:C.bg,alignItems:'center',justifyContent:'center'},detailHeaderTitle:{fontSize:17,fontWeight:'900'},detailPage:{padding:18,paddingBottom:38},detailImageBox:{height:290,width:'100%',borderRadius:22,backgroundColor:C.white,borderWidth:1,borderColor:C.border,overflow:'hidden',alignItems:'center',justifyContent:'center'},detailImage:{width:'100%',height:'100%'},detailBadge:{alignSelf:'flex-start',marginTop:16,backgroundColor:C.orangeSoft,color:C.orangeDark,fontWeight:'900',fontSize:11,paddingHorizontal:10,paddingVertical:6,borderRadius:8},detailName:{fontSize:27,fontWeight:'900',color:C.black,marginTop:14},detailCategory:{fontSize:12,color:C.muted,fontWeight:'800',marginTop:4},detailPrice:{fontSize:26,fontWeight:'900',color:C.orange,marginTop:14},detailSection:{marginTop:22,paddingTop:18,borderTopWidth:1,borderTopColor:C.border},detailSectionTitle:{fontSize:16,fontWeight:'900',marginBottom:8},detailDescription:{fontSize:14,color:'#444',lineHeight:21},detailInfo:{marginTop:18,backgroundColor:C.orangeSoft,borderRadius:14,padding:12,flexDirection:'row',gap:8},detailInfoText:{flex:1,fontSize:11,color:'#333',lineHeight:16},
   empty:{flex:1,alignItems:'center',justifyContent:'center',padding:25},emptyInline:{alignItems:'center',padding:30},emptyTitle:{fontSize:19,fontWeight:'900',marginTop:10},primary:{minHeight:50,borderRadius:14,backgroundColor:C.orange,alignItems:'center',justifyContent:'center',paddingHorizontal:18,marginTop:13,flexDirection:'row',gap:7},primaryText:{color:C.white,fontWeight:'900'},cartItem:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:16,padding:13,marginBottom:9,flexDirection:'row',alignItems:'center'},muted:{fontSize:12,color:C.muted,marginTop:4},qty:{flexDirection:'row',alignItems:'center',gap:7},total:{backgroundColor:C.black,borderRadius:16,padding:17,flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginTop:7},totalValue:{color:C.orange,fontWeight:'900',fontSize:21},loginRequired:{marginTop:12,padding:12,borderRadius:14,backgroundColor:C.orangeSoft,flexDirection:'row',alignItems:'center',gap:8},loginRequiredTitle:{fontSize:12,fontWeight:'900'},loginRequiredText:{fontSize:10,color:C.muted,marginTop:2},
   order:{backgroundColor:C.white,borderRadius:16,borderWidth:1,borderColor:C.border,padding:14,marginBottom:9},row:{flexDirection:'row',justifyContent:'space-between',gap:8},orderStatus:{color:C.orangeDark,fontWeight:'900',fontSize:11},orderTotal:{fontWeight:'900',fontSize:17,marginTop:8},
