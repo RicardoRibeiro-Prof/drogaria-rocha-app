@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image as ExpoImage } from 'expo-image';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -200,7 +200,7 @@ function Home({products,loading,add,openProduct,catalog}:any){
   ];
 
   return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
-    <View style={s.hero}><View style={{flex:1}}><Text style={s.heroSmall}>DROGARIA ROCHA</Text><Text style={s.heroTitle}>Cuidado e praticidade na palma da sua mão.</Text><Text style={s.heroText}>Escolha seus produtos e finalize a compra pelo WhatsApp.</Text><Pressable style={s.heroBtn} onPress={()=>catalog('Todos')}><Text style={s.heroBtnText}>Ver produtos</Text></Pressable></View><Ionicons name="medkit" size={70} color={C.orange}/></View>
+    <HeroCarousel catalog={catalog}/>
     <Text style={s.section}>Acesso rápido</Text><View style={s.quick}><Quick icon="happy-outline" text="Infantil" onPress={()=>catalog('Infantil')}/><Quick icon="sparkles-outline" text="Dermocosméticos" onPress={()=>catalog('Dermocosméticos')}/><Quick icon="sunny-outline" text="Protetores" onPress={()=>catalog('Protetores Solares')}/><Quick icon="water-outline" text="Hidratantes" onPress={()=>catalog('Hidratantes')}/></View>
     {loading?<ActivityIndicator style={{marginTop:26}} color={C.orange}/>:<>
       <HomeSection title="Destaques" products={featured} onMore={()=>catalog('Todos')} add={add} openProduct={openProduct}/>
@@ -210,6 +210,64 @@ function Home({products,loading,add,openProduct,catalog}:any){
       })}
     </>}
   </ScrollView>;
+}
+
+function HeroCarousel({catalog}:any){
+  const scrollRef=useRef<ScrollView|null>(null);
+  const[index,setIndex]=useState(0);
+  const[width,setWidth]=useState(0);
+  const slides=useMemo(()=>[
+    {eyebrow:'DROGARIA ROCHA',title:'Cuidado e praticidade na palma da sua mão.',text:'Escolha seus produtos e finalize o atendimento pelo WhatsApp.',button:'Ver produtos',category:'Todos',icon:'medkit-outline'},
+    {eyebrow:'LINHA PRINCIPIA',title:'Skincare para cuidar da sua rotina.',text:'Séruns, limpeza, hidratação e proteção solar em um só lugar.',button:'Conhecer a linha',category:'Dermocosméticos',icon:'sparkles-outline'},
+    {eyebrow:'MUNDO DO BEBÊ',title:'Tudo para o cuidado dos pequenos.',text:'Fraldas, Johnson’s Baby, higiene e cuidados para o dia a dia.',button:'Ver linha infantil',category:'Infantil',icon:'happy-outline'},
+    {eyebrow:'PROTEÇÃO SOLAR',title:'Proteção para todos os dias.',text:'Encontre protetores solares para diferentes tipos de pele e rotina.',button:'Ver protetores',category:'Protetores Solares',icon:'sunny-outline'},
+  ],[]);
+
+  const goTo=useCallback((next:number,animated=true)=>{
+    if(!width)return;
+    const normalized=((next%slides.length)+slides.length)%slides.length;
+    scrollRef.current?.scrollTo({x:normalized*width,y:0,animated});
+    setIndex(normalized);
+  },[width,slides.length]);
+
+  useEffect(()=>{
+    if(!width)return;
+    const timer=setInterval(()=>setIndex(current=>{
+      const next=(current+1)%slides.length;
+      scrollRef.current?.scrollTo({x:next*width,y:0,animated:true});
+      return next;
+    }),4500);
+    return()=>clearInterval(timer);
+  },[width,slides.length]);
+
+  useEffect(()=>{
+    if(width)scrollRef.current?.scrollTo({x:index*width,y:0,animated:false});
+  },[width]);
+
+  return <View style={s.heroCarouselWrap} onLayout={e=>setWidth(e.nativeEvent.layout.width)}>
+    {width>0?<ScrollView
+      ref={scrollRef}
+      horizontal
+      pagingEnabled
+      showsHorizontalScrollIndicator={false}
+      decelerationRate="fast"
+      onMomentumScrollEnd={e=>{
+        const next=Math.round(e.nativeEvent.contentOffset.x/width);
+        setIndex(Math.max(0,Math.min(slides.length-1,next)));
+      }}
+    >
+      {slides.map((slide,i)=><View key={slide.eyebrow} style={[s.heroSlide,{width}]}>
+        <View style={s.heroContent}>
+          <Text style={s.heroSmall}>{slide.eyebrow}</Text>
+          <Text style={s.heroTitle}>{slide.title}</Text>
+          <Text style={s.heroText}>{slide.text}</Text>
+          <Pressable style={s.heroBtn} onPress={()=>catalog(slide.category)}><Text style={s.heroBtnText}>{slide.button}</Text><Ionicons name="arrow-forward" size={14} color={C.white}/></Pressable>
+        </View>
+        <View style={s.heroIconBox}><Ionicons name={slide.icon as any} size={64} color={C.orange}/><Text style={s.heroSlideNumber}>0{i+1}</Text></View>
+      </View>)}
+    </ScrollView>:<View style={s.heroSlide}><ActivityIndicator color={C.orange}/></View>}
+    <View style={s.heroDots}>{slides.map((_,i)=><Pressable key={i} hitSlop={8} style={[s.heroDot,index===i&&s.heroDotOn]} onPress={()=>goTo(i)}/>)}</View>
+  </View>;
 }
 
 function HomeSection({title,products,onMore,add,openProduct}:any){
@@ -454,7 +512,7 @@ function Bottom({tab,setTab,count}:any){const inset=useSafeAreaInsets();const it
 
 const s=StyleSheet.create({
   app:{flex:1,backgroundColor:C.bg},content:{flex:1},page:{padding:18,paddingBottom:36},title:{fontSize:28,fontWeight:'900',color:C.black,marginBottom:16},
-  hero:{backgroundColor:C.black,borderRadius:23,padding:20,minHeight:205,flexDirection:'row',alignItems:'center',gap:10},heroSmall:{color:C.orange,fontSize:11,fontWeight:'900'},heroTitle:{color:C.white,fontSize:24,lineHeight:29,fontWeight:'900',marginTop:7},heroText:{color:'#CCC',fontSize:13,lineHeight:18,marginTop:7},heroBtn:{marginTop:14,alignSelf:'flex-start',backgroundColor:C.orange,borderRadius:12,paddingHorizontal:15,paddingVertical:11},heroBtnText:{color:C.white,fontWeight:'900'},
+  heroCarouselWrap:{borderRadius:23,overflow:'hidden',backgroundColor:C.black,minHeight:226},heroSlide:{backgroundColor:C.black,minHeight:226,padding:20,paddingBottom:36,flexDirection:'row',alignItems:'center',gap:12},heroContent:{flex:1},heroSmall:{color:C.orange,fontSize:11,fontWeight:'900',letterSpacing:.4},heroTitle:{color:C.white,fontSize:24,lineHeight:29,fontWeight:'900',marginTop:7},heroText:{color:'#CCC',fontSize:13,lineHeight:18,marginTop:7},heroBtn:{marginTop:14,alignSelf:'flex-start',backgroundColor:C.orange,borderRadius:12,paddingHorizontal:15,paddingVertical:11,flexDirection:'row',alignItems:'center',gap:7},heroBtnText:{color:C.white,fontWeight:'900'},heroIconBox:{width:86,height:116,borderRadius:25,backgroundColor:'#1C1C1C',borderWidth:1,borderColor:'#2B2B2B',alignItems:'center',justifyContent:'center'},heroSlideNumber:{position:'absolute',right:10,bottom:8,color:'#555',fontSize:10,fontWeight:'900'},heroDots:{position:'absolute',left:0,right:0,bottom:12,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:6},heroDot:{width:7,height:7,borderRadius:4,backgroundColor:'#555'},heroDotOn:{width:20,backgroundColor:C.orange},
   section:{fontSize:19,fontWeight:'900',marginTop:22,marginBottom:11,color:C.black},quick:{flexDirection:'row',flexWrap:'wrap',gap:9},quickItem:{width:'48%',backgroundColor:C.white,borderRadius:16,borderWidth:1,borderColor:C.border,padding:13,flexDirection:'row',alignItems:'center',gap:8},quickIcon:{width:40,height:40,borderRadius:12,backgroundColor:C.orangeSoft,alignItems:'center',justifyContent:'center'},quickText:{fontWeight:'800',fontSize:12,flex:1},
   homeSection:{marginTop:26},homeSectionHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:11},homeSectionTitle:{fontSize:20,fontWeight:'900',color:C.black,flex:1},seeMore:{flexDirection:'row',alignItems:'center',paddingVertical:6,paddingLeft:12},seeMoreText:{fontSize:12,fontWeight:'900',color:C.orangeDark},homeCarousel:{gap:10,paddingRight:6},
   search:{height:50,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:8},filterLabel:{fontSize:12,fontWeight:'900',color:C.black,marginTop:14,marginBottom:8},chip:{height:38,paddingHorizontal:13,borderRadius:19,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipOn:{backgroundColor:C.black,borderColor:C.black},chipText:{fontSize:11,fontWeight:'800'},sortRow:{gap:7,paddingBottom:10},sortChip:{height:34,paddingHorizontal:11,borderRadius:11,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},sortChipOn:{backgroundColor:C.orangeSoft,borderColor:C.orange},sortText:{fontSize:10,fontWeight:'900',color:C.muted},catalogSummary:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginTop:4,marginBottom:12},resultCount:{fontSize:12,fontWeight:'900',color:C.black},clearFilters:{fontSize:11,fontWeight:'900',color:C.orangeDark},grid:{flexDirection:'row',flexWrap:'wrap',gap:10},emptyCatalog:{alignItems:'center',justifyContent:'center',paddingVertical:50},
