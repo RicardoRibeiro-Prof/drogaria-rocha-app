@@ -2,7 +2,7 @@
   "expo": {
     "name": "Drogaria Rocha",
     "slug": "drogaria-rocha",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "backgroundColor": "#FFFFFF",
@@ -20,12 +20,16 @@
     ],
     "android": {
       "package": "com.ativadigitalon.drogariarocha",
-      "versionCode": 3,
-      "icon": "./assets/icon.png"
+      "versionCode": 4,
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F47A1F"
+      }
     },
     "ios": {
       "bundleIdentifier": "com.ativadigitalon.drogariarocha",
-      "buildNumber": "1.0.2",
+      "buildNumber": "1.0.3",
       "supportsTablet": true
     },
     "extra": {
