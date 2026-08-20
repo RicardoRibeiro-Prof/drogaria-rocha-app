@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -25,12 +26,14 @@ type Cart = Record<number, number>;
 type SortMode = 'featured' | 'priceAsc' | 'priceDesc' | 'az';
 type PaymentMethod = { code: string; label: string; instructions: string; pix_key?: string | null; sort_order: number };
 type Order = { id?: string; code: string; store_id: number; fulfillment: string; payment_method: string; total: number; status: string; created_at: string };
+type StoreContact = { id:number; name:string; whatsapp_number?:string|null };
 
 const CART_KEY = '@drogaria-rocha/cart-live';
 const C = { orange:'#F47A1F', orangeDark:'#D95F09', orangeSoft:'#FFF1E6', black:'#111111', white:'#FFFFFF', muted:'#727272', border:'#E8E8E8', bg:'#F7F7F7' };
 const CATEGORY_ORDER = ['Todos','Dermocosméticos','Protetores Solares','Hidratantes','Sabonetes e Limpeza','Higiene Pessoal','Cabelos','Perfumaria','Repelentes','Medicamentos'];
 const money = (v:number) => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 const digits = (v:string) => v.replace(/\D/g,'');
+const whatsappNumber = (v:string) => { const n=digits(v||''); return n.startsWith('55')?n:`55${n}`; };
 const STATUS: Record<string,string> = { received:'Pedido recebido', confirmed:'Confirmado', separating:'Em separação', ready:'Pronto para retirada', out_for_delivery:'Saiu para entrega', delivered:'Entregue', cancelled:'Cancelado' };
 
 function orderCode() {
@@ -117,7 +120,7 @@ export default function ClientApp() {
   const requestCheckout = () => {
     if(!cartItems.length) return Alert.alert('Carrinho vazio','Adicione produtos antes de finalizar.');
     if(!session?.user){
-      Alert.alert('Entre na sua conta','Para finalizar uma compra, é necessário estar logado.',[
+      Alert.alert('Entre na sua conta','Para enviar o pedido pelo WhatsApp, é necessário estar logado.',[
         {text:'Cancelar',style:'cancel'},
         {text:'Entrar',onPress:()=>setTab('account')},
       ]);
@@ -137,7 +140,7 @@ export default function ClientApp() {
     </View>
     <Bottom tab={tab} setTab={setTab} count={count}/>
     <ProductDetail visible={!!selectedProduct} product={selectedProduct} onClose={()=>setSelectedProduct(null)} add={(p:Product)=>{add(p);setSelectedProduct(null);}}/>
-    <Checkout visible={checkout} onClose={()=>setCheckout(false)} items={cartItems} total={total} session={session} profile={profile} done={()=>{setCart({});setCheckout(false);setTab('orders');loadOrders();}}/>
+    <Checkout visible={checkout} onClose={()=>setCheckout(false)} items={cartItems} total={total} session={session} profile={profile} done={()=>{setCart({});setCheckout(false);setTab('home');}}/>
   </View>;
 }
 
@@ -230,7 +233,7 @@ function ProductDetail({visible,product,onClose,add}:any){
   return <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}><SafeAreaView style={s.modal} edges={['top','bottom','left','right']}><View style={s.detailHeader}><Pressable style={s.backBtn} onPress={onClose}><Ionicons name="arrow-back" size={24} color={C.black}/></Pressable><Text style={s.detailHeaderTitle}>Detalhes do produto</Text><View style={{width:42}}/></View><ScrollView contentContainerStyle={s.detailPage}><View style={s.detailImageBox}>{detailImageUri&&!detailImageFailed?<Image key={`${product.id}-${detailImageUri}`} source={{uri:detailImageUri}} style={s.detailImage} resizeMode="contain" onError={()=>setDetailImageFailed(true)}/>:<View style={[s.detailImage,s.imageFallback]}><Ionicons name="medical-outline" size={58} color={C.orange}/></View>}</View>{product.badge?<Text style={s.detailBadge}>{product.badge}</Text>:null}<Text style={s.detailName}>{product.name}</Text><Text style={s.detailCategory}>{product.category}</Text><Text style={s.detailPrice}>{money(product.price)}</Text><View style={s.detailSection}><Text style={s.detailSectionTitle}>Descrição</Text><Text style={s.detailDescription}>{product.description?.trim() || 'Descrição não informada.'}</Text></View><View style={s.detailInfo}><Ionicons name="information-circle-outline" size={21} color={C.orange}/><Text style={s.detailInfoText}>Em caso de medicamentos, a dispensação segue as exigências legais e pode depender de análise de receita.</Text></View><Pressable style={s.primary} onPress={()=>add(product)}><Ionicons name="bag-add-outline" size={20} color={C.white}/><Text style={s.primaryText}>Adicionar ao carrinho</Text></Pressable></ScrollView></SafeAreaView></Modal>;
 }
 
-function Cart({items,total,qty,catalog,checkout,session,account}:any){if(!items.length)return <View style={s.empty}><Ionicons name="bag-handle-outline" size={64} color={C.orange}/><Text style={s.emptyTitle}>Seu carrinho está vazio</Text><Pressable style={s.primary} onPress={catalog}><Text style={s.primaryText}>Ver catálogo</Text></Pressable></View>;return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Carrinho</Text>{items.map((x:any)=><View style={s.cartItem} key={x.id}><View style={{flex:1}}><Text style={s.productName}>{x.name}</Text><Text style={s.muted}>{money(x.price)}</Text></View><View style={s.qty}><Pressable onPress={()=>qty(x.id,-1)}><Ionicons name="remove-circle-outline" size={26}/></Pressable><Text style={{fontWeight:'900'}}>{x.quantity}</Text><Pressable onPress={()=>qty(x.id,1)}><Ionicons name="add-circle" size={26} color={C.orange}/></Pressable></View></View>)}<View style={s.total}><Text style={{color:'#AAA'}}>Total</Text><Text style={s.totalValue}>{money(total)}</Text></View>{!session?.user?<View style={s.loginRequired}><Ionicons name="lock-closed-outline" size={20} color={C.orange}/><View style={{flex:1}}><Text style={s.loginRequiredTitle}>Login obrigatório</Text><Text style={s.loginRequiredText}>Entre na sua conta para finalizar a compra.</Text></View></View>:null}<Pressable style={s.primary} onPress={session?.user?checkout:account}><Text style={s.primaryText}>{session?.user?'Finalizar pedido':'Entrar para finalizar'}</Text></Pressable></ScrollView>}
+function Cart({items,total,qty,catalog,checkout,session,account}:any){if(!items.length)return <View style={s.empty}><Ionicons name="bag-handle-outline" size={64} color={C.orange}/><Text style={s.emptyTitle}>Seu carrinho está vazio</Text><Pressable style={s.primary} onPress={catalog}><Text style={s.primaryText}>Ver catálogo</Text></Pressable></View>;return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Carrinho</Text>{items.map((x:any)=><View style={s.cartItem} key={x.id}><View style={{flex:1}}><Text style={s.productName}>{x.name}</Text><Text style={s.muted}>{money(x.price)}</Text></View><View style={s.qty}><Pressable onPress={()=>qty(x.id,-1)}><Ionicons name="remove-circle-outline" size={26}/></Pressable><Text style={{fontWeight:'900'}}>{x.quantity}</Text><Pressable onPress={()=>qty(x.id,1)}><Ionicons name="add-circle" size={26} color={C.orange}/></Pressable></View></View>)}<View style={s.total}><Text style={{color:'#AAA'}}>Total estimado</Text><Text style={s.totalValue}>{money(total)}</Text></View><View style={s.whatsappNotice}><Ionicons name="logo-whatsapp" size={21} color="#198754"/><Text style={s.whatsappNoticeText}>A disponibilidade dos produtos e o valor final serão confirmados pela Drogaria Rocha no WhatsApp.</Text></View>{!session?.user?<View style={s.loginRequired}><Ionicons name="lock-closed-outline" size={20} color={C.orange}/><View style={{flex:1}}><Text style={s.loginRequiredTitle}>Login obrigatório</Text><Text style={s.loginRequiredText}>Entre na sua conta para enviar o pedido.</Text></View></View>:null}<Pressable style={s.primary} onPress={session?.user?checkout:account}><Ionicons name="logo-whatsapp" size={20} color={C.white}/><Text style={s.primaryText}>{session?.user?'Enviar pedido pelo WhatsApp':'Entrar para continuar'}</Text></Pressable></ScrollView>}
 
 function Orders({orders,session,account}:any){if(!session?.user)return <View style={s.empty}><Ionicons name="lock-closed-outline" size={60} color={C.orange}/><Text style={s.emptyTitle}>Entre para ver seus pedidos</Text><Pressable style={s.primary} onPress={account}><Text style={s.primaryText}>Entrar na conta</Text></Pressable></View>;return <ScrollView contentContainerStyle={s.page}><Text style={s.title}>Meus pedidos</Text>{!orders.length?<View style={s.emptyInline}><Ionicons name="receipt-outline" size={50} color={C.orange}/><Text style={s.emptyTitle}>Nenhum pedido ainda</Text></View>:orders.map((o:Order)=><View key={`${o.id||o.code}-${o.created_at}`} style={s.order}><View style={s.row}><Text style={s.productName}>{o.code}</Text><Text style={s.orderStatus}>{STATUS[o.status]||o.status}</Text></View><Text style={s.muted}>Loja {o.store_id} • {o.fulfillment==='delivery'?'Entrega':'Retirada'}</Text><Text style={s.orderTotal}>{money(o.total)}</Text></View>)}</ScrollView>}
 
@@ -257,53 +260,55 @@ function Account({session,profile}:any){
 }
 
 function Checkout({visible,onClose,items,total,session,profile,done}:any){
-  const[name,setName]=useState('');const[phone,setPhone]=useState('');const[address,setAddress]=useState('');const[store,setStore]=useState(1);const[fulfillment,setFulfillment]=useState<'delivery'|'pickup'>('delivery');const[methods,setMethods]=useState<PaymentMethod[]>([]);const[payment,setPayment]=useState('');const[changeFor,setChangeFor]=useState('');const[busy,setBusy]=useState(false);
+  const[name,setName]=useState('');
+  const[phone,setPhone]=useState('');
+  const[address,setAddress]=useState('');
+  const[store,setStore]=useState(1);
+  const[fulfillment,setFulfillment]=useState<'delivery'|'pickup'>('delivery');
+  const[stores,setStores]=useState<StoreContact[]>([]);
+  const[busy,setBusy]=useState(false);
+
   useEffect(()=>{
     if(!visible||!session?.user)return;
     setName(profile?.name||session.user.user_metadata?.name||'');
     setPhone(profile?.phone||session.user.user_metadata?.phone||'');
     (async()=>{
-      const{data,error}=await supabase.from('payment_methods').select('code,label,instructions,pix_key,sort_order').eq('active',true).order('sort_order');
-      const list=!error&&data?.length?data as PaymentMethod[]:[{code:'pix',label:'PIX',instructions:'',sort_order:1},{code:'cash',label:'Dinheiro',instructions:'',sort_order:2},{code:'credit',label:'Crédito',instructions:'',sort_order:3},{code:'debit',label:'Débito',instructions:'',sort_order:4}];
-      setMethods(list);setPayment(list[0]?.code||'');
+      const{data,error}=await supabase.from('stores').select('id,name,whatsapp_number').eq('active',true).order('id');
+      if(error){setStores([]);return;}
+      const list=(data||[]) as StoreContact[];
+      setStores(list);
+      if(list.length&&!list.some(x=>x.id===store))setStore(list[0].id);
     })();
   },[visible,profile,session]);
 
-  const selected=methods.find(m=>m.code===payment);
+  const selectedStore=stores.find(x=>x.id===store);
+
   const submit=async()=>{
-    if(!session?.user)return Alert.alert('Login obrigatório','Entre na sua conta para comprar.');
+    if(!session?.user)return Alert.alert('Login obrigatório','Entre na sua conta para enviar o pedido.');
     if(!name.trim()||digits(phone).length<10)return Alert.alert('Confira os dados','Informe nome e telefone.');
-    if(fulfillment==='delivery'&&!address.trim())return Alert.alert('Endereço','Informe o endereço.');
-    if(!payment)return Alert.alert('Pagamento','Escolha uma forma de pagamento.');
+    if(fulfillment==='delivery'&&!address.trim())return Alert.alert('Endereço','Informe o endereço para entrega.');
+    if(!selectedStore)return Alert.alert('Loja','Escolha a loja que deverá atender seu pedido.');
+    const wa=whatsappNumber(selectedStore.whatsapp_number||'');
+    if(wa.length<12)return Alert.alert('WhatsApp não configurado',`O número de WhatsApp da ${selectedStore.name} ainda não foi configurado.`);
 
-    const change=payment==='cash'&&changeFor.trim()?Number(changeFor.replace(',','.')):null;
-    if(payment==='cash'&&change!==null&&(!Number.isFinite(change)||change<total))return Alert.alert('Troco','O valor para troco precisa ser maior ou igual ao total.');
+    const itemLines=items.map((x:any,index:number)=>`${index+1}. ${x.name}\n   Qtd: ${x.quantity} • ${money(x.price)} cada\n   Subtotal: ${money(x.price*x.quantity)}`).join('\n\n');
+    let message=`Olá! Meu nome é ${name.trim()}.\n\nGostaria de confirmar a disponibilidade destes produtos:\n\n${itemLines}\n\nTotal estimado: ${money(total)}\nLoja escolhida: ${selectedStore.name}\nRecebimento: ${fulfillment==='delivery'?'Entrega':'Retirada na loja'}\nTelefone do cliente: ${phone.trim()}`;
+    if(fulfillment==='delivery')message+=`\nEndereço: ${address.trim()}`;
+    message+='\n\nPor favor, confirme quais itens estão disponíveis e o valor final antes de concluirmos a compra.';
 
+    const url=`https://wa.me/${wa}?text=${encodeURIComponent(message)}`;
     setBusy(true);
-    const code=orderCode();
-    const payload={code,user_id:session.user.id,customer_name:name.trim(),phone:phone.trim(),email:session.user.email||null,store_id:store,fulfillment,address:fulfillment==='delivery'?address.trim():null,payment_method:payment,change_for:change,notes:selected?.instructions||null,subtotal:total,delivery_fee:0,total,status:'received'};
-    const{data:order,error}=await supabase.from('orders').insert(payload).select('id').single();
-
-    if(error||!order?.id){
+    try{
+      await Linking.openURL(url);
       setBusy(false);
-      return Alert.alert('Pedido não enviado','Não foi possível registrar o pedido agora. Confira sua internet e tente novamente.');
-    }
-
-    const{error:itemError}=await supabase.from('order_items').insert(items.map((x:any)=>({order_id:order.id,product_id:x.id,product_name:x.name,quantity:x.quantity,unit_price:x.price,total:x.price*x.quantity})));
-    if(itemError){
+      done();
+    }catch{
       setBusy(false);
-      return Alert.alert('Pedido incompleto','O pedido foi criado, mas houve falha ao registrar os itens. Entre em contato com a Drogaria Rocha informando o número '+code+'.');
+      Alert.alert('WhatsApp','Não foi possível abrir o WhatsApp neste aparelho.');
     }
-
-    setBusy(false);
-    let msg=`Número ${code}`;
-    if(payment==='pix'&&selected?.pix_key)msg+=`\n\nChave PIX: ${selected.pix_key}`;
-    if(selected?.instructions)msg+=`\n${selected.instructions}`;
-    Alert.alert('Pedido recebido',msg);
-    done();
   };
 
-  return <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><SafeAreaView style={s.modal} edges={['top','bottom']}><View style={s.modalHeader}><Text style={s.modalTitle}>Finalizar pedido</Text><Pressable onPress={onClose}><Ionicons name="close" size={26}/></Pressable></View><ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled"><View style={s.checkoutAccount}><Ionicons name="person-circle" size={24} color={C.orange}/><View><Text style={s.checkoutAccountTitle}>Comprando como</Text><Text style={s.checkoutAccountText}>{profile?.name||'Cliente'} • {session?.user?.email||''}</Text></View></View><Field label="Nome" value={name} onChangeText={setName}/><Field label="Telefone" value={phone} onChangeText={setPhone} keyboardType="phone-pad"/><Text style={s.fieldLabel}>Loja</Text><Options options={[["1","Loja 1"],["2","Loja 2"]]} value={String(store)} onChange={(v:string)=>setStore(Number(v))}/><Text style={s.fieldLabel}>Recebimento</Text><Options options={[["delivery","Entrega"],["pickup","Retirada"]]} value={fulfillment} onChange={(v:string)=>setFulfillment(v as any)}/>{fulfillment==='delivery'?<Field label="Endereço" value={address} onChangeText={setAddress}/>:null}<Text style={s.fieldLabel}>Pagamento</Text><View style={s.paymentList}>{methods.map(m=><Pressable key={m.code} style={[s.paymentOption,payment===m.code&&s.paymentOn]} onPress={()=>setPayment(m.code)}><Ionicons name={m.code==='pix'?'qr-code-outline':m.code==='cash'?'cash-outline':'card-outline'} size={21} color={payment===m.code?C.white:C.orange}/><Text style={[s.paymentLabel,payment===m.code&&{color:C.white}]}>{m.label}</Text></Pressable>)}</View>{selected?.instructions?<View style={s.instructions}><Text style={s.instructionsText}>{selected.instructions}</Text>{payment==='pix'&&selected.pix_key?<Text style={s.pixKey}>Chave PIX: {selected.pix_key}</Text>:null}</View>:null}{payment==='cash'?<Field label="Troco para quanto? (opcional)" value={changeFor} onChangeText={setChangeFor} keyboardType="decimal-pad" placeholder={money(total)}/>:null}<View style={s.checkoutTotal}><Text>Total</Text><Text style={s.checkoutValue}>{money(total)}</Text></View><Pressable style={s.primary} onPress={submit} disabled={busy}>{busy?<ActivityIndicator color={C.white}/>:<Text style={s.primaryText}>Confirmar pedido</Text>}</Pressable></ScrollView></SafeAreaView></Modal>;
+  return <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><SafeAreaView style={s.modal} edges={['top','bottom']}><View style={s.modalHeader}><Text style={s.modalTitle}>Enviar pelo WhatsApp</Text><Pressable onPress={onClose}><Ionicons name="close" size={26}/></Pressable></View><ScrollView contentContainerStyle={s.page} keyboardShouldPersistTaps="handled"><View style={s.checkoutAccount}><Ionicons name="person-circle" size={24} color={C.orange}/><View><Text style={s.checkoutAccountTitle}>Comprando como</Text><Text style={s.checkoutAccountText}>{profile?.name||'Cliente'} • {session?.user?.email||''}</Text></View></View><View style={s.whatsappNotice}><Ionicons name="logo-whatsapp" size={22} color="#198754"/><Text style={s.whatsappNoticeText}>O pedido será enviado à drogaria para confirmação de disponibilidade. A compra só será fechada após a resposta no WhatsApp.</Text></View><Field label="Nome" value={name} onChangeText={setName}/><Field label="Telefone" value={phone} onChangeText={setPhone} keyboardType="phone-pad"/><Text style={s.fieldLabel}>Loja</Text>{stores.length?<Options options={stores.map(x=>[String(x.id),x.name])} value={String(store)} onChange={(v:string)=>setStore(Number(v))}/>:<View style={s.instructions}><Text style={s.instructionsText}>Nenhuma loja disponível no momento.</Text></View>}<Text style={s.fieldLabel}>Recebimento</Text><Options options={[["delivery","Entrega"],["pickup","Retirada"]]} value={fulfillment} onChange={(v:string)=>setFulfillment(v as any)}/>{fulfillment==='delivery'?<Field label="Endereço" value={address} onChangeText={setAddress}/>:null}<View style={s.checkoutTotal}><Text>Total estimado</Text><Text style={s.checkoutValue}>{money(total)}</Text></View><Pressable style={s.whatsappButton} onPress={submit} disabled={busy}>{busy?<ActivityIndicator color={C.white}/>:<><Ionicons name="logo-whatsapp" size={21} color={C.white}/><Text style={s.primaryText}>Confirmar disponibilidade no WhatsApp</Text></>}</Pressable></ScrollView></SafeAreaView></Modal>;
 }
 
 function Field({label,...props}:any){return <View style={{marginBottom:12}}><Text style={s.fieldLabel}>{label}</Text><TextInput {...props} placeholderTextColor="#999" style={s.input}/></View>}
@@ -318,7 +323,7 @@ const s=StyleSheet.create({
   search:{height:50,borderRadius:15,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:8},filterLabel:{fontSize:12,fontWeight:'900',color:C.black,marginTop:14,marginBottom:8},chip:{height:38,paddingHorizontal:13,borderRadius:19,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},chipOn:{backgroundColor:C.black,borderColor:C.black},chipText:{fontSize:11,fontWeight:'800'},sortRow:{gap:7,paddingBottom:10},sortChip:{height:34,paddingHorizontal:11,borderRadius:11,backgroundColor:C.white,borderWidth:1,borderColor:C.border,justifyContent:'center'},sortChipOn:{backgroundColor:C.orangeSoft,borderColor:C.orange},sortText:{fontSize:10,fontWeight:'900',color:C.muted},catalogSummary:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginTop:4,marginBottom:12},resultCount:{fontSize:12,fontWeight:'900',color:C.black},clearFilters:{fontSize:11,fontWeight:'900',color:C.orangeDark},grid:{flexDirection:'row',flexWrap:'wrap',gap:10},emptyCatalog:{alignItems:'center',justifyContent:'center',paddingVertical:50},
   product:{width:'48%',minHeight:265,backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:18,padding:12},productCompact:{width:152,minHeight:255},productImg:{height:104,borderRadius:14,backgroundColor:C.white,borderWidth:1,borderColor:'#EFEFEF',overflow:'hidden',alignItems:'center',justifyContent:'center'},productImageReal:{width:'100%',height:'100%'},imageFallback:{alignItems:'center',justifyContent:'center',backgroundColor:C.orangeSoft},badge:{alignSelf:'flex-start',marginTop:7,fontSize:9,fontWeight:'900',color:C.orangeDark,backgroundColor:C.orangeSoft,paddingHorizontal:7,paddingVertical:3,borderRadius:6},productName:{fontSize:14,fontWeight:'900',color:C.black,marginTop:7},productDesc:{fontSize:11,color:C.muted,marginTop:3},productBottom:{marginTop:'auto',paddingTop:9,flexDirection:'row',alignItems:'center'},price:{fontWeight:'900',fontSize:15,flex:1},add:{width:34,height:34,borderRadius:11,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailsHint:{fontSize:9,color:C.orangeDark,fontWeight:'800',marginTop:7},
   detailHeader:{height:62,backgroundColor:C.white,borderBottomWidth:1,borderBottomColor:C.border,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},backBtn:{width:42,height:42,borderRadius:13,backgroundColor:C.bg,alignItems:'center',justifyContent:'center'},detailHeaderTitle:{fontSize:17,fontWeight:'900'},detailPage:{padding:18,paddingBottom:38},detailImageBox:{height:290,width:'100%',borderRadius:22,backgroundColor:C.white,borderWidth:1,borderColor:C.border,overflow:'hidden',alignItems:'center',justifyContent:'center'},detailImage:{width:'100%',height:'100%'},detailBadge:{alignSelf:'flex-start',marginTop:16,backgroundColor:C.orangeSoft,color:C.orangeDark,fontWeight:'900',fontSize:11,paddingHorizontal:10,paddingVertical:6,borderRadius:8},detailName:{fontSize:27,fontWeight:'900',color:C.black,marginTop:14},detailCategory:{fontSize:12,color:C.muted,fontWeight:'800',marginTop:4},detailPrice:{fontSize:26,fontWeight:'900',color:C.orange,marginTop:14},detailSection:{marginTop:22,paddingTop:18,borderTopWidth:1,borderTopColor:C.border},detailSectionTitle:{fontSize:16,fontWeight:'900',marginBottom:8},detailDescription:{fontSize:14,color:'#444',lineHeight:21},detailInfo:{marginTop:18,backgroundColor:C.orangeSoft,borderRadius:14,padding:12,flexDirection:'row',gap:8},detailInfoText:{flex:1,fontSize:11,color:'#333',lineHeight:16},
-  empty:{flex:1,alignItems:'center',justifyContent:'center',padding:25},emptyInline:{alignItems:'center',padding:30},emptyTitle:{fontSize:19,fontWeight:'900',marginTop:10},primary:{minHeight:50,borderRadius:14,backgroundColor:C.orange,alignItems:'center',justifyContent:'center',paddingHorizontal:18,marginTop:13,flexDirection:'row',gap:7},primaryText:{color:C.white,fontWeight:'900'},cartItem:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:16,padding:13,marginBottom:9,flexDirection:'row',alignItems:'center'},muted:{fontSize:12,color:C.muted,marginTop:4},qty:{flexDirection:'row',alignItems:'center',gap:7},total:{backgroundColor:C.black,borderRadius:16,padding:17,flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginTop:7},totalValue:{color:C.orange,fontWeight:'900',fontSize:21},loginRequired:{marginTop:12,padding:12,borderRadius:14,backgroundColor:C.orangeSoft,flexDirection:'row',alignItems:'center',gap:8},loginRequiredTitle:{fontSize:12,fontWeight:'900'},loginRequiredText:{fontSize:10,color:C.muted,marginTop:2},
+  empty:{flex:1,alignItems:'center',justifyContent:'center',padding:25},emptyInline:{alignItems:'center',padding:30},emptyTitle:{fontSize:19,fontWeight:'900',marginTop:10},primary:{minHeight:50,borderRadius:14,backgroundColor:C.orange,alignItems:'center',justifyContent:'center',paddingHorizontal:18,marginTop:13,flexDirection:'row',gap:7},primaryText:{color:C.white,fontWeight:'900'},cartItem:{backgroundColor:C.white,borderWidth:1,borderColor:C.border,borderRadius:16,padding:13,marginBottom:9,flexDirection:'row',alignItems:'center'},muted:{fontSize:12,color:C.muted,marginTop:4},qty:{flexDirection:'row',alignItems:'center',gap:7},total:{backgroundColor:C.black,borderRadius:16,padding:17,flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginTop:7},totalValue:{color:C.orange,fontWeight:'900',fontSize:21},loginRequired:{marginTop:12,padding:12,borderRadius:14,backgroundColor:C.orangeSoft,flexDirection:'row',alignItems:'center',gap:8},loginRequiredTitle:{fontSize:12,fontWeight:'900'},loginRequiredText:{fontSize:10,color:C.muted,marginTop:2},whatsappNotice:{marginTop:12,padding:12,borderRadius:14,backgroundColor:'#EAF8EF',borderWidth:1,borderColor:'#CBEBD7',flexDirection:'row',alignItems:'center',gap:9},whatsappNoticeText:{flex:1,fontSize:11,color:'#23452E',lineHeight:16,fontWeight:'700'},whatsappButton:{minHeight:52,borderRadius:14,backgroundColor:'#198754',alignItems:'center',justifyContent:'center',paddingHorizontal:16,marginTop:14,flexDirection:'row',gap:8},
   order:{backgroundColor:C.white,borderRadius:16,borderWidth:1,borderColor:C.border,padding:14,marginBottom:9},row:{flexDirection:'row',justifyContent:'space-between',gap:8},orderStatus:{color:C.orangeDark,fontWeight:'900',fontSize:11},orderTotal:{fontWeight:'900',fontSize:17,marginTop:8},
   account:{backgroundColor:C.black,borderRadius:20,padding:17,flexDirection:'row',alignItems:'center',gap:11},avatar:{width:50,height:50,borderRadius:16,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},accountName:{color:C.white,fontWeight:'900',fontSize:17},accountEmail:{color:'#CCC',fontSize:12,marginTop:3},accountActive:{color:C.orange,fontSize:10,fontWeight:'900',marginTop:5},secondary:{minHeight:48,borderRadius:14,borderWidth:1,borderColor:C.border,backgroundColor:C.white,alignItems:'center',justifyContent:'center',marginTop:13},secondaryText:{fontWeight:'900'},authTabs:{flexDirection:'row',backgroundColor:'#EEE',padding:4,borderRadius:13,marginBottom:14},authTab:{flex:1,height:40,alignItems:'center',justifyContent:'center',borderRadius:10},authOn:{backgroundColor:C.white},fieldLabel:{fontSize:12,fontWeight:'900',marginBottom:6},input:{minHeight:48,borderRadius:13,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:12,color:C.black},
   modal:{flex:1,backgroundColor:C.bg},modalHeader:{height:62,backgroundColor:C.white,borderBottomWidth:1,borderBottomColor:C.border,paddingHorizontal:16,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},modalTitle:{fontSize:18,fontWeight:'900'},checkoutAccount:{padding:12,borderRadius:14,backgroundColor:C.orangeSoft,marginBottom:14,flexDirection:'row',alignItems:'center',gap:8},checkoutAccountTitle:{fontSize:10,fontWeight:'900',color:C.orangeDark},checkoutAccountText:{fontSize:11,fontWeight:'800',color:C.black,marginTop:2},options:{flexDirection:'row',gap:8,marginBottom:14},option:{flex:1,minHeight:42,borderRadius:12,backgroundColor:C.white,borderWidth:1,borderColor:C.border,alignItems:'center',justifyContent:'center'},optionOn:{backgroundColor:C.black,borderColor:C.black},optionText:{fontSize:11,fontWeight:'800'},paymentList:{gap:8,marginBottom:12},paymentOption:{minHeight:48,borderRadius:13,backgroundColor:C.white,borderWidth:1,borderColor:C.border,paddingHorizontal:13,flexDirection:'row',alignItems:'center',gap:9},paymentOn:{backgroundColor:C.black,borderColor:C.black},paymentLabel:{fontWeight:'900'},instructions:{padding:12,borderRadius:13,backgroundColor:C.orangeSoft,marginBottom:12},instructionsText:{fontSize:11,color:'#333',lineHeight:16},pixKey:{fontSize:12,fontWeight:'900',color:C.orangeDark,marginTop:6},checkoutTotal:{padding:15,borderRadius:14,backgroundColor:C.white,borderWidth:1,borderColor:C.border,flexDirection:'row',justifyContent:'space-between',alignItems:'center'},checkoutValue:{fontSize:20,fontWeight:'900',color:C.orange},
