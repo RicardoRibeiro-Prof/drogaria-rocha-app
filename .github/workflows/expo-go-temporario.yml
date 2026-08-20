@@ -32,21 +32,40 @@ jobs:
           fs.writeFileSync(p,JSON.stringify(j,null,2));
           NODE
           npm install --no-save @expo/ngrok
-      - name: Iniciar tunnel
+      - name: Iniciar tunnel e obter link Expo Go
         env:
           CI: '1'
         run: |
-          nohup npx expo start --tunnel > expo.log 2>&1 &
+          nohup npx expo start --tunnel --go > expo.log 2>&1 &
           echo $! > expo.pid
-          for i in {1..24}; do
+          for i in {1..36}; do
             sleep 5
-            grep -Eo 'exp://[^[:space:]]+|https://[^[:space:]]+\.exp\.direct[^[:space:]]*' expo.log | head -1 > expo-go-link.txt || true
-            [ -s expo-go-link.txt ] && break
+            if grep -q 'Tunnel ready' expo.log; then
+              break
+            fi
           done
           cat expo.log
-          echo LINK_EXPO_GO
-          cat expo-go-link.txt || true
-          test -s expo-go-link.txt
+          grep -q 'Tunnel ready' expo.log
+          for i in {1..12}; do
+            curl -fsS 'http://127.0.0.1:8081/_expo/open?platform=android&runtime=expo' -o expo-open.json && break || true
+            sleep 3
+          done
+          cat expo-open.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const raw=fs.readFileSync('expo-open.json','utf8');
+          const data=JSON.parse(raw);
+          const find=(v)=>{
+            if(typeof v==='string' && v.startsWith('exp://')) return v;
+            if(Array.isArray(v)) for(const x of v){const r=find(x);if(r)return r;}
+            if(v&&typeof v==='object') for(const x of Object.values(v)){const r=find(x);if(r)return r;}
+            return null;
+          };
+          const link=find(data);
+          if(!link) throw new Error('Link exp:// não encontrado');
+          fs.writeFileSync('expo-go-link.txt',link+'\n');
+          console.log(link);
+          NODE
       - name: Publicar link
         uses: actions/upload-artifact@v4
         with:
