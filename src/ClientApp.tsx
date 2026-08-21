@@ -22,7 +22,7 @@ import { DEMO_PRODUCTS, Product } from './data/demoProducts';
 import HomeBannerCarousel from './HomeBannerCarousel';
 import { supabase } from './lib/supabase';
 
-type Tab = 'home' | 'catalog' | 'cart' | 'account';
+type Tab = 'home' | 'catalog' | 'offers' | 'cart' | 'account';
 type Cart = Record<number, number>;
 type SortMode = 'featured' | 'priceAsc' | 'priceDesc' | 'az';
 type AppProduct = Product & { code?: string | null };
@@ -124,6 +124,7 @@ export default function ClientApp() {
     return list;
   },[products,search,category,sort]);
 
+  const offers = useMemo(()=>products.filter(p=>String(p.badge||'').trim().toLowerCase()==='oferta'),[products]);
   const cartItems = useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({...p,quantity:cart[p.id]})),[products,cart]);
   const count = cartItems.reduce((s,x)=>s+x.quantity,0);
   const total = cartItems.reduce((s,x)=>s+x.price*x.quantity,0);
@@ -166,6 +167,7 @@ export default function ClientApp() {
     <View style={s.content}>
       {tab==='home'&&<Home products={products} loading={loading} add={add} openProduct={setSelectedProduct} catalog={openCatalog}/>}
       {tab==='catalog'&&<Catalog products={filtered} loading={loading} search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={categories} sort={sort} setSort={setSort} add={add} openProduct={setSelectedProduct}/>} 
+      {tab==='offers'&&<Offers products={offers} loading={loading} add={add} openProduct={setSelectedProduct}/>} 
       {tab==='cart'&&<Cart items={cartItems} total={total} qty={qty} catalog={()=>openCatalog('Todos')} checkout={sendCartToWhatsApp} session={session} account={()=>setTab('account')}/>} 
       {tab==='account'&&<Account session={session} profile={profile}/>} 
     </View>
@@ -298,6 +300,18 @@ function Catalog({products,loading,search,setSearch,category,setCategory,categor
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.sortRow}>{sorts.map(([id,label])=><Pressable key={id} style={[s.sortChip,sort===id&&s.sortChipOn]} onPress={()=>setSort(id)}><Text style={[s.sortText,sort===id&&{color:C.orangeDark}]}>{label}</Text></Pressable>)}</ScrollView>
     <View style={s.catalogSummary}><Text style={s.resultCount}>{loading?'Carregando...':`${products.length} ${products.length===1?'produto':'produtos'}`}</Text>{hasFilters?<Pressable onPress={()=>{setCategory('Todos');setSearch('');setSort('featured');}}><Text style={s.clearFilters}>Limpar filtros</Text></Pressable>:null}</View>
     {loading?<ActivityIndicator color={C.orange}/>:products.length?<View style={s.grid}>{products.map((p:AppProduct)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)}/>)}</View>:<View style={s.emptyCatalog}><Ionicons name="search-outline" size={42} color={C.orange}/><Text style={s.emptyTitle}>Nenhum produto encontrado</Text><Text style={s.muted}>Tente outra categoria ou limpe os filtros.</Text></View>}
+  </ScrollView>;
+}
+
+function Offers({products,loading,add,openProduct}:any){
+  return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
+    <Text style={s.title}>Ofertas</Text>
+    <View style={[s.whatsappNotice,{marginTop:0,marginBottom:14,backgroundColor:C.orangeSoft,borderColor:'#FFD2AF'}]}>
+      <Ionicons name="pricetags-outline" size={22} color={C.orange}/>
+      <Text style={[s.whatsappNoticeText,{color:'#5B3418'}]}>Produtos selecionados pela Drogaria Rocha com preço especial.</Text>
+    </View>
+    <View style={s.catalogSummary}><Text style={s.resultCount}>{loading?'Carregando...':`${products.length} ${products.length===1?'oferta':'ofertas'}`}</Text></View>
+    {loading?<ActivityIndicator color={C.orange}/>:products.length?<View style={s.grid}>{products.map((p:AppProduct)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)}/>)}</View>:<View style={s.emptyCatalog}><Ionicons name="pricetags-outline" size={46} color={C.orange}/><Text style={s.emptyTitle}>Nenhuma oferta ativa agora</Text><Text style={s.muted}>Assim que um produto receber o selo Oferta, ele aparecerá automaticamente aqui.</Text></View>}
   </ScrollView>;
 }
 
@@ -509,7 +523,7 @@ function Account({session,profile}:any){
 }
 
 function Field({label,...props}:any){return <View style={{marginBottom:12}}><Text style={s.fieldLabel}>{label}</Text><TextInput {...props} placeholderTextColor="#999" style={s.input}/></View>}
-function Bottom({tab,setTab,count}:any){const inset=useSafeAreaInsets();const items:[Tab,string,any][]=[['home','Início','home-outline'],['catalog','Catálogo','search-outline'],['cart','Carrinho','bag-handle-outline'],['account','Conta','person-outline']];return <View style={[s.bottom,{paddingBottom:Math.max(inset.bottom,6)}]}>{items.map(([id,label,icon])=><Pressable key={id} style={s.nav} onPress={()=>setTab(id)}><View><Ionicons name={icon} size={23} color={tab===id?C.orange:C.muted}/>{id==='cart'&&count>0?<View style={s.navBadge}><Text style={s.navBadgeText}>{count}</Text></View>:null}</View><Text style={[s.navText,tab===id&&{color:C.orange}]}>{label}</Text></Pressable>)}</View>}
+function Bottom({tab,setTab,count}:any){const inset=useSafeAreaInsets();const items:[Tab,string,any][]=[['home','Início','home-outline'],['catalog','Catálogo','search-outline'],['offers','Ofertas','pricetags-outline'],['cart','Carrinho','bag-handle-outline'],['account','Conta','person-outline']];return <View style={[s.bottom,{paddingBottom:Math.max(inset.bottom,6)}]}>{items.map(([id,label,icon])=><Pressable key={id} style={s.nav} onPress={()=>setTab(id)}><View><Ionicons name={icon} size={23} color={tab===id?C.orange:C.muted}/>{id==='cart'&&count>0?<View style={s.navBadge}><Text style={s.navBadgeText}>{count}</Text></View>:null}</View><Text style={[s.navText,tab===id&&{color:C.orange}]}>{label}</Text></Pressable>)}</View>}
 
 const s=StyleSheet.create({
   app:{flex:1,backgroundColor:C.bg},content:{flex:1},page:{padding:18,paddingBottom:36},title:{fontSize:28,fontWeight:'900',color:C.black,marginBottom:16},
