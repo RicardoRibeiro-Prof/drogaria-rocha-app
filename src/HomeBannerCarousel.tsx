@@ -1,11 +1,9 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ImageBackground, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { ImageBackground, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { supabase } from './lib/supabase';
 
 type Banner = {
   id: number;
-  eyebrow?: string | null;
   title: string;
   subtitle: string;
   button_text: string;
@@ -20,7 +18,7 @@ type Props = {
 };
 
 const FALLBACK: Banner[] = [
-  {id:-1,eyebrow:'DROGARIA ROCHA',title:'Cuidado e praticidade na palma da sua mão.',subtitle:'Escolha seus produtos e finalize a compra pelo WhatsApp.',button_text:'Ver produtos',target_type:'all',target_value:'',sort_order:1},
+  {id:-1,title:'',subtitle:'',button_text:'',target_type:'all',target_value:'',sort_order:1},
 ];
 
 export default function HomeBannerCarousel({catalog}:Props){
@@ -33,7 +31,7 @@ export default function HomeBannerCarousel({catalog}:Props){
   useEffect(()=>{
     let alive=true;
     supabase.from('home_banners')
-      .select('id,eyebrow,title,subtitle,button_text,image_url,target_type,target_value,sort_order')
+      .select('id,title,subtitle,button_text,image_url,target_type,target_value,sort_order')
       .eq('active',true)
       .order('sort_order',{ascending:true})
       .then(({data})=>{
@@ -67,19 +65,6 @@ export default function HomeBannerCarousel({catalog}:Props){
     catalog('Todos','');
   };
 
-  const content=(banner:Banner)=><>
-    <View style={s.overlay}/>
-    <View style={s.copy}>
-      <Text style={s.eyebrow}>{banner.eyebrow||'DROGARIA ROCHA'}</Text>
-      <Text style={s.title}>{banner.title}</Text>
-      {!!banner.subtitle&&<Text style={s.subtitle}>{banner.subtitle}</Text>}
-      <Pressable style={s.button} onPress={()=>go(banner)}>
-        <Text style={s.buttonText}>{banner.button_text||'Ver produtos'}</Text>
-        <Ionicons name="arrow-forward" size={16} color="#FFF"/>
-      </Pressable>
-    </View>
-  </>;
-
   return <View>
     <ScrollView
       ref={ref}
@@ -93,22 +78,18 @@ export default function HomeBannerCarousel({catalog}:Props){
       }}
     >
       {slides.map(banner=><View key={banner.id} style={{width:cardWidth}}>
-        <View style={s.hero}>
+        <Pressable style={s.hero} onPress={()=>go(banner)}>
           {banner.image_url?
             <ImageBackground
               source={{uri:banner.image_url}}
               style={s.heroBackground}
               imageStyle={s.heroImage}
               resizeMode="cover"
-            >
-              {content(banner)}
-            </ImageBackground>
+            />
           :
-            <View style={s.heroFallback}>
-              {content(banner)}
-            </View>
+            <View style={s.heroFallback}/>
           }
-        </View>
+        </Pressable>
       </View>)}
     </ScrollView>
     {slides.length>1?<View style={s.dots}>{slides.map((b,i)=><View key={b.id} style={[s.dot,i===index&&s.dotOn]}/>)}</View>:null}
@@ -116,17 +97,10 @@ export default function HomeBannerCarousel({catalog}:Props){
 }
 
 const s=StyleSheet.create({
-  hero:{minHeight:210,borderRadius:23,backgroundColor:'#111111',overflow:'hidden'},
-  heroBackground:{minHeight:210,justifyContent:'center',padding:20},
+  hero:{height:210,borderRadius:23,backgroundColor:'#111111',overflow:'hidden'},
+  heroBackground:{width:'100%',height:'100%'},
   heroImage:{borderRadius:23},
-  heroFallback:{minHeight:210,justifyContent:'center',padding:20,backgroundColor:'#111111'},
-  overlay:{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(0,0,0,0.42)'},
-  copy:{zIndex:2,maxWidth:'72%'},
-  eyebrow:{color:'#F47A1F',fontSize:10,fontWeight:'900',letterSpacing:.8},
-  title:{color:'#FFF',fontSize:23,lineHeight:28,fontWeight:'900',marginTop:7,textShadowColor:'rgba(0,0,0,.35)',textShadowOffset:{width:0,height:1},textShadowRadius:3},
-  subtitle:{color:'#F2F2F2',fontSize:12,lineHeight:18,marginTop:7,textShadowColor:'rgba(0,0,0,.35)',textShadowOffset:{width:0,height:1},textShadowRadius:2},
-  button:{marginTop:14,alignSelf:'flex-start',height:42,borderRadius:12,backgroundColor:'#F47A1F',paddingHorizontal:14,flexDirection:'row',alignItems:'center',gap:6},
-  buttonText:{color:'#FFF',fontSize:12,fontWeight:'900'},
+  heroFallback:{width:'100%',height:'100%',backgroundColor:'#111111'},
   dots:{height:24,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:6},
   dot:{width:7,height:7,borderRadius:4,backgroundColor:'#D1D1D1'},
   dotOn:{width:21,backgroundColor:'#F47A1F'},
