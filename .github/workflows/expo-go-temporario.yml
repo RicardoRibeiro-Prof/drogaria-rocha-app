@@ -6,7 +6,7 @@ on:
 
 jobs:
   expo-go:
-    if: github.head_ref == 'expo-go-session'
+    if: startsWith(github.head_ref, 'expo-go-session')
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -32,7 +32,7 @@ jobs:
           fs.writeFileSync(p,JSON.stringify(j,null,2));
           NODE
           npm install --no-save @expo/ngrok
-      - name: Iniciar tunnel e obter link Expo Go
+      - name: Iniciar tunnel e validar acesso publico
         env:
           CI: '1'
         run: |
@@ -46,14 +46,10 @@ jobs:
           grep -q 'Tunnel ready' expo.log
 
           curl -sS -D expo-link-headers.txt -o expo-link-body.txt 'http://127.0.0.1:8081/_expo/link' || true
-          cat expo-link-headers.txt || true
-          cat expo-link-body.txt || true
-
           LINK=$(tr -d '\r' < expo-link-headers.txt | awk 'BEGIN{IGNORECASE=1} /^location:/ {sub(/^location:[[:space:]]*/,""); print; exit}')
 
           if [ -z "$LINK" ]; then
             curl -fsS 'http://127.0.0.1:4040/api/tunnels' -o ngrok-tunnels.json
-            cat ngrok-tunnels.json
             LINK=$(node - <<'NODE'
           const fs=require('fs');
           const data=JSON.parse(fs.readFileSync('ngrok-tunnels.json','utf8'));
@@ -67,13 +63,31 @@ jobs:
           fi
 
           echo "$LINK" > expo-go-link.txt
+          HOST=$(echo "$LINK" | sed -E 's#^exp://##; s#:80/?$##')
+          echo "Testando host publico: $HOST"
+
+          OK=0
+          for i in {1..12}; do
+            if curl -fsS --max-time 10 \
+              -H 'expo-platform: android' \
+              -H 'accept: application/expo+json,application/json,text/plain,*/*' \
+              "http://$HOST" -o expo-public-response.txt; then
+              OK=1
+              break
+            fi
+            sleep 3
+          done
           echo "EXPO_GO_LINK=$LINK"
+          head -c 1000 expo-public-response.txt || true
+          test "$OK" = "1"
           grep -q '^exp://' expo-go-link.txt
       - name: Publicar link
         uses: actions/upload-artifact@v4
         with:
           name: expo-go-link
-          path: expo-go-link.txt
+          path: |
+            expo-go-link.txt
+            expo-public-response.txt
           retention-days: 1
       - name: Manter tunnel ativo
         run: sleep 1500
