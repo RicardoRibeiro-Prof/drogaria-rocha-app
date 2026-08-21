@@ -1,0 +1,89 @@
+name: Add Offers Tab
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-offers-tab.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  update-client:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Add Ofertas tab to client app
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path('src/ClientApp.tsx')
+          text = path.read_text(encoding='utf-8')
+
+          old_tab = "type Tab = 'home' | 'catalog' | 'cart' | 'account';"
+          new_tab = "type Tab = 'home' | 'catalog' | 'offers' | 'cart' | 'account';"
+          if old_tab in text:
+              text = text.replace(old_tab, new_tab, 1)
+          elif new_tab not in text:
+              raise SystemExit('Tab type anchor not found')
+
+          offers_state = """  const offers = useMemo(()=>products.filter(p=>String(p.badge||'').trim().toLowerCase()==='oferta'),[products]);\n\n"""
+          cart_anchor = "  const cartItems = useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({...p,quantity:cart[p.id]})),[products,cart]);"
+          if offers_state.strip() not in text:
+              if cart_anchor not in text:
+                  raise SystemExit('Cart anchor not found')
+              text = text.replace(cart_anchor, offers_state + cart_anchor, 1)
+
+          offers_render = "      {tab==='offers'&&<Offers products={offers} loading={loading} add={add} openProduct={setSelectedProduct}/>} \n"
+          cart_render_anchor = "      {tab==='cart'&&<Cart items={cartItems} total={total} qty={qty} catalog={()=>openCatalog('Todos')} checkout={sendCartToWhatsApp} session={session} account={()=>setTab('account')}/>} "
+          if offers_render.strip() not in text:
+              if cart_render_anchor not in text:
+                  raise SystemExit('Cart render anchor not found')
+              text = text.replace(cart_render_anchor, offers_render + cart_render_anchor, 1)
+
+          offers_component = r'''
+function Offers({products,loading,add,openProduct}:any){
+  return <ScrollView contentContainerStyle={s.page} showsVerticalScrollIndicator={false}>
+    <Text style={s.title}>Ofertas</Text>
+    <View style={[s.whatsappNotice,{marginTop:0,marginBottom:14,backgroundColor:C.orangeSoft,borderColor:'#FFD2AF'}]}>
+      <Ionicons name="pricetags-outline" size={22} color={C.orange}/>
+      <Text style={[s.whatsappNoticeText,{color:'#5B3418'}]}>Produtos selecionados pela Drogaria Rocha com preço especial.</Text>
+    </View>
+    <View style={s.catalogSummary}><Text style={s.resultCount}>{loading?'Carregando...':`${products.length} ${products.length===1?'oferta':'ofertas'}`}</Text></View>
+    {loading?<ActivityIndicator color={C.orange}/>:products.length?<View style={s.grid}>{products.map((p:AppProduct)=><ProductCard key={p.id} p={p} add={()=>add(p)} open={()=>openProduct(p)}/>)}</View>:<View style={s.emptyCatalog}><Ionicons name="pricetags-outline" size={46} color={C.orange}/><Text style={s.emptyTitle}>Nenhuma oferta ativa agora</Text><Text style={s.muted}>Assim que um produto receber o selo Oferta, ele aparecerá automaticamente aqui.</Text></View>}
+  </ScrollView>;
+}
+'''
+          product_image_anchor = "\nfunction ProductImage({uri,style}:any){"
+          if 'function Offers({products,loading,add,openProduct}:any)' not in text:
+              if product_image_anchor not in text:
+                  raise SystemExit('ProductImage anchor not found')
+              text = text.replace(product_image_anchor, offers_component + product_image_anchor, 1)
+
+          old_items = "const items:[Tab,string,any][]=[['home','Início','home-outline'],['catalog','Catálogo','search-outline'],['cart','Carrinho','bag-handle-outline'],['account','Conta','person-outline']]"
+          new_items = "const items:[Tab,string,any][]=[['home','Início','home-outline'],['catalog','Catálogo','search-outline'],['offers','Ofertas','pricetags-outline'],['cart','Carrinho','bag-handle-outline'],['account','Conta','person-outline']]"
+          if old_items in text:
+              text = text.replace(old_items, new_items, 1)
+          elif new_items not in text:
+              raise SystemExit('Bottom menu anchor not found')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit app change
+        shell: bash
+        run: |
+          if git diff --quiet -- src/ClientApp.tsx; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/ClientApp.tsx
+          git commit -m "feat: add ofertas tab to bottom navigation"
+          git push
