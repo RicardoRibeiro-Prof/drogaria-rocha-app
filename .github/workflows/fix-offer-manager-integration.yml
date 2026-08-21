@@ -1,0 +1,142 @@
+name: Integrar ofertas do gerenciador ao app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-offer-manager-integration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Aplicar integração das ofertas
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('src/ClientApp.tsx')
+          s = path.read_text(encoding='utf-8')
+
+          def rep(old, new, label):
+              global s
+              if old not in s:
+                  raise SystemExit(f'Trecho não encontrado: {label}')
+              s = s.replace(old, new, 1)
+
+          rep(
+              "type AppProduct = Product & { code?: string | null };",
+              "type AppProduct = Product & { code?: string | null; offer_price?: number | null; offer_active?: boolean | null; offer_start?: string | null; offer_end?: string | null };",
+              'tipo AppProduct'
+          )
+
+          rep(
+              "const money = (v:number) => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});",
+              "const money = (v:number) => Number(v || 0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});\nconst hasActiveOffer = (p:AppProduct) => Boolean(p.offer_active) && p.offer_price != null && Number(p.offer_price) >= 0 && Number(p.offer_price) < Number(p.price);\nconst currentPrice = (p:AppProduct) => hasActiveOffer(p) ? Number(p.offer_price) : Number(p.price);\nconst discountPercent = (p:AppProduct) => hasActiveOffer(p) && Number(p.price) > 0 ? Math.max(0,Math.round((1-Number(p.offer_price)/Number(p.price))*100)) : 0;",
+              'helpers de oferta'
+          )
+
+          rep(
+              ".select('id,name,description,category,price,badge,image_url,active,code')",
+              ".select('id,name,description,category,price,badge,image_url,active,code,offer_price,offer_active,offer_start,offer_end')",
+              'select de produtos'
+          )
+
+          rep(
+              "if(!error && data?.length) setProducts(data.map((x:any)=>({...x,id:Number(x.id),price:Number(x.price||0)})));",
+              "if(!error && data?.length) setProducts(data.map((x:any)=>({...x,id:Number(x.id),price:Number(x.price||0),offer_price:x.offer_price==null?null:Number(x.offer_price)})));",
+              'mapeamento de produtos'
+          )
+
+          rep(
+              "if(sort==='priceAsc') return [...list].sort((a,b)=>a.price-b.price);\n    if(sort==='priceDesc') return [...list].sort((a,b)=>b.price-a.price);",
+              "if(sort==='priceAsc') return [...list].sort((a,b)=>currentPrice(a)-currentPrice(b));\n    if(sort==='priceDesc') return [...list].sort((a,b)=>currentPrice(b)-currentPrice(a));",
+              'ordenação por preço'
+          )
+
+          rep(
+              "const offers = useMemo(()=>products.filter(p=>String(p.badge||'').trim().toLowerCase()==='oferta'),[products]);\n  const cartItems = useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({...p,quantity:cart[p.id]})),[products,cart]);\n  const count = cartItems.reduce((s,x)=>s+x.quantity,0);\n  const total = cartItems.reduce((s,x)=>s+x.price*x.quantity,0);",
+              "const offers = useMemo(()=>products.filter(hasActiveOffer),[products]);\n  const cartItems = useMemo(()=>products.filter(p=>cart[p.id]>0).map(p=>({...p,quantity:cart[p.id],unitPrice:currentPrice(p)})),[products,cart]);\n  const count = cartItems.reduce((s,x)=>s+x.quantity,0);\n  const total = cartItems.reduce((s,x)=>s+x.unitPrice*x.quantity,0);",
+              'ofertas e carrinho'
+          )
+
+          rep(
+              "const lines = cartItems.map((x:any,index:number)=>`${index+1}. ${x.name}\\nQtd: ${x.quantity} | Unitário: ${money(x.price)} | Subtotal: ${money(x.price*x.quantity)}`).join('\\n\\n');",
+              "const lines = cartItems.map((x:any,index:number)=>`${index+1}. ${x.name}\\nQtd: ${x.quantity} | Unitário: ${money(x.unitPrice)} | Subtotal: ${money(x.unitPrice*x.quantity)}`).join('\\n\\n');",
+              'preço no WhatsApp'
+          )
+
+          rep(
+              "{p.badge?<Text style={s.badge}>{p.badge}</Text>:null}\n    <Text style={s.productName}",
+              "{p.badge?<Text style={s.badge}>{p.badge}</Text>:null}\n    {hasActiveOffer(p)?<Text style={s.discountBadge}>{discountPercent(p)}% OFF</Text>:null}\n    <Text style={s.productName}",
+              'selo percentual'
+          )
+
+          rep(
+              "<View style={s.productBottom}>\n      <Text style={s.price}>{money(p.price)}</Text>\n      <Pressable style={s.add}",
+              "<View style={s.productBottom}>\n      <View style={{flex:1}}>\n        {hasActiveOffer(p)?<Text style={s.oldPrice}>{money(p.price)}</Text>:null}\n        <Text style={[s.price,hasActiveOffer(p)&&s.offerPrice]}>{money(currentPrice(p))}</Text>\n      </View>\n      <Pressable style={s.add}",
+              'preço nos cards'
+          )
+
+          rep(
+              "<View><Text style={s.priceCardLabel}>Preço no aplicativo</Text><Text style={s.priceCardValue}>{money(product.price)}</Text></View>",
+              "<View><Text style={s.priceCardLabel}>{hasActiveOffer(product)?'Preço de oferta':'Preço no aplicativo'}</Text>{hasActiveOffer(product)?<Text style={s.detailOldPrice}>{money(product.price)}</Text>:null}<Text style={s.priceCardValue}>{money(currentPrice(product))}</Text></View>",
+              'preço nos detalhes'
+          )
+
+          rep(
+              "<View style={{flex:1}}><Text style={s.detailBottomLabel}>Preço</Text><Text style={s.detailBottomPrice}>{money(product.price)}</Text></View>",
+              "<View style={{flex:1}}><Text style={s.detailBottomLabel}>{hasActiveOffer(product)?'Oferta':'Preço'}</Text>{hasActiveOffer(product)?<Text style={s.detailBottomOldPrice}>{money(product.price)}</Text>:null}<Text style={s.detailBottomPrice}>{money(currentPrice(product))}</Text></View>",
+              'preço na barra de detalhes'
+          )
+
+          rep(
+              "<Text style={s.muted}>{money(x.price)} cada</Text>",
+              "<Text style={s.muted}>{money(x.unitPrice)} cada{hasActiveOffer(x)?` • ${discountPercent(x)}% OFF`:''}</Text>",
+              'preço no carrinho'
+          )
+
+          rep(
+              "<Text style={s.muted}>Assim que um produto receber o selo Oferta, ele aparecerá automaticamente aqui.</Text>",
+              "<Text style={s.muted}>Assim que uma oferta for ativada no gerenciador, ela aparecerá automaticamente aqui.</Text>",
+              'texto vazio de ofertas'
+          )
+
+          rep(
+              "price:{fontWeight:'900',fontSize:15,flex:1},add:{width:34,height:34,borderRadius:11,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailsHint:{fontSize:9,color:C.orangeDark,fontWeight:'800',marginTop:7},",
+              "price:{fontWeight:'900',fontSize:15},oldPrice:{fontSize:10,color:C.muted,textDecorationLine:'line-through',marginBottom:1},offerPrice:{color:C.orangeDark,fontSize:17},discountBadge:{alignSelf:'flex-start',marginTop:6,fontSize:9,fontWeight:'900',color:'#137333',backgroundColor:'#E7F6EC',paddingHorizontal:7,paddingVertical:3,borderRadius:6},add:{width:34,height:34,borderRadius:11,backgroundColor:C.orange,alignItems:'center',justifyContent:'center'},detailsHint:{fontSize:9,color:C.orangeDark,fontWeight:'800',marginTop:7},",
+              'estilos dos cards'
+          )
+
+          rep(
+              "priceCardLabel:{fontSize:11,color:C.muted,fontWeight:'800'},priceCardValue:{fontSize:28,fontWeight:'900',color:C.black,marginTop:3},",
+              "priceCardLabel:{fontSize:11,color:C.muted,fontWeight:'800'},detailOldPrice:{fontSize:12,color:C.muted,textDecorationLine:'line-through',marginTop:4},priceCardValue:{fontSize:28,fontWeight:'900',color:C.black,marginTop:3},",
+              'estilo preço detalhes'
+          )
+
+          rep(
+              "detailBottomLabel:{fontSize:10,color:C.muted,fontWeight:'800'},detailBottomPrice:{fontSize:25,fontWeight:'900',color:C.black,marginTop:2},",
+              "detailBottomLabel:{fontSize:10,color:C.muted,fontWeight:'800'},detailBottomOldPrice:{fontSize:10,color:C.muted,textDecorationLine:'line-through',marginTop:1},detailBottomPrice:{fontSize:25,fontWeight:'900',color:C.black,marginTop:2},",
+              'estilo preço barra inferior'
+          )
+
+          path.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Validar TypeScript
+        run: |
+          npm install
+          npx tsc --noEmit
+      - name: Commitar alteração
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/ClientApp.tsx
+          git commit -m "fix: integrar ofertas do gerenciador ao app"
+          git push
