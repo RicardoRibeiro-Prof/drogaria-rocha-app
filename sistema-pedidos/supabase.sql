@@ -7,7 +7,7 @@ create table if not exists public.pedidos_produtos (
   observacao text,
   status text not null default 'anotado' check (status in ('anotado','pedido','recebido')),
   criado_por text not null,
-  criado_por_id uuid not null references auth.users(id),
+  criado_por_id uuid references auth.users(id),
   pedido_por text,
   pedido_em timestamptz,
   recebido_por text,
@@ -17,12 +17,12 @@ create table if not exists public.pedidos_produtos (
 );
 
 alter table public.pedidos_produtos enable row level security;
-grant select, insert, update, delete on public.pedidos_produtos to authenticated;
+grant select, insert, update, delete on public.pedidos_produtos to anon, authenticated;
 
-create policy "Funcionarios podem visualizar pedidos" on public.pedidos_produtos for select to authenticated using (true);
-create policy "Funcionarios podem anotar produtos" on public.pedidos_produtos for insert to authenticated with check ((select auth.uid()) = criado_por_id);
-create policy "Funcionarios podem atualizar pedidos" on public.pedidos_produtos for update to authenticated using (true) with check (true);
-create policy "Funcionarios podem excluir anotacoes" on public.pedidos_produtos for delete to authenticated using (true);
+create policy "Equipe pode visualizar pedidos" on public.pedidos_produtos for select to anon, authenticated using (true);
+create policy "Equipe pode anotar produtos" on public.pedidos_produtos for insert to anon, authenticated with check (criado_por in ('Ricardo','Farmacêutica','Jonas','Nilza'));
+create policy "Equipe pode atualizar pedidos" on public.pedidos_produtos for update to anon, authenticated using (true) with check (true);
+create policy "Equipe pode excluir anotacoes" on public.pedidos_produtos for delete to anon, authenticated using (true);
 
 create or replace function public.atualizar_data_pedido() returns trigger language plpgsql set search_path = '' as $$ begin new.updated_at = now(); return new; end; $$;
 create trigger atualizar_data_pedido before update on public.pedidos_produtos for each row execute function public.atualizar_data_pedido();

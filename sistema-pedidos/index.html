@@ -12,25 +12,10 @@
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <section id="loginView" class="login-view">
-    <div class="login-card">
-      <div class="brand-mark" aria-hidden="true">DR</div>
-      <p class="eyebrow">Drogaria Rocha</p>
-      <h1>Controle de pedidos</h1>
-      <p class="muted">Entre com seu acesso de funcionário.</p>
-      <form id="loginForm" class="stack">
-        <label>E-mail<input id="email" type="email" autocomplete="email" required></label>
-        <label>Senha<input id="password" type="password" autocomplete="current-password" required minlength="6"></label>
-        <button id="loginButton" class="btn primary" type="submit">Entrar</button>
-      </form>
-      <p id="loginError" class="error" role="alert"></p>
-    </div>
-  </section>
-
-  <div id="appView" class="app hidden">
+  <div id="appView" class="app">
     <header class="topbar">
       <div class="brand-row"><div class="brand-mark small">DR</div><div><strong>Drogaria Rocha</strong><span>Pedidos internos</span></div></div>
-      <button id="logoutButton" class="btn ghost" type="button">Sair</button>
+      <label class="employee-picker">Usando como<select id="employeeSelect"><option>Ricardo</option><option>Farmacêutica</option><option>Jonas</option><option>Nilza</option></select></label>
     </header>
 
     <main class="container">
