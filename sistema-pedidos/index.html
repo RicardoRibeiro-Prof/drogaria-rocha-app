@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f97316">
+  <meta name="description" content="Controle interno de pedidos da Drogaria Rocha">
+  <title>Pedidos | Drogaria Rocha</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <section id="loginView" class="login-view">
+    <div class="login-card">
+      <div class="brand-mark" aria-hidden="true">DR</div>
+      <p class="eyebrow">Drogaria Rocha</p>
+      <h1>Controle de pedidos</h1>
+      <p class="muted">Entre com seu acesso de funcionário.</p>
+      <form id="loginForm" class="stack">
+        <label>E-mail<input id="email" type="email" autocomplete="email" required></label>
+        <label>Senha<input id="password" type="password" autocomplete="current-password" required minlength="6"></label>
+        <button id="loginButton" class="btn primary" type="submit">Entrar</button>
+      </form>
+      <p id="loginError" class="error" role="alert"></p>
+    </div>
+  </section>
+
+  <div id="appView" class="app hidden">
+    <header class="topbar">
+      <div class="brand-row"><div class="brand-mark small">DR</div><div><strong>Drogaria Rocha</strong><span>Pedidos internos</span></div></div>
+      <button id="logoutButton" class="btn ghost" type="button">Sair</button>
+    </header>
+
+    <main class="container">
+      <section class="welcome-row">
+        <div><p class="eyebrow">Painel da equipe</p><h1>O que precisa ser pedido?</h1></div>
+        <button id="openModalButton" class="btn primary" type="button">+ Anotar produto</button>
+      </section>
+
+      <section class="metrics" aria-label="Resumo dos pedidos">
+        <button class="metric active" data-filter="todos"><span id="totalCount">0</span><small>Todos</small></button>
+        <button class="metric" data-filter="anotado"><span id="notedCount">0</span><small>Para pedir</small></button>
+        <button class="metric" data-filter="pedido"><span id="orderedCount">0</span><small>Pedidos</small></button>
+        <button class="metric" data-filter="recebido"><span id="receivedCount">0</span><small>Recebidos</small></button>
+      </section>
+
+      <section class="toolbar">
+        <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar produto, fornecedor ou responsável"></label>
+        <select id="priorityFilter" aria-label="Filtrar por prioridade"><option value="todas">Todas as prioridades</option><option value="alta">Alta</option><option value="normal">Normal</option><option value="baixa">Baixa</option></select>
+        <button id="refreshButton" class="btn secondary" type="button">Atualizar</button>
+      </section>
+
+      <section id="loadingState" class="state">Carregando pedidos...</section>
+      <section id="emptyState" class="state hidden"><strong>Nenhum produto encontrado.</strong><span>Use “Anotar produto” para começar.</span></section>
+      <section id="ordersList" class="orders-list" aria-live="polite"></section>
+    </main>
+  </div>
+
+  <dialog id="orderModal">
+    <form id="orderForm" class="modal-card">
+      <div class="modal-head"><div><p class="eyebrow">Nova anotação</p><h2>Produto para pedir</h2></div><button id="closeModalButton" class="icon-btn" type="button" aria-label="Fechar">×</button></div>
+      <div class="form-grid">
+        <label class="full">Nome do produto *<input id="productName" required maxlength="120" placeholder="Ex.: Dipirona 500 mg"></label>
+        <label>Quantidade *<input id="quantity" type="number" min="1" max="9999" value="1" required></label>
+        <label>Prioridade *<select id="priority" required><option value="normal">Normal</option><option value="alta">Alta</option><option value="baixa">Baixa</option></select></label>
+        <label class="full">Fornecedor preferencial<input id="supplier" maxlength="120" placeholder="Opcional"></label>
+        <label class="full">Observação<textarea id="notes" maxlength="500" rows="3" placeholder="Apresentação, marca, motivo ou outro detalhe"></textarea></label>
+      </div>
+      <p id="formError" class="error" role="alert"></p>
+      <div class="modal-actions"><button id="cancelModalButton" class="btn secondary" type="button">Cancelar</button><button id="saveButton" class="btn primary" type="submit">Salvar anotação</button></div>
+    </form>
+  </dialog>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

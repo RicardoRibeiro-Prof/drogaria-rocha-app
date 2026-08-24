@@ -1,0 +1,30 @@
+create table if not exists public.pedidos_produtos (
+  id uuid primary key default gen_random_uuid(),
+  produto text not null check (char_length(produto) between 2 and 120),
+  quantidade integer not null check (quantidade between 1 and 9999),
+  prioridade text not null default 'normal' check (prioridade in ('alta','normal','baixa')),
+  fornecedor text,
+  observacao text,
+  status text not null default 'anotado' check (status in ('anotado','pedido','recebido')),
+  criado_por text not null,
+  criado_por_id uuid not null references auth.users(id),
+  pedido_por text,
+  pedido_em timestamptz,
+  recebido_por text,
+  recebido_em timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.pedidos_produtos enable row level security;
+grant select, insert, update, delete on public.pedidos_produtos to authenticated;
+
+create policy "Funcionarios podem visualizar pedidos" on public.pedidos_produtos for select to authenticated using (true);
+create policy "Funcionarios podem anotar produtos" on public.pedidos_produtos for insert to authenticated with check ((select auth.uid()) = criado_por_id);
+create policy "Funcionarios podem atualizar pedidos" on public.pedidos_produtos for update to authenticated using (true) with check (true);
+create policy "Funcionarios podem excluir anotacoes" on public.pedidos_produtos for delete to authenticated using (true);
+
+create or replace function public.atualizar_data_pedido() returns trigger language plpgsql set search_path = '' as $$ begin new.updated_at = now(); return new; end; $$;
+create trigger atualizar_data_pedido before update on public.pedidos_produtos for each row execute function public.atualizar_data_pedido();
+create index if not exists pedidos_produtos_status_idx on public.pedidos_produtos(status);
+create index if not exists pedidos_produtos_created_at_idx on public.pedidos_produtos(created_at desc);
