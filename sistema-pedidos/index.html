@@ -33,6 +33,7 @@
 
       <section class="toolbar">
         <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar produto, fornecedor ou responsável"></label>
+        <select id="laboratoryFilter" aria-label="Filtrar por laboratório"><option value="todos">Todos os laboratórios</option><option>Eurofarma</option><option>Teuto</option><option>Biosintética</option><option>Prati-Donaduzzi</option><option>Diversos</option></select>
         <select id="priorityFilter" aria-label="Filtrar por prioridade"><option value="todas">Todas as prioridades</option><option value="alta">Alta</option><option value="normal">Normal</option><option value="baixa">Baixa</option></select>
         <button id="refreshButton" class="btn secondary" type="button">Atualizar</button>
       </section>
@@ -50,6 +51,7 @@
         <label class="full">Nome do produto *<input id="productName" required maxlength="120" placeholder="Ex.: Dipirona 500 mg"></label>
         <label>Quantidade *<input id="quantity" type="number" min="1" max="9999" value="1" required></label>
         <label>Prioridade *<select id="priority" required><option value="normal">Normal</option><option value="alta">Alta</option><option value="baixa">Baixa</option></select></label>
+        <label class="full">Laboratório *<select id="laboratory" required><option value="">Selecione o laboratório</option><option>Eurofarma</option><option>Teuto</option><option>Biosintética</option><option>Prati-Donaduzzi</option><option>Diversos</option></select></label>
         <label class="full">Fornecedor preferencial<input id="supplier" maxlength="120" placeholder="Opcional"></label>
         <label class="full">Observação<textarea id="notes" maxlength="500" rows="3" placeholder="Apresentação, marca, motivo ou outro detalhe"></textarea></label>
       </div>

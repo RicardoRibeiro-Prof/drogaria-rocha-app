@@ -3,6 +3,7 @@ create table if not exists public.pedidos_produtos (
   produto text not null check (char_length(produto) between 2 and 120),
   quantidade integer not null check (quantidade between 1 and 9999),
   prioridade text not null default 'normal' check (prioridade in ('alta','normal','baixa')),
+  laboratorio text not null default 'Diversos' check (laboratorio in ('Eurofarma','Teuto','Biosintética','Prati-Donaduzzi','Diversos')),
   fornecedor text,
   observacao text,
   status text not null default 'anotado' check (status in ('anotado','pedido','recebido')),
@@ -27,4 +28,5 @@ create policy "Equipe pode excluir anotacoes" on public.pedidos_produtos for del
 create or replace function public.atualizar_data_pedido() returns trigger language plpgsql set search_path = '' as $$ begin new.updated_at = now(); return new; end; $$;
 create trigger atualizar_data_pedido before update on public.pedidos_produtos for each row execute function public.atualizar_data_pedido();
 create index if not exists pedidos_produtos_status_idx on public.pedidos_produtos(status);
+create index if not exists pedidos_produtos_laboratorio_idx on public.pedidos_produtos(laboratorio);
 create index if not exists pedidos_produtos_created_at_idx on public.pedidos_produtos(created_at desc);
