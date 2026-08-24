@@ -23,6 +23,13 @@
         <div><p class="eyebrow">Painel da equipe</p><h1>O que precisa ser pedido?</h1></div>
         <button id="openModalButton" class="btn primary" type="button">+ Anotar produto</button>
       </section>
+      <section class="laboratory-shortcuts" aria-label="Anotação rápida por laboratório">
+        <button type="button" data-quick-lab="Eurofarma"><strong>Eurofarma</strong><span>+ Anotar</span></button>
+        <button type="button" data-quick-lab="Teuto"><strong>Teuto</strong><span>+ Anotar</span></button>
+        <button type="button" data-quick-lab="Biosintética"><strong>Biosintética</strong><span>+ Anotar</span></button>
+        <button type="button" data-quick-lab="Prati-Donaduzzi"><strong>Prati-Donaduzzi</strong><span>+ Anotar</span></button>
+        <button type="button" data-quick-lab="Diversos"><strong>Diversos</strong><span>+ Anotar</span></button>
+      </section>
 
       <section class="metrics" aria-label="Resumo dos pedidos">
         <button class="metric active" data-filter="todos"><span id="totalCount">0</span><small>Todos</small></button>
@@ -46,17 +53,17 @@
 
   <dialog id="orderModal">
     <form id="orderForm" class="modal-card">
-      <div class="modal-head"><div><p class="eyebrow">Nova anotação</p><h2>Produto para pedir</h2></div><button id="closeModalButton" class="icon-btn" type="button" aria-label="Fechar">×</button></div>
+      <div class="modal-head"><div><p class="eyebrow">Anotação rápida</p><h2>Adicionar produtos à lista</h2></div><button id="closeModalButton" class="icon-btn" type="button" aria-label="Fechar">×</button></div>
       <div class="form-grid">
+        <label class="full">Laboratório *<select id="laboratory" required><option value="">Selecione o laboratório</option><option>Eurofarma</option><option>Teuto</option><option>Biosintética</option><option>Prati-Donaduzzi</option><option>Diversos</option></select></label>
         <label class="full">Nome do produto *<input id="productName" required maxlength="120" placeholder="Ex.: Dipirona 500 mg"></label>
         <label>Quantidade *<input id="quantity" type="number" min="1" max="9999" value="1" required></label>
         <label>Prioridade *<select id="priority" required><option value="normal">Normal</option><option value="alta">Alta</option><option value="baixa">Baixa</option></select></label>
-        <label class="full">Laboratório *<select id="laboratory" required><option value="">Selecione o laboratório</option><option>Eurofarma</option><option>Teuto</option><option>Biosintética</option><option>Prati-Donaduzzi</option><option>Diversos</option></select></label>
         <label class="full">Fornecedor preferencial<input id="supplier" maxlength="120" placeholder="Opcional"></label>
         <label class="full">Observação<textarea id="notes" maxlength="500" rows="3" placeholder="Apresentação, marca, motivo ou outro detalhe"></textarea></label>
       </div>
       <p id="formError" class="error" role="alert"></p>
-      <div class="modal-actions"><button id="cancelModalButton" class="btn secondary" type="button">Cancelar</button><button id="saveButton" class="btn primary" type="submit">Salvar anotação</button></div>
+      <div class="modal-actions"><button id="cancelModalButton" class="btn secondary" type="button">Concluir</button><button id="saveButton" class="btn primary" type="submit">Adicionar e continuar</button></div>
     </form>
   </dialog>
 
