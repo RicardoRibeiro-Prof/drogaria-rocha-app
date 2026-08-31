@@ -216,6 +216,26 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
   .nfe-table{min-width:820px}
 }
 
+
+/* CADASTRO DE PRODUTO DA NF */
+.register-modal{
+  position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:1000;
+  align-items:center;justify-content:center;padding:16px;
+}
+.register-box{
+  width:min(460px,100%);background:#fff;border-radius:12px;padding:18px;
+  box-shadow:0 18px 50px rgba(0,0,0,.25)
+}
+.register-title{font-size:18px;font-weight:800;color:var(--green);margin-bottom:10px}
+.register-product{font-weight:700;line-height:1.3;margin-bottom:4px}
+.register-ean{font-size:12px;color:var(--muted);font-family:monospace;margin-bottom:16px}
+.register-label{display:block;font-size:12px;font-weight:700;margin:10px 0 5px;color:var(--text)}
+.register-box select{width:100%}
+.register-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.register-btn{
+  border:0;border-radius:6px;padding:6px 9px;background:var(--green2);
+  color:#fff;font-size:11px;font-weight:700;cursor:pointer
+}
 </style>
 </head>
 <body>
@@ -301,6 +321,33 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
   </div>
 </section>
 
+<div id="register-product-modal" class="register-modal" style="display:none">
+  <div class="register-box">
+    <div class="register-title">Cadastrar produto</div>
+    <div class="register-product" id="register-product-name">—</div>
+    <div class="register-ean" id="register-product-ean">EAN: —</div>
+
+    <label class="register-label">Laboratório</label>
+    <select id="register-product-supplier">
+      <option value="biolab">Biolab</option>
+      <option value="eurofarma">Eurofarma</option>
+      <option value="medley">Medley</option>
+    </select>
+
+    <label class="register-label">Tipo</label>
+    <select id="register-product-type">
+      <option value="Genérico">Genérico</option>
+      <option value="Não genérico">Não genérico</option>
+      <option value="A confirmar">A confirmar</option>
+    </select>
+
+    <div class="register-actions">
+      <button class="btn" onclick="saveNfeProductRegistration()">Salvar cadastro</button>
+      <button class="btn secondary" onclick="closeProductRegistration()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <div id="scanner-modal" class="scanner-modal" style="display:none">
   <div class="scanner-box">
     <div class="scanner-title">Aponte para o código de barras da NF-e</div>
@@ -380,6 +427,87 @@ function ps(s,i){
 }
 function esc(s){
   return String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+}
+
+
+function loadCustomProducts(){
+  state.customProducts ??= {eurofarma:[],medley:[],biolab:[]};
+  for(const supplier of ["eurofarma","medley","biolab"]){
+    state.customProducts[supplier] ??= [];
+    for(const cp of state.customProducts[supplier]){
+      const exists=DATA[supplier].some(p=>{
+        const e1=cleanEAN(p.ean||"");
+        const e2=cleanEAN(cp.ean||"");
+        return (e1 && e2 && e1===e2) || (!e1 && !e2 && normalizeProductName(p.produto)===normalizeProductName(cp.produto));
+      });
+      if(!exists) DATA[supplier].push({...cp,custom:true});
+    }
+  }
+}
+function supplierLabel(s){
+  return s==="eurofarma"?"Eurofarma":s==="medley"?"Medley":"Biolab";
+}
+let registeringNfeItemIndex=null;
+
+function suggestSupplierFromName(name){
+  const n=normalizeProductName(name);
+  if(/\bBIOL\b|\bBIOLAB\b/.test(n)) return "biolab";
+  if(/\bMEDLEY\b/.test(n)) return "medley";
+  if(/\bEUROFARMA\b|\bEURO\b/.test(n)) return "eurofarma";
+  return "biolab";
+}
+function openProductRegistration(itemIndex){
+  if(!currentNfe || !currentNfe.items[itemIndex]) return;
+  const it=currentNfe.items[itemIndex];
+  registeringNfeItemIndex=itemIndex;
+  document.getElementById("register-product-name").textContent=it.name||"Produto";
+  document.getElementById("register-product-ean").textContent="EAN: "+(it.ean||"sem GTIN");
+  document.getElementById("register-product-supplier").value=suggestSupplierFromName(it.name);
+  document.getElementById("register-product-type").value="A confirmar";
+  document.getElementById("register-product-modal").style.display="flex";
+}
+function closeProductRegistration(){
+  registeringNfeItemIndex=null;
+  const modal=document.getElementById("register-product-modal");
+  if(modal) modal.style.display="none";
+}
+function saveNfeProductRegistration(){
+  if(registeringNfeItemIndex===null || !currentNfe) return;
+  const it=currentNfe.items[registeringNfeItemIndex];
+  const supplier=document.getElementById("register-product-supplier").value;
+  const tipo=normalizeTipo(document.getElementById("register-product-type").value);
+  const ean=cleanEAN(it.ean);
+
+  const existing=findProductMatch(ean,it.name);
+  if(existing){
+    it.match=existing;
+    const st=ps(existing.supplier,existing.index);
+    if(tipo!=="A confirmar") st.tipoOverride=tipo;
+    if(ean && !existing.product.ean && !st.eanOverride) st.eanOverride=ean;
+    save();
+    closeProductRegistration();
+    renderNfe();
+    return;
+  }
+
+  const product={produto:it.name,ean:ean||"",tipo,custom:true};
+  DATA[supplier].push(product);
+  const index=DATA[supplier].length-1;
+
+  state.customProducts ??= {eurofarma:[],medley:[],biolab:[]};
+  state.customProducts[supplier] ??= [];
+  state.customProducts[supplier].push(product);
+
+  it.match={supplier,index,product};
+  const st=ps(supplier,index);
+  st.tipoOverride=tipo;
+  if(ean) st.eanOverride=ean;
+  save();
+
+  closeProductRegistration();
+  renderProducts(supplier);
+  renderNfe();
+  nfeMessage("Produto cadastrado. Agora você pode confirmar a entrada da NF-e.","success");
 }
 
 function normalizeTipo(v){
@@ -703,7 +831,7 @@ function renderNfe(){
       '<td>'+money(it.unit)+'</td>'+
       '<td>'+money(it.discount)+'</td>'+
       '<td><b>'+money(it.netUnit)+'</b></td>'+
-      '<td>'+(it.match?'<span class="status ok">'+esc(it.match.supplier==="eurofarma"?"Eurofarma":it.match.supplier==="medley"?"Medley":"Biolab")+'</span>':'<span class="status falta">Não cadastrado</span>')+'</td>';
+      '<td>'+(it.match?'<span class="status ok">'+esc(supplierLabel(it.match.supplier))+'</span>':'<button class="register-btn" onclick="openProductRegistration('+currentNfe.items.indexOf(it)+')">Cadastrar</button>')+'</td>';
     body.appendChild(tr);
   });
   const missing=currentNfe.items.length-matched;
@@ -734,7 +862,7 @@ function confirmNfeEntry(){
   const matched=currentNfe.items.filter(x=>x.match);
   const unmatched=currentNfe.items.length-matched.length;
   if(!matched.length){
-    alert("Nenhum item da nota foi encontrado nas listas cadastradas.");
+    alert("Nenhum item da nota está cadastrado ainda. Use o botão Cadastrar em cada item e depois confirme a entrada.");
     return;
   }
   if(unmatched && !confirm(unmatched+" item(ns) não estão cadastrados e não serão lançados. Deseja continuar?")) return;
@@ -904,6 +1032,6 @@ function renderWeek(){
 function setRoutine(i,d,v){state.rotina[i][d]=v;save();} function setPriority(i,f,v){state.prioridades[i][f]=v;save();}
 function renderPending(){state.pendencias??=Array.from({length:8},()=>({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"}));const tb=document.querySelector("#pendTable tbody");tb.innerHTML="";state.pendencias.forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input type="text" placeholder="dd/mm" value="${esc(p.data)}" onchange="setPending(${i},'data',this.value)"></td><td><input type="text" value="${esc(p.desc)}" onchange="setPending(${i},'desc',this.value)"></td><td><select onchange="setPending(${i},'prio',this.value)"><option ${p.prio==="Alta"?"selected":""}>Alta</option><option ${p.prio==="Média"?"selected":""}>Média</option><option ${p.prio==="Baixa"?"selected":""}>Baixa</option></select></td><td><input type="text" value="${esc(p.resp)}" onchange="setPending(${i},'resp',this.value)"></td><td><select onchange="setPending(${i},'status',this.value)"><option ${p.status==="Pendente"?"selected":""}>Pendente</option><option ${p.status==="Em andamento"?"selected":""}>Em andamento</option><option ${p.status==="Concluído"?"selected":""}>Concluído</option></select></td>`;tb.appendChild(tr);});}
 function setPending(i,f,v){state.pendencias[i][f]=v;save();} function addPendingRow(){state.pendencias.push({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"});save();renderPending();}
-try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);} try{renderProducts("biolab");}catch(e){console.error("Biolab:",e);} try{renderNfeHistory();}catch(e){console.error("NF:",e);} try{renderThursdayAlert();}catch(e){console.error("Alerta:",e);}
+try{loadCustomProducts();}catch(e){console.error("Produtos cadastrados:",e);} try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);} try{renderProducts("biolab");}catch(e){console.error("Biolab:",e);} try{renderNfeHistory();}catch(e){console.error("NF:",e);} try{renderThursdayAlert();}catch(e){console.error("Alerta:",e);}
 </script>
 </body></html>
