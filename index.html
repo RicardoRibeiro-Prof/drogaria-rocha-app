@@ -96,6 +96,76 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
   .toolbar .summary{width:100%;margin-left:0}
 }
 
+
+/* DESKTOP / NOTEBOOK TABLE WIDTH FIX */
+#eurofarma table, #medley table{
+  width:100%;
+  table-layout:fixed;
+}
+#eurofarma th:nth-child(1), #medley th:nth-child(1){width:72px}
+#eurofarma th:nth-child(2), #medley th:nth-child(2){width:95px}
+#eurofarma th:nth-child(3), #medley th:nth-child(3){width:auto}
+#eurofarma th:nth-child(4), #medley th:nth-child(4){width:145px}
+#eurofarma th:nth-child(5), #medley th:nth-child(5){width:190px}
+#eurofarma td, #medley td{overflow-wrap:anywhere}
+#eurofarma .ean, #medley .ean{white-space:normal}
+#eurofarma .note, #medley .note{min-width:0;width:100%}
+
+@media(max-width:1250px){
+  #eurofarma .table-wrap, #medley .table-wrap{overflow:visible}
+  #eurofarma table, #medley table{display:block;width:100%;table-layout:auto}
+  #eurofarma thead, #medley thead{display:none !important}
+  #eurofarma tbody, #medley tbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;width:100%}
+  #eurofarma tbody tr, #medley tbody tr{
+    display:grid;
+    grid-template-columns:72px 92px minmax(0,1fr);
+    gap:8px 10px;
+    padding:12px;
+    margin:0;
+    border:1px solid var(--border);
+    border-radius:10px;
+    background:#fff;
+    min-width:0;
+  }
+  #eurofarma tbody tr.missing, #medley tbody tr.missing{background:var(--danger-bg)}
+  #eurofarma tbody td, #medley tbody td{
+    display:block;
+    border:0;
+    padding:0;
+    min-width:0;
+    width:auto !important;
+    position:static !important;
+  }
+  #eurofarma tbody td:nth-child(1), #medley tbody td:nth-child(1){
+    grid-column:1;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--muted)
+  }
+  #eurofarma tbody td:nth-child(1)::after, #medley tbody td:nth-child(1)::after{content:"Falta"}
+  #eurofarma tbody td:nth-child(2), #medley tbody td:nth-child(2){grid-column:2}
+  #eurofarma tbody td:nth-child(2)::before, #medley tbody td:nth-child(2)::before{
+    content:"Qtd.";display:block;font-size:11px;color:var(--muted);margin-bottom:3px
+  }
+  #eurofarma tbody td:nth-child(3), #medley tbody td:nth-child(3){
+    grid-column:3;grid-row:1 / span 2;font-size:14px;font-weight:600;line-height:1.3;align-self:center
+  }
+  #eurofarma tbody td:nth-child(4), #medley tbody td:nth-child(4){
+    grid-column:1 / -1;font-size:11px;color:var(--muted);font-family:monospace;padding-top:4px
+  }
+  #eurofarma tbody td:nth-child(4)::before, #medley tbody td:nth-child(4)::before{content:"EAN: "}
+  #eurofarma tbody td:nth-child(5), #medley tbody td:nth-child(5){grid-column:1 / -1}
+  #eurofarma tbody td:nth-child(5)::before, #medley tbody td:nth-child(5)::before{
+    content:"Observação";display:block;font-size:11px;color:var(--muted);margin-bottom:3px
+  }
+  #eurofarma .qty, #medley .qty{width:100%;max-width:92px;padding:8px}
+  #eurofarma .note, #medley .note{width:100%;min-width:0;padding:8px}
+  #eurofarma .checkbox-cell, #medley .checkbox-cell{width:auto;text-align:left}
+  #eurofarma th, #medley th{position:static !important;top:auto !important}
+  .toolbar .search{flex-basis:100%;width:100%}
+  .toolbar .summary{width:100%;margin-left:0}
+}
+@media(max-width:760px){
+  #eurofarma tbody, #medley tbody{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
