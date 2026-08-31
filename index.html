@@ -23,287 +23,68 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
 
 
 
-/* RESPONSIVE LAYOUT SEM CORTES */
 
-/* Área geral */
-main{
-  width:100%;
-  max-width:1400px;
-  padding:16px;
-}
-.card,
-.card .content,
+/* LISTA SIMPLES DE PRODUTOS */
 .table-wrap{
   width:100%;
-  max-width:100%;
-}
-.table-wrap{
   overflow-x:hidden;
 }
-
-/* =========================
-   EUROFARMA / MEDLEY
-   ========================= */
-#eurofarma table,
-#medley table{
+.simple-products{
   width:100%;
-  max-width:100%;
   table-layout:fixed;
   border-collapse:collapse;
 }
+.simple-products th{
+  position:static !important;
+  top:auto !important;
+}
+.simple-products th:nth-child(1){width:82px;text-align:center}
+.simple-products th:nth-child(2){width:100px;text-align:center}
+.simple-products th:nth-child(3){width:auto}
 
-#eurofarma th:nth-child(1),
-#medley th:nth-child(1){width:7%}
-
-#eurofarma th:nth-child(2),
-#medley th:nth-child(2){width:9%}
-
-#eurofarma th:nth-child(3),
-#medley th:nth-child(3){width:45%}
-
-#eurofarma th:nth-child(4),
-#medley th:nth-child(4){width:16%}
-
-#eurofarma th:nth-child(5),
-#medley th:nth-child(5){width:23%}
-
-#eurofarma td,
-#medley td{
-  min-width:0;
-  max-width:100%;
-  white-space:normal;
-  overflow-wrap:anywhere;
-  word-break:break-word;
+.simple-products td{
+  padding:10px 8px;
+  border-bottom:1px solid var(--border);
   vertical-align:middle;
-}
-
-#eurofarma .qty,
-#medley .qty{
-  width:100%;
-  max-width:70px;
-}
-
-#eurofarma .note,
-#medley .note{
-  width:100%;
-  min-width:0;
-  max-width:100%;
-}
-
-#eurofarma .ean,
-#medley .ean{
   white-space:normal;
-  font-size:12px;
-}
-
-/* =========================
-   SEMANA
-   ========================= */
-.priority-table{
-  width:100%;
-  max-width:100%;
-  min-width:0 !important;
-  table-layout:fixed;
-}
-
-.priority-table th:nth-child(1){width:8%}
-.priority-table th:nth-child(2){width:8%}
-.priority-table th:nth-child(3){width:40%}
-.priority-table th:nth-child(4){width:8%}
-.priority-table th:nth-child(5){width:11%}
-.priority-table th:nth-child(6){width:11%}
-.priority-table th:nth-child(7){width:14%}
-
-.priority-table td{
-  min-width:0;
-  max-width:100%;
   overflow-wrap:anywhere;
-  white-space:normal;
+}
+.simple-products .checkbox-cell{
+  width:82px;
+  text-align:center;
+}
+.simple-products .qty{
+  width:76px;
+  padding:8px;
+  text-align:center;
+}
+.product-name{
+  font-weight:600;
+  line-height:1.3;
+}
+.product-ean{
+  margin-top:3px;
+  color:var(--muted);
+  font-size:11px;
+  font-family:monospace;
+}
+.simple-products tr.missing{
+  background:var(--danger-bg);
 }
 
-.priority-table td:nth-child(3){
-  min-width:0 !important;
-}
-
-.priority-table input,
-.priority-table select{
-  width:100%;
-  max-width:100%;
-  min-width:0;
-}
-
-/* Rotina diária */
-#rotinaTable{
-  width:100%;
-  max-width:100%;
-  table-layout:fixed;
-}
-#rotinaTable th:nth-child(1){width:12%}
-#rotinaTable th:nth-child(2){width:46%}
-#rotinaTable th:nth-child(n+3){width:7%}
-#rotinaTable td{
-  overflow-wrap:anywhere;
-  white-space:normal;
-}
-#rotinaTable select{
-  width:100%;
-  min-width:0;
-}
-
-/* =========================
-   CELULAR
-   ========================= */
 @media(max-width:760px){
   main{padding:10px}
+  .card .content{padding:10px}
+  .toolbar .search{width:100%;flex-basis:100%}
+  .toolbar .summary{width:100%;margin-left:0}
 
-  .toolbar{
-    align-items:flex-start;
-  }
-  .toolbar .search{
-    width:100%;
-    flex-basis:100%;
-  }
-  .toolbar .summary{
-    width:100%;
-    margin-left:0;
-  }
-
-  /* fornecedores em cartões apenas no celular */
-  #eurofarma .table-wrap,
-  #medley .table-wrap{
-    overflow:visible;
-  }
-
-  #eurofarma table,
-  #medley table{
-    display:block;
-    width:100%;
-  }
-
-  #eurofarma thead,
-  #medley thead{
-    display:none !important;
-  }
-
-  #eurofarma tbody,
-  #medley tbody{
-    display:block;
-    width:100%;
-  }
-
-  #eurofarma tbody tr,
-  #medley tbody tr{
-    display:grid;
-    grid-template-columns:65px 82px minmax(0,1fr);
-    gap:8px 10px;
-    padding:12px 10px;
-    margin-bottom:10px;
-    border:1px solid var(--border);
-    border-radius:10px;
-    background:#fff;
-  }
-
-  #eurofarma tbody tr.missing,
-  #medley tbody tr.missing{
-    background:var(--danger-bg);
-  }
-
-  #eurofarma tbody td,
-  #medley tbody td{
-    display:block;
-    width:auto !important;
-    border:0;
-    padding:0;
-    min-width:0;
-    position:static !important;
-  }
-
-  #eurofarma tbody td:nth-child(1),
-  #medley tbody td:nth-child(1){
-    grid-column:1;
-    display:flex;
-    align-items:center;
-    gap:5px;
-    font-size:12px;
-    font-weight:700;
-    color:var(--muted);
-  }
-
-  #eurofarma tbody td:nth-child(1)::after,
-  #medley tbody td:nth-child(1)::after{
-    content:"Falta";
-  }
-
-  #eurofarma tbody td:nth-child(2),
-  #medley tbody td:nth-child(2){
-    grid-column:2;
-  }
-
-  #eurofarma tbody td:nth-child(2)::before,
-  #medley tbody td:nth-child(2)::before{
-    content:"Qtd.";
-    display:block;
-    font-size:11px;
-    color:var(--muted);
-    margin-bottom:3px;
-  }
-
-  #eurofarma tbody td:nth-child(3),
-  #medley tbody td:nth-child(3){
-    grid-column:3;
-    grid-row:1 / span 2;
-    align-self:center;
-    font-size:14px;
-    font-weight:600;
-    line-height:1.25;
-  }
-
-  #eurofarma tbody td:nth-child(4),
-  #medley tbody td:nth-child(4){
-    grid-column:1 / -1;
-    font-size:11px;
-    color:var(--muted);
-    font-family:monospace;
-  }
-
-  #eurofarma tbody td:nth-child(4)::before,
-  #medley tbody td:nth-child(4)::before{
-    content:"EAN: ";
-  }
-
-  #eurofarma tbody td:nth-child(5),
-  #medley tbody td:nth-child(5){
-    grid-column:1 / -1;
-  }
-
-  #eurofarma tbody td:nth-child(5)::before,
-  #medley tbody td:nth-child(5)::before{
-    content:"Observação";
-    display:block;
-    font-size:11px;
-    color:var(--muted);
-    margin-bottom:3px;
-  }
-
-  #eurofarma .qty,
-  #medley .qty{
-    width:100%;
-    max-width:82px;
-  }
-
-  #eurofarma .note,
-  #medley .note{
-    width:100%;
-  }
-
-  /* Semana no celular fica rolável para não espremer tudo */
-  .priority-table{
-    min-width:780px !important;
-  }
-  .priority-table-wrap,
-  .priority-table{
-    overflow-x:auto;
-  }
+  .simple-products th:nth-child(1){width:62px}
+  .simple-products th:nth-child(2){width:74px}
+  .simple-products .checkbox-cell{width:62px}
+  .simple-products .qty{width:62px;padding:7px}
+  .simple-products td{padding:9px 5px;font-size:13px}
+  .product-name{font-size:13px}
+  .product-ean{font-size:10px}
 }
 
 </style>
@@ -331,12 +112,12 @@ main{
 
 <section id="eurofarma" class="section"><div class="card"><h2>Eurofarma</h2><div class="content">
 <div class="toolbar"><input id="search-eurofarma" class="search" type="text" placeholder="Pesquisar produto ou EAN..." oninput="renderProducts('eurofarma')"><label><input type="checkbox" id="only-eurofarma" onchange="renderProducts('eurofarma')"> Somente faltas</label><button class="btn" onclick="exportCSV('eurofarma')">Exportar faltas</button><span class="summary" id="summary-eurofarma"></span></div>
-<div class="table-wrap"><table><thead><tr><th>Falta?</th><th>Qtd.</th><th>Produto</th><th>EAN</th><th>Observação</th></tr></thead><tbody id="body-eurofarma"></tbody></table></div>
+<div class="table-wrap"><table class="simple-products"><thead><tr><th>Falta?</th><th>Qtd.</th><th>Produto</th></tr></thead><tbody id="body-eurofarma"></tbody></table></div>
 </div></div></section>
 
 <section id="medley" class="section"><div class="card"><h2>Medley</h2><div class="content">
 <div class="toolbar"><input id="search-medley" class="search" type="text" placeholder="Pesquisar produto ou EAN..." oninput="renderProducts('medley')"><label><input type="checkbox" id="only-medley" onchange="renderProducts('medley')"> Somente faltas</label><button class="btn" onclick="exportCSV('medley')">Exportar faltas</button><span class="summary" id="summary-medley"></span></div>
-<div class="table-wrap"><table><thead><tr><th>Falta?</th><th>Qtd.</th><th>Produto</th><th>EAN</th><th>Observação</th></tr></thead><tbody id="body-medley"></tbody></table></div>
+<div class="table-wrap"><table class="simple-products"><thead><tr><th>Falta?</th><th>Qtd.</th><th>Produto</th></tr></thead><tbody id="body-medley"></tbody></table></div>
 </div></div></section>
 </main>
 <footer>As marcações são salvas automaticamente neste navegador.</footer>
@@ -352,21 +133,35 @@ function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 function renderProducts(s){
  const list=DATA[s],body=document.getElementById("body-"+s),q=document.getElementById("search-"+s).value.toLowerCase().trim(),only=document.getElementById("only-"+s).checked;
  body.innerHTML="";let mc=0,tq=0,shown=0;
- list.forEach((p,i)=>{const st=ps(s,i);if(st.missing){mc++;tq+=Number(st.qty||0)};const match=!q||p.produto.toLowerCase().includes(q)||p.ean.toLowerCase().includes(q);if(!match||(only&&!st.missing))return;shown++;
- const tr=document.createElement("tr");if(st.missing)tr.classList.add("missing");
- tr.innerHTML=`<td class="checkbox-cell"><input type="checkbox" ${st.missing?"checked":""} onchange="toggleMissing('${s}',${i},this.checked)"></td><td><input class="qty" type="number" min="0" value="${esc(st.qty)}" onchange="setField('${s}',${i},'qty',this.value)"></td><td>${esc(p.produto)}</td><td class="ean">${esc(p.ean)}</td><td><input class="note" type="text" value="${esc(st.note)}" onchange="setField('${s}',${i},'note',this.value)"></td>`;
- body.appendChild(tr);});
- document.getElementById("summary-"+s).textContent=`${mc} faltas • ${tq} unidades • ${shown} itens exibidos`;
+ list.forEach((p,i)=>{
+   const st=ps(s,i);
+   if(st.missing){mc++;tq+=Number(st.qty||0)}
+   const match=!q||p.produto.toLowerCase().includes(q)||p.ean.toLowerCase().includes(q);
+   if(!match||(only&&!st.missing))return;
+   shown++;
+   const tr=document.createElement("tr");
+   if(st.missing)tr.classList.add("missing");
+   tr.innerHTML=
+     '<td class="checkbox-cell"><input type="checkbox" '+(st.missing?"checked":"")+' onchange="toggleMissing(\''+s+'\','+i+',this.checked)"></td>'+
+     '<td><input class="qty" type="number" min="0" value="'+esc(st.qty)+'" onchange="setField(\''+s+'\','+i+',\'qty\',this.value)"></td>'+
+     '<td class="product-cell"><div class="product-name">'+esc(p.produto)+'</div><div class="product-ean">EAN: '+esc(p.ean)+'</div></td>';
+   body.appendChild(tr);
+ });
+ document.getElementById("summary-"+s).textContent=mc+" faltas • "+tq+" unidades • "+shown+" itens exibidos";
 }
 function toggleMissing(s,i,v){ps(s,i).missing=v;save();renderProducts(s);}
 function setField(s,i,f,v){ps(s,i)[f]=v;if(f==="qty"&&Number(v)>0)ps(s,i).missing=true;save();renderProducts(s);}
-function exportCSV(s){const rows=[["Produto","EAN","Quantidade","Observação"]];DATA[s].forEach((p,i)=>{const st=ps(s,i);if(st.missing)rows.push([p.produto,p.ean,st.qty||"",st.note||""]);});if(rows.length===1){alert("Nenhuma falta marcada.");return;}const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(";")).join("\n");const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`faltas_${s}.csv`;a.click();URL.revokeObjectURL(a.href);}
-function renderWeek(){
- state.rotina??={};const tb=document.querySelector("#rotinaTable tbody");tb.innerHTML="";
- DATA.rotina.forEach((r,i)=>{state.rotina[i]??=["","","","","",""];const tr=document.createElement("tr");let cells=`<td>${esc(r.momento)}</td><td>${esc(r.tarefa)}</td>`;for(let d=0;d<6;d++){const v=state.rotina[i][d]||"";cells+=`<td><select class="status-select" onchange="setRoutine(${i},${d},this.value)"><option value="" ${v===""?"selected":""}>-</option><option value="OK" ${v==="OK"?"selected":""}>OK</option><option value="Pendente" ${v==="Pendente"?"selected":""}>Pendente</option></select></td>`;}tr.innerHTML=cells;tb.appendChild(tr);});
- state.prioridades??={};const pt=document.querySelector("#priorityTable tbody");pt.innerHTML="";
- DATA.prioridades.forEach((p,i)=>{state.prioridades[i]??={status:"Pendente",responsavel:"",obs:""};const st=state.prioridades[i],tr=document.createElement("tr");if(p.prioridade==="Alta")tr.classList.add("priority-high");tr.innerHTML=`<td>${esc(p.dia)}</td><td>${esc(p.periodo)}</td><td>${esc(p.tarefa)}</td><td>${esc(p.prioridade)}</td><td><select onchange="setPriority(${i},'status',this.value)"><option ${st.status==="Pendente"?"selected":""}>Pendente</option><option ${st.status==="Em andamento"?"selected":""}>Em andamento</option><option ${st.status==="Concluído"?"selected":""}>Concluído</option></select></td><td><input type="text" value="${esc(st.responsavel)}" onchange="setPriority(${i},'responsavel',this.value)"></td><td><input type="text" value="${esc(st.obs)}" onchange="setPriority(${i},'obs',this.value)"></td>`;pt.appendChild(tr);});
- renderPending();
+function exportCSV(s){
+ const rows=[["Produto","EAN","Quantidade"]];
+ DATA[s].forEach((p,i)=>{const st=ps(s,i);if(st.missing)rows.push([p.produto,p.ean,st.qty||""]);});
+ if(rows.length===1){alert("Nenhuma falta marcada.");return;}
+ const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\n");
+ const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ a.download="faltas_"+s+".csv";
+ a.click();
+ URL.revokeObjectURL(a.href);
 }
 function setRoutine(i,d,v){state.rotina[i][d]=v;save();} function setPriority(i,f,v){state.prioridades[i][f]=v;save();}
 function renderPending(){state.pendencias??=Array.from({length:8},()=>({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"}));const tb=document.querySelector("#pendTable tbody");tb.innerHTML="";state.pendencias.forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input type="text" placeholder="dd/mm" value="${esc(p.data)}" onchange="setPending(${i},'data',this.value)"></td><td><input type="text" value="${esc(p.desc)}" onchange="setPending(${i},'desc',this.value)"></td><td><select onchange="setPending(${i},'prio',this.value)"><option ${p.prio==="Alta"?"selected":""}>Alta</option><option ${p.prio==="Média"?"selected":""}>Média</option><option ${p.prio==="Baixa"?"selected":""}>Baixa</option></select></td><td><input type="text" value="${esc(p.resp)}" onchange="setPending(${i},'resp',this.value)"></td><td><select onchange="setPending(${i},'status',this.value)"><option ${p.status==="Pendente"?"selected":""}>Pendente</option><option ${p.status==="Em andamento"?"selected":""}>Em andamento</option><option ${p.status==="Concluído"?"selected":""}>Concluído</option></select></td>`;tb.appendChild(tr);});}
