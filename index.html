@@ -163,9 +163,60 @@ function exportCSV(s){
  a.click();
  URL.revokeObjectURL(a.href);
 }
+
+function renderWeek(){
+  state.rotina ??= {};
+  const tb=document.querySelector("#rotinaTable tbody");
+  if(tb){
+    tb.innerHTML="";
+    DATA.rotina.forEach((r,i)=>{
+      state.rotina[i] ??= ["","","","","",""];
+      const tr=document.createElement("tr");
+      let cells='<td>'+esc(r.momento)+'</td><td>'+esc(r.tarefa)+'</td>';
+      for(let d=0;d<6;d++){
+        const v=state.rotina[i][d]||"";
+        cells+='<td><select class="status-select" onchange="setRoutine('+i+','+d+',this.value)">'+
+          '<option value="" '+(v===""?"selected":"")+'>-</option>'+
+          '<option value="OK" '+(v==="OK"?"selected":"")+'>OK</option>'+
+          '<option value="Pendente" '+(v==="Pendente"?"selected":"")+'>Pendente</option>'+
+          '</select></td>';
+      }
+      tr.innerHTML=cells;
+      tb.appendChild(tr);
+    });
+  }
+
+  state.prioridades ??= {};
+  const pt=document.querySelector("#priorityTable tbody");
+  if(pt){
+    pt.innerHTML="";
+    DATA.prioridades.forEach((p,i)=>{
+      state.prioridades[i] ??= {status:"Pendente",responsavel:"",obs:""};
+      const st=state.prioridades[i];
+      const tr=document.createElement("tr");
+      if(p.prioridade==="Alta")tr.classList.add("priority-high");
+      tr.innerHTML=
+        '<td>'+esc(p.dia)+'</td>'+
+        '<td>'+esc(p.periodo)+'</td>'+
+        '<td>'+esc(p.tarefa)+'</td>'+
+        '<td>'+esc(p.prioridade)+'</td>'+
+        '<td><select onchange="setPriority('+i+',\'status\',this.value)">'+
+          '<option '+(st.status==="Pendente"?"selected":"")+'>Pendente</option>'+
+          '<option '+(st.status==="Em andamento"?"selected":"")+'>Em andamento</option>'+
+          '<option '+(st.status==="Concluído"?"selected":"")+'>Concluído</option>'+
+        '</select></td>'+
+        '<td><input type="text" value="'+esc(st.responsavel)+'" onchange="setPriority('+i+',\'responsavel\',this.value)"></td>'+
+        '<td><input type="text" value="'+esc(st.obs)+'" onchange="setPriority('+i+',\'obs\',this.value)"></td>';
+      pt.appendChild(tr);
+    });
+  }
+
+  renderPending();
+}
+
 function setRoutine(i,d,v){state.rotina[i][d]=v;save();} function setPriority(i,f,v){state.prioridades[i][f]=v;save();}
 function renderPending(){state.pendencias??=Array.from({length:8},()=>({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"}));const tb=document.querySelector("#pendTable tbody");tb.innerHTML="";state.pendencias.forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input type="text" placeholder="dd/mm" value="${esc(p.data)}" onchange="setPending(${i},'data',this.value)"></td><td><input type="text" value="${esc(p.desc)}" onchange="setPending(${i},'desc',this.value)"></td><td><select onchange="setPending(${i},'prio',this.value)"><option ${p.prio==="Alta"?"selected":""}>Alta</option><option ${p.prio==="Média"?"selected":""}>Média</option><option ${p.prio==="Baixa"?"selected":""}>Baixa</option></select></td><td><input type="text" value="${esc(p.resp)}" onchange="setPending(${i},'resp',this.value)"></td><td><select onchange="setPending(${i},'status',this.value)"><option ${p.status==="Pendente"?"selected":""}>Pendente</option><option ${p.status==="Em andamento"?"selected":""}>Em andamento</option><option ${p.status==="Concluído"?"selected":""}>Concluído</option></select></td>`;tb.appendChild(tr);});}
 function setPending(i,f,v){state.pendencias[i][f]=v;save();} function addPendingRow(){state.pendencias.push({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"});save();renderPending();}
-renderWeek();renderProducts("eurofarma");renderProducts("medley");
+try{renderWeek();}catch(e){console.error("Semana:",e);} try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);}
 </script>
 </body></html>
