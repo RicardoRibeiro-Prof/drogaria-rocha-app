@@ -1283,4 +1283,197 @@ try{loadCustomProducts();}catch(e){console.error("Produtos cadastrados:",e);} tr
 })();
 
 </script>
+
+<script>
+(function(){
+  const BASE_COUNTS={eurofarma:281,medley:217,biolab:103};
+
+  function cleanEanLocal(v){return String(v||"").replace(/\D/g,"");}
+
+  function canonicalName(v){
+    let s=String(v||"")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+      .toUpperCase();
+
+    s=s
+      .replace(/%\s*DN\s*[:=]?\s*\d+(?:[.,]\d+)?/g," ")
+      .replace(/\(\s*BGN-G\s*\)/g," ")
+      .replace(/\bBGN-G\b/g," ")
+      .replace(/\bBIOLAB\b|\bBIOL\b|\bMEDLEY\b|\bEUROFARMA\b/g," ")
+      .replace(/\bVIT\b/g," VITAMINA ")
+      .replace(/\bAMPOLAS?\b|\bAMPS?\b/g," AMP ")
+      .replace(/\bINJETAVEL\b|\bINJ\b/g," INJ ")
+      .replace(/\bCOMPRIMIDOS?\b|\bCOMPR?\b|\bCPR\b/g," CPR ")
+      .replace(/\bCAPSULAS?\b|\bCAPS?\b/g," CAPS ")
+      .replace(/\bREVESTIDOS?\b|\bREV\b/g," ")
+      .replace(/(\d)(MG|MCG|G|ML|UI)\b/g,"$1 $2")
+      .replace(/\b(MG|MCG|G|ML|UI)(\d)/g,"$1 $2")
+      .replace(/[^A-Z0-9.,]+/g," ")
+      .replace(/(\d),(\d)/g,"$1.$2")
+      .replace(/\s+/g," ")
+      .trim();
+    return s;
+  }
+
+  function tokens(v){
+    return canonicalName(v).split(" ").filter(x=>x && !["DE","DA","DO","DOS","DAS","COM","C"].includes(x));
+  }
+
+  function numericTokens(v){
+    return (canonicalName(v).match(/\d+(?:\.\d+)?/g)||[]);
+  }
+
+  function canonicalScore(nfeName, catalogName){
+    const a=tokens(nfeName);
+    const b=tokens(catalogName);
+    if(!a.length||!b.length)return 0;
+
+    const A=new Set(a), B=new Set(b);
+    let common=0;
+    B.forEach(x=>{if(A.has(x))common++;});
+    const coverage=common/B.size;
+
+    const numsA=new Set(numericTokens(nfeName));
+    const numsB=numericTokens(catalogName);
+    if(numsB.length && numsB.some(x=>!numsA.has(x))) return 0;
+
+    return coverage;
+  }
+
+  function findStaticMatch(supplier,name){
+    const limit=BASE_COUNTS[supplier]||DATA[supplier].length;
+    let best=null,bestScore=0;
+    for(let i=0;i<Math.min(limit,DATA[supplier].length);i++){
+      const p=DATA[supplier][i];
+      const score=canonicalScore(name,p.produto);
+      if(score>bestScore){
+        bestScore=score;
+        best={supplier:supplier,index:i,product:p,score:score};
+      }
+    }
+    return bestScore>=0.76?best:null;
+  }
+
+  function stateForCustom(supplier,cp,oldIndex){
+    const bucket=state[supplier]||{};
+    const ean=cleanEanLocal(cp.ean||"");
+    if(ean){
+      for(const k of Object.keys(bucket)){
+        const st=bucket[k];
+        if(st && cleanEanLocal(st.eanOverride||"")===ean) return {index:Number(k),data:st};
+      }
+    }
+    return {index:oldIndex,data:bucket[oldIndex]||null};
+  }
+
+  function mergeProductState(supplier,targetIndex,source,cp){
+    if(!source)return;
+    const target=ps(supplier,targetIndex);
+
+    const srcStock=source.stock;
+    if(srcStock!=="" && srcStock!==undefined && srcStock!==null){
+      if(target.stock==="" || target.stock===undefined || target.stock===null){
+        target.stock=Number(srcStock||0);
+      }else{
+        const sameNfe=source.lastNfeKey && target.lastNfeKey && source.lastNfeKey===target.lastNfeKey;
+        if(!sameNfe && source.lastNfeKey){
+          target.stock=Number(target.stock||0)+Number(srcStock||0);
+        }
+      }
+    }
+
+    if((target.min===""||target.min===undefined) && source.min!=="") target.min=source.min;
+
+    ["lastCost","lastGross","lastDiscount","lastEntry","lastNfe","lastNfeKey","tipoOverride"].forEach(function(k){
+      if(source[k]!==undefined && source[k]!=="") target[k]=source[k];
+    });
+
+    const ean=cleanEanLocal(cp.ean||source.eanOverride||"");
+    if(ean && !DATA[supplier][targetIndex].ean) target.eanOverride=ean;
+  }
+
+  function migrateCustomProducts(){
+    if(!state.customProducts)return false;
+    let changed=false;
+
+    ["eurofarma","medley","biolab"].forEach(function(supplier){
+      const base=BASE_COUNTS[supplier];
+      const customs=Array.isArray(state.customProducts[supplier])?state.customProducts[supplier].slice():[];
+      if(!customs.length)return;
+
+      // remove runtime custom rows already appended by the older loader
+      if(DATA[supplier].length>base) DATA[supplier].splice(base);
+
+      const keep=[];
+      customs.forEach(function(cp,pos){
+        const oldIndex=base+pos;
+        const located=stateForCustom(supplier,cp,oldIndex);
+        let match=null;
+
+        const ean=cleanEanLocal(cp.ean||"");
+        if(ean){
+          for(let i=0;i<base;i++){
+            const p=DATA[supplier][i];
+            const st=ps(supplier,i);
+            const known=cleanEanLocal(p.ean||st.eanOverride||"");
+            if(known && known===ean){
+              match={supplier:supplier,index:i,product:p,score:1};
+              break;
+            }
+          }
+        }
+
+        if(!match && supplier==="biolab"){
+          match=findStaticMatch("biolab",cp.produto);
+        }
+
+        if(match){
+          mergeProductState(supplier,match.index,located.data,cp);
+          changed=true;
+        }else{
+          const newIndex=DATA[supplier].length;
+          DATA[supplier].push(Object.assign({},cp,{custom:true}));
+          if(located.data) state[supplier][newIndex]=Object.assign({},located.data);
+          keep.push(cp);
+        }
+      });
+
+      state.customProducts[supplier]=keep;
+    });
+
+    if(changed) save();
+    return changed;
+  }
+
+  // Melhor reconhecimento para as próximas NF-e.
+  window.findProductMatch=function(ean,name){
+    const target=cleanEanLocal(ean);
+    if(target){
+      for(const supplier of ["eurofarma","medley","biolab"]){
+        for(let i=0;i<DATA[supplier].length;i++){
+          const p=DATA[supplier][i];
+          const st=ps(supplier,i);
+          const known=cleanEanLocal(p.ean||st.eanOverride||"");
+          if(known && known===target) return {supplier:supplier,index:i,product:p};
+        }
+      }
+    }
+
+    const biolab=findStaticMatch("biolab",name);
+    if(biolab) return {supplier:"biolab",index:biolab.index,product:biolab.product};
+    return null;
+  };
+
+  try{
+    const changed=migrateCustomProducts();
+    renderProducts("eurofarma");
+    renderProducts("medley");
+    renderProducts("biolab");
+    if(changed) console.info("Cadastros duplicados migrados para produtos existentes.");
+  }catch(e){
+    console.error("Erro na migração do estoque:",e);
+  }
+})();
+</script>
+
 </body></html>
