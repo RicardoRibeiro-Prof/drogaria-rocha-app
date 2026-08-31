@@ -156,32 +156,41 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
   .nfe-history-table{min-width:520px}
 }
 
+
+/* THURSDAY STOCK ALERT */
+.thursday-alert{
+  max-width:1180px;
+  margin:12px auto 0;
+  padding:12px 16px;
+  border-radius:10px;
+  background:#fff4d6;
+  border:1px solid #ead59a;
+  color:#6f5718;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+.thursday-alert strong{font-size:14px}
+.thursday-alert span{font-size:13px}
+@media(max-width:760px){
+  .thursday-alert{margin:10px 10px 0;padding:10px 12px}
+}
 </style>
 </head>
 <body>
 <header><h1>Drogaria Rocha</h1><p>Controle de estoque e reposição</p></header>
 <nav>
-<button class="tab active" data-target="semana">Semana</button>
-<button class="tab" data-target="entrada-nf">Entrada NF</button>
+<button class="tab active" data-target="entrada-nf">Entrada NF</button>
 <button class="tab" data-target="eurofarma">Eurofarma</button>
 <button class="tab" data-target="medley">Medley</button>
 </nav>
+<div id="thursday-alert" class="thursday-alert" style="display:none">
+  <strong>Alerta de estoque</strong>
+  <span>Hoje é quinta-feira. Faça a conferência do estoque e revise os itens abaixo do mínimo.</span>
+</div>
 <main>
-<section id="semana" class="section active">
-<div class="card"><h2>Rotina diária</h2><div class="content table-wrap">
-<table id="rotinaTable"><thead><tr><th>Momento</th><th>Tarefa</th><th>Seg</th><th>Ter</th><th>Qua</th><th>Qui</th><th>Sex</th><th>Sáb</th></tr></thead><tbody></tbody></table>
-</div></div>
-<div class="card"><h2>Prioridades da semana</h2><div class="content table-wrap">
-<table class="priority-table" id="priorityTable"><thead><tr><th>Dia</th><th>Período</th><th>Tarefa principal</th><th>Prioridade</th><th>Status</th><th>Responsável</th><th>Observação</th></tr></thead><tbody></tbody></table>
-</div></div>
-<div class="card"><h2>Pendências e imprevistos</h2><div class="content table-wrap">
-<table class="pendencias" id="pendTable"><thead><tr><th>Data</th><th>Descrição</th><th>Prioridade</th><th>Responsável</th><th>Status</th></tr></thead><tbody></tbody></table>
-<div style="margin-top:10px"><button class="btn secondary" onclick="addPendingRow()">+ Adicionar pendência</button></div>
-</div></div>
-</section>
-
-
-<section id="entrada-nf" class="section">
+<section id="entrada-nf" class="section active">
   <div class="card">
     <h2>Entrada de Nota Fiscal</h2>
     <div class="content">
@@ -605,6 +614,12 @@ function confirmNfeEntry(){
   renderNfeHistory();
   nfeMessage("Entrada confirmada. "+matched.length+" item(ns) somados ao estoque.","success");
 }
+function renderThursdayAlert(){
+  const el=document.getElementById("thursday-alert");
+  if(!el) return;
+  const isThursday=(new Date()).getDay()===4;
+  el.style.display=isThursday?"flex":"none";
+}
 function renderNfeHistory(){
   const body=document.getElementById("nfe-history-body");
   if(!body) return;
@@ -733,6 +748,6 @@ function renderWeek(){
 function setRoutine(i,d,v){state.rotina[i][d]=v;save();} function setPriority(i,f,v){state.prioridades[i][f]=v;save();}
 function renderPending(){state.pendencias??=Array.from({length:8},()=>({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"}));const tb=document.querySelector("#pendTable tbody");tb.innerHTML="";state.pendencias.forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input type="text" placeholder="dd/mm" value="${esc(p.data)}" onchange="setPending(${i},'data',this.value)"></td><td><input type="text" value="${esc(p.desc)}" onchange="setPending(${i},'desc',this.value)"></td><td><select onchange="setPending(${i},'prio',this.value)"><option ${p.prio==="Alta"?"selected":""}>Alta</option><option ${p.prio==="Média"?"selected":""}>Média</option><option ${p.prio==="Baixa"?"selected":""}>Baixa</option></select></td><td><input type="text" value="${esc(p.resp)}" onchange="setPending(${i},'resp',this.value)"></td><td><select onchange="setPending(${i},'status',this.value)"><option ${p.status==="Pendente"?"selected":""}>Pendente</option><option ${p.status==="Em andamento"?"selected":""}>Em andamento</option><option ${p.status==="Concluído"?"selected":""}>Concluído</option></select></td>`;tb.appendChild(tr);});}
 function setPending(i,f,v){state.pendencias[i][f]=v;save();} function addPendingRow(){state.pendencias.push({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"});save();renderPending();}
-try{renderWeek();}catch(e){console.error("Semana:",e);} try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);} try{renderNfeHistory();}catch(e){console.error("NF:",e);}
+try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);} try{renderNfeHistory();}catch(e){console.error("NF:",e);} try{renderThursdayAlert();}catch(e){console.error("Alerta:",e);}
 </script>
 </body></html>
