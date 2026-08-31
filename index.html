@@ -1034,4 +1034,5 @@ function renderPending(){state.pendencias??=Array.from({length:8},()=>({data:"",
 function setPending(i,f,v){state.pendencias[i][f]=v;save();} function addPendingRow(){state.pendencias.push({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"});save();renderPending();}
 try{loadCustomProducts();}catch(e){console.error("Produtos cadastrados:",e);} try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);} try{renderProducts("biolab");}catch(e){console.error("Biolab:",e);} try{renderNfeHistory();}catch(e){console.error("NF:",e);} try{renderThursdayAlert();}catch(e){console.error("Alerta:",e);}
 </script>
+<script src="./register-products.js"></script>
 </body></html>
