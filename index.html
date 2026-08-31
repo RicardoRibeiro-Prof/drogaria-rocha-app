@@ -22,100 +22,179 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
 @media(max-width:760px){main{padding:10px}header h1{font-size:19px}td,th{font-size:12px;padding:7px}.priority-table td:nth-child(3){min-width:260px}.summary{width:100%;margin-left:0}}
 
 
-/* RESPONSIVE LAYOUT FINAL */
+
+/* RESPONSIVE LAYOUT SEM CORTES */
+
+/* Área geral */
+main{
+  width:100%;
+  max-width:1400px;
+  padding:16px;
+}
+.card,
+.card .content,
 .table-wrap{
   width:100%;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
+  max-width:100%;
+}
+.table-wrap{
+  overflow-x:hidden;
 }
 
-/* ===== DESKTOP / NOTEBOOK ===== */
+/* =========================
+   EUROFARMA / MEDLEY
+   ========================= */
 #eurofarma table,
 #medley table{
   width:100%;
-  min-width:920px;
+  max-width:100%;
   table-layout:fixed;
+  border-collapse:collapse;
 }
+
 #eurofarma th:nth-child(1),
-#medley th:nth-child(1){width:72px}
+#medley th:nth-child(1){width:7%}
+
 #eurofarma th:nth-child(2),
-#medley th:nth-child(2){width:92px}
+#medley th:nth-child(2){width:9%}
+
 #eurofarma th:nth-child(3),
-#medley th:nth-child(3){width:auto}
+#medley th:nth-child(3){width:45%}
+
 #eurofarma th:nth-child(4),
-#medley th:nth-child(4){width:145px}
+#medley th:nth-child(4){width:16%}
+
 #eurofarma th:nth-child(5),
-#medley th:nth-child(5){width:190px}
+#medley th:nth-child(5){width:23%}
 
 #eurofarma td,
 #medley td{
+  min-width:0;
+  max-width:100%;
+  white-space:normal;
   overflow-wrap:anywhere;
+  word-break:break-word;
   vertical-align:middle;
 }
-#eurofarma .ean,
-#medley .ean{
-  white-space:normal;
-}
+
 #eurofarma .qty,
 #medley .qty{
   width:100%;
-  max-width:80px;
+  max-width:70px;
 }
+
 #eurofarma .note,
 #medley .note{
   width:100%;
   min-width:0;
+  max-width:100%;
 }
 
-/* Semana: tabela completa sem cortar colunas */
+#eurofarma .ean,
+#medley .ean{
+  white-space:normal;
+  font-size:12px;
+}
+
+/* =========================
+   SEMANA
+   ========================= */
 .priority-table{
   width:100%;
-  min-width:980px;
+  max-width:100%;
+  min-width:0 !important;
   table-layout:fixed;
 }
-.priority-table th:nth-child(1){width:90px}
-.priority-table th:nth-child(2){width:90px}
-.priority-table th:nth-child(3){width:auto}
-.priority-table th:nth-child(4){width:100px}
-.priority-table th:nth-child(5){width:145px}
-.priority-table th:nth-child(6){width:150px}
-.priority-table th:nth-child(7){width:180px}
+
+.priority-table th:nth-child(1){width:8%}
+.priority-table th:nth-child(2){width:8%}
+.priority-table th:nth-child(3){width:40%}
+.priority-table th:nth-child(4){width:8%}
+.priority-table th:nth-child(5){width:11%}
+.priority-table th:nth-child(6){width:11%}
+.priority-table th:nth-child(7){width:14%}
+
+.priority-table td{
+  min-width:0;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+
 .priority-table td:nth-child(3){
   min-width:0 !important;
 }
+
 .priority-table input,
 .priority-table select{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+
+/* Rotina diária */
+#rotinaTable{
+  width:100%;
+  max-width:100%;
+  table-layout:fixed;
+}
+#rotinaTable th:nth-child(1){width:12%}
+#rotinaTable th:nth-child(2){width:46%}
+#rotinaTable th:nth-child(n+3){width:7%}
+#rotinaTable td{
+  overflow-wrap:anywhere;
+  white-space:normal;
+}
+#rotinaTable select{
   width:100%;
   min-width:0;
 }
 
-/* ===== CELULAR ===== */
+/* =========================
+   CELULAR
+   ========================= */
 @media(max-width:760px){
   main{padding:10px}
-  .card .content{padding:10px}
-  .toolbar .search{width:100%;flex-basis:100%}
-  .toolbar .summary{width:100%;margin-left:0}
 
-  /* fornecedores viram cartões apenas no celular */
+  .toolbar{
+    align-items:flex-start;
+  }
+  .toolbar .search{
+    width:100%;
+    flex-basis:100%;
+  }
+  .toolbar .summary{
+    width:100%;
+    margin-left:0;
+  }
+
+  /* fornecedores em cartões apenas no celular */
   #eurofarma .table-wrap,
-  #medley .table-wrap{overflow:visible}
+  #medley .table-wrap{
+    overflow:visible;
+  }
 
   #eurofarma table,
   #medley table{
     display:block;
     width:100%;
-    min-width:0;
-    table-layout:auto;
   }
+
   #eurofarma thead,
-  #medley thead{display:none !important}
+  #medley thead{
+    display:none !important;
+  }
+
   #eurofarma tbody,
-  #medley tbody{display:block;width:100%}
+  #medley tbody{
+    display:block;
+    width:100%;
+  }
 
   #eurofarma tbody tr,
   #medley tbody tr{
     display:grid;
-    grid-template-columns:68px 88px minmax(0,1fr);
+    grid-template-columns:65px 82px minmax(0,1fr);
     gap:8px 10px;
     padding:12px 10px;
     margin-bottom:10px;
@@ -123,8 +202,11 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
     border-radius:10px;
     background:#fff;
   }
+
   #eurofarma tbody tr.missing,
-  #medley tbody tr.missing{background:var(--danger-bg)}
+  #medley tbody tr.missing{
+    background:var(--danger-bg);
+  }
 
   #eurofarma tbody td,
   #medley tbody td{
@@ -146,11 +228,17 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
     font-weight:700;
     color:var(--muted);
   }
+
   #eurofarma tbody td:nth-child(1)::after,
-  #medley tbody td:nth-child(1)::after{content:"Falta"}
+  #medley tbody td:nth-child(1)::after{
+    content:"Falta";
+  }
 
   #eurofarma tbody td:nth-child(2),
-  #medley tbody td:nth-child(2){grid-column:2}
+  #medley tbody td:nth-child(2){
+    grid-column:2;
+  }
+
   #eurofarma tbody td:nth-child(2)::before,
   #medley tbody td:nth-child(2)::before{
     content:"Qtd.";
@@ -176,13 +264,18 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
     font-size:11px;
     color:var(--muted);
     font-family:monospace;
-    padding-top:4px;
   }
+
   #eurofarma tbody td:nth-child(4)::before,
-  #medley tbody td:nth-child(4)::before{content:"EAN: "}
+  #medley tbody td:nth-child(4)::before{
+    content:"EAN: ";
+  }
 
   #eurofarma tbody td:nth-child(5),
-  #medley tbody td:nth-child(5){grid-column:1 / -1}
+  #medley tbody td:nth-child(5){
+    grid-column:1 / -1;
+  }
+
   #eurofarma tbody td:nth-child(5)::before,
   #medley tbody td:nth-child(5)::before{
     content:"Observação";
@@ -195,21 +288,21 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
   #eurofarma .qty,
   #medley .qty{
     width:100%;
-    max-width:88px;
-    padding:8px;
+    max-width:82px;
   }
+
   #eurofarma .note,
   #medley .note{
     width:100%;
-    min-width:0;
-    padding:8px;
   }
 
-  /* Semana continua como tabela rolável no celular,
-     sem esconder responsável e observação */
+  /* Semana no celular fica rolável para não espremer tudo */
   .priority-table{
-    min-width:900px;
-    table-layout:fixed;
+    min-width:780px !important;
+  }
+  .priority-table-wrap,
+  .priority-table{
+    overflow-x:auto;
   }
 }
 
