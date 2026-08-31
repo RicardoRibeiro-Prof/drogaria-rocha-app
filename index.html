@@ -110,12 +110,59 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
   .buy-cell{font-size:13px}
 }
 
+
+/* ENTRADA NF-E */
+.nfe-step{padding:10px 0;border-bottom:1px solid var(--border)}
+.nfe-label{font-weight:700;margin-bottom:7px}
+.nfe-key-row{display:flex;gap:8px;align-items:center}
+.nfe-key-input{flex:1;min-width:220px;font-family:monospace;letter-spacing:.4px}
+.nfe-note,.nfe-file-name{font-size:12px;color:var(--muted);margin-top:6px}
+.file-btn{display:inline-block;cursor:pointer}
+.file-btn input{display:none}
+.nfe-message{margin:12px 0 0;padding:0;font-size:13px}
+.nfe-message.success{padding:9px 11px;background:#e6f3eb;color:#1f6b4f;border-radius:7px}
+.nfe-message.warn{padding:9px 11px;background:#fff4d6;color:#7b5a14;border-radius:7px}
+.nfe-message.error{padding:9px 11px;background:#fde8e7;color:#a61b13;border-radius:7px}
+.nfe-summary{grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.nfe-summary>div{background:#f7faf8;border:1px solid var(--border);border-radius:8px;padding:9px}
+.nfe-summary span{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+.nfe-summary strong{font-size:13px}
+.nfe-table,.nfe-history-table{width:100%;table-layout:fixed;border-collapse:collapse}
+.nfe-table th,.nfe-history-table th{position:static!important;top:auto!important}
+.nfe-table th:nth-child(1){width:auto}
+.nfe-table th:nth-child(2){width:65px}
+.nfe-table th:nth-child(3){width:95px}
+.nfe-table th:nth-child(4){width:95px}
+.nfe-table th:nth-child(5){width:115px}
+.nfe-table th:nth-child(6){width:105px}
+.nfe-table td,.nfe-history-table td{padding:8px 6px;border-bottom:1px solid var(--border);vertical-align:middle}
+.nfe-table td:not(:first-child){text-align:center}
+.nfe-table tr.unmatched{background:#fff8e8}
+.nfe-product-name{font-weight:600;line-height:1.25}
+.nfe-actions{gap:8px;margin-top:14px;flex-wrap:wrap}
+.empty-row{text-align:center;color:var(--muted);padding:20px!important}
+.product-cost{margin-top:3px;font-size:10px;color:#2f6b55;font-weight:600}
+.scanner-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center;padding:16px}
+.scanner-box{width:min(520px,100%);background:#fff;border-radius:12px;padding:14px}
+.scanner-title{font-weight:700;margin-bottom:10px}
+#scanner-video{width:100%;max-height:65vh;background:#000;border-radius:8px;margin-bottom:10px}
+
+@media(max-width:760px){
+  .nfe-key-row{flex-wrap:wrap}
+  .nfe-key-input{width:100%;min-width:0;flex-basis:100%}
+  .nfe-summary{grid-template-columns:1fr 1fr}
+  .nfe-table{min-width:720px}
+  #nfe-items-wrap{overflow-x:auto}
+  .nfe-history-table{min-width:520px}
+}
+
 </style>
 </head>
 <body>
 <header><h1>Drogaria Rocha</h1><p>Controle de estoque e reposição</p></header>
 <nav>
 <button class="tab active" data-target="semana">Semana</button>
+<button class="tab" data-target="entrada-nf">Entrada NF</button>
 <button class="tab" data-target="eurofarma">Eurofarma</button>
 <button class="tab" data-target="medley">Medley</button>
 </nav>
@@ -132,6 +179,84 @@ footer{text-align:center;color:var(--muted);padding:24px;font-size:12px}
 <div style="margin-top:10px"><button class="btn secondary" onclick="addPendingRow()">+ Adicionar pendência</button></div>
 </div></div>
 </section>
+
+
+<section id="entrada-nf" class="section">
+  <div class="card">
+    <h2>Entrada de Nota Fiscal</h2>
+    <div class="content">
+      <div class="nfe-step">
+        <div class="nfe-label">1. Chave da NF-e</div>
+        <div class="nfe-key-row">
+          <input id="nfe-key" class="nfe-key-input" type="text" inputmode="numeric" maxlength="44"
+                 placeholder="Digite ou leia a chave de 44 dígitos"
+                 oninput="this.value=this.value.replace(/\D/g,'').slice(0,44)">
+          <button class="btn secondary" onclick="startBarcodeScanner()">Ler código</button>
+        </div>
+        <div class="nfe-note">A chave identifica a nota. Para obter itens, preços e descontos, importe o XML da NF-e.</div>
+      </div>
+
+      <div class="nfe-step">
+        <div class="nfe-label">2. Importar XML</div>
+        <label class="btn file-btn">
+          Selecionar XML
+          <input id="nfe-xml-file" type="file" accept=".xml,text/xml,application/xml" onchange="handleNfeFile(this.files[0])">
+        </label>
+        <span id="nfe-file-name" class="nfe-file-name">Nenhum arquivo selecionado</span>
+      </div>
+
+      <div id="nfe-message" class="nfe-message"></div>
+
+      <div id="nfe-summary" class="nfe-summary" style="display:none">
+        <div><span>Fornecedor</span><strong id="nfe-supplier">—</strong></div>
+        <div><span>NF</span><strong id="nfe-number">—</strong></div>
+        <div><span>Emissão</span><strong id="nfe-date">—</strong></div>
+        <div><span>Valor NF</span><strong id="nfe-total">—</strong></div>
+      </div>
+
+      <div id="nfe-items-wrap" class="table-wrap" style="display:none">
+        <table class="nfe-table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Qtd.</th>
+              <th>Preço un.</th>
+              <th>Desconto</th>
+              <th>Custo liq./un.</th>
+              <th>Cadastro</th>
+            </tr>
+          </thead>
+          <tbody id="nfe-items-body"></tbody>
+        </table>
+      </div>
+
+      <div id="nfe-actions" class="nfe-actions" style="display:none">
+        <button class="btn" onclick="confirmNfeEntry()">Confirmar entrada no estoque</button>
+        <button class="btn secondary" onclick="clearNfe()">Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Últimas entradas</h2>
+    <div class="content">
+      <div class="table-wrap">
+        <table class="nfe-history-table">
+          <thead><tr><th>Data</th><th>NF</th><th>Fornecedor</th><th>Itens</th><th>Valor</th></tr></thead>
+          <tbody id="nfe-history-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div id="scanner-modal" class="scanner-modal" style="display:none">
+  <div class="scanner-box">
+    <div class="scanner-title">Aponte para o código de barras da NF-e</div>
+    <video id="scanner-video" autoplay playsinline muted></video>
+    <button class="btn secondary" onclick="stopBarcodeScanner()">Cancelar</button>
+  </div>
+</div>
 
 <section id="eurofarma" class="section"><div class="card"><h2>Eurofarma</h2><div class="content">
 <div class="toolbar">
@@ -212,7 +337,9 @@ function renderProducts(s){
         : '<span class="status ok">OK</span>';
 
     tr.innerHTML=
-      '<td class="product-cell"><div class="product-name">'+esc(p.produto)+'</div><div class="product-ean">EAN: '+esc(p.ean)+'</div></td>'+
+      '<td class="product-cell"><div class="product-name">'+esc(p.produto)+'</div><div class="product-ean">EAN: '+esc(p.ean)+'</div>'+
+      (st.lastCost!==undefined ? '<div class="product-cost">Últ. custo: '+money(st.lastCost)+(st.lastEntry?' • '+formatDateBR(st.lastEntry):'')+'</div>' : '')+
+      '</td>'+
       '<td><input class="stock-input" type="number" min="0" step="1" inputmode="numeric" value="'+esc(st.stock)+'" onchange="setStockField(\''+s+'\','+i+',\'stock\',this.value)"></td>'+
       '<td><input class="stock-input" type="number" min="0" step="1" inputmode="numeric" value="'+esc(st.min)+'" onchange="setStockField(\''+s+'\','+i+',\'min\',this.value)"></td>'+
       '<td class="buy-cell">'+(need===null?'—':need)+'</td>'+
@@ -247,6 +374,312 @@ function exportCSV(s){
   a.click();
   URL.revokeObjectURL(a.href);
 }
+
+let currentNfe = null;
+let scannerStream = null;
+let scannerActive = false;
+
+function money(v){
+  const n=Number(v||0);
+  return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+function formatDateBR(v){
+  if(!v) return "—";
+  const d=new Date(v);
+  if(Number.isNaN(d.getTime())) return String(v).slice(0,10).split("-").reverse().join("/");
+  return d.toLocaleDateString("pt-BR");
+}
+function xmlText(node,name){
+  if(!node) return "";
+  const a=node.getElementsByTagNameNS ? node.getElementsByTagNameNS("*",name) : [];
+  const el=(a&&a.length?a[0]:null) || (node.getElementsByTagName ? node.getElementsByTagName(name)[0] : null);
+  return el ? (el.textContent||"").trim() : "";
+}
+function xmlNum(node,name){
+  const v=xmlText(node,name).replace(",",".");
+  const n=Number(v);
+  return Number.isFinite(n)?n:0;
+}
+function extractNfeKey(raw){
+  const s=String(raw||"");
+  const direct=s.match(/\d{44}/);
+  if(direct) return direct[0];
+  const digits=s.replace(/\D/g,"");
+  return digits.length>=44 ? digits.slice(0,44) : "";
+}
+function cleanEAN(v){
+  const s=String(v||"").replace(/\D/g,"");
+  return /^\d{8,14}$/.test(s)?s:"";
+}
+function findProductByEAN(ean){
+  const target=cleanEAN(ean);
+  if(!target) return null;
+  for(const supplier of ["eurofarma","medley"]){
+    const idx=DATA[supplier].findIndex(p=>cleanEAN(p.ean)===target);
+    if(idx>=0) return {supplier,index:idx,product:DATA[supplier][idx]};
+  }
+  return null;
+}
+function nfeMessage(text,type){
+  const el=document.getElementById("nfe-message");
+  if(!el) return;
+  el.textContent=text||"";
+  el.className="nfe-message "+(type||"");
+}
+async function handleNfeFile(file){
+  if(!file) return;
+  document.getElementById("nfe-file-name").textContent=file.name;
+  try{
+    const txt=await file.text();
+    parseNfeXml(txt);
+  }catch(e){
+    console.error(e);
+    nfeMessage("Não foi possível ler o XML selecionado.","error");
+  }
+}
+function parseNfeXml(xmlString){
+  const doc=new DOMParser().parseFromString(xmlString,"application/xml");
+  if(doc.getElementsByTagName("parsererror").length){
+    nfeMessage("O arquivo não parece ser um XML de NF-e válido.","error");
+    return;
+  }
+
+  const infNodes=doc.getElementsByTagNameNS ? doc.getElementsByTagNameNS("*","infNFe") : [];
+  const inf=(infNodes&&infNodes.length?infNodes[0]:doc.getElementsByTagName("infNFe")[0]);
+  if(!inf){
+    nfeMessage("Não encontrei a estrutura infNFe no XML.","error");
+    return;
+  }
+
+  const id=inf.getAttribute("Id")||"";
+  const key=id.replace(/^NFe/,"");
+  const typedKey=document.getElementById("nfe-key").value.replace(/\D/g,"");
+  if(typedKey && key && typedKey!==key){
+    nfeMessage("A chave lida não corresponde ao XML selecionado. Verifique a nota.","error");
+    return;
+  }
+  if(key) document.getElementById("nfe-key").value=key;
+
+  const emitNodes=doc.getElementsByTagNameNS ? doc.getElementsByTagNameNS("*","emit") : [];
+  const emit=(emitNodes&&emitNodes.length?emitNodes[0]:doc.getElementsByTagName("emit")[0]);
+  const ideNodes=doc.getElementsByTagNameNS ? doc.getElementsByTagNameNS("*","ide") : [];
+  const ide=(ideNodes&&ideNodes.length?ideNodes[0]:doc.getElementsByTagName("ide")[0]);
+  const totalNodes=doc.getElementsByTagNameNS ? doc.getElementsByTagNameNS("*","ICMSTot") : [];
+  const total=(totalNodes&&totalNodes.length?totalNodes[0]:doc.getElementsByTagName("ICMSTot")[0]);
+
+  const dets=doc.getElementsByTagNameNS ? Array.from(doc.getElementsByTagNameNS("*","det")) : Array.from(doc.getElementsByTagName("det"));
+  const items=dets.map((det,idx)=>{
+    const prodNodes=det.getElementsByTagNameNS ? det.getElementsByTagNameNS("*","prod") : [];
+    const prod=(prodNodes&&prodNodes.length?prodNodes[0]:det.getElementsByTagName("prod")[0]);
+    let ean=cleanEAN(xmlText(prod,"cEAN"));
+    if(!ean) ean=cleanEAN(xmlText(prod,"cEANTrib"));
+    const q=xmlNum(prod,"qCom");
+    const unit=xmlNum(prod,"vUnCom");
+    const vProd=xmlNum(prod,"vProd");
+    const discount=xmlNum(prod,"vDesc");
+    const frete=xmlNum(prod,"vFrete");
+    const seguro=xmlNum(prod,"vSeg");
+    const outros=xmlNum(prod,"vOutro");
+    const ipiNodes=det.getElementsByTagNameNS ? det.getElementsByTagNameNS("*","IPI") : [];
+    const ipi=(ipiNodes&&ipiNodes.length?ipiNodes[0]:det.getElementsByTagName("IPI")[0]);
+    const vIPI=xmlNum(ipi,"vIPI");
+    const netTotal=Math.max(0,vProd-discount+frete+seguro+outros+vIPI);
+    const netUnit=q>0?netTotal/q:unit;
+    const match=findProductByEAN(ean);
+    return {
+      item:idx+1,
+      code:xmlText(prod,"cProd"),
+      ean,
+      name:xmlText(prod,"xProd")||("Item "+(idx+1)),
+      qty:q,
+      unit,
+      gross:vProd,
+      discount,
+      freight:frete,
+      insurance:seguro,
+      other:outros,
+      ipi:vIPI,
+      netTotal,
+      netUnit,
+      match
+    };
+  });
+
+  currentNfe={
+    key,
+    number:xmlText(ide,"nNF"),
+    series:xmlText(ide,"serie"),
+    date:xmlText(ide,"dhEmi")||xmlText(ide,"dEmi"),
+    supplier:xmlText(emit,"xNome"),
+    cnpj:xmlText(emit,"CNPJ")||xmlText(emit,"CPF"),
+    total:xmlNum(total,"vNF"),
+    items
+  };
+  renderNfe();
+}
+function renderNfe(){
+  if(!currentNfe) return;
+  document.getElementById("nfe-summary").style.display="grid";
+  document.getElementById("nfe-items-wrap").style.display="block";
+  document.getElementById("nfe-actions").style.display="flex";
+  document.getElementById("nfe-supplier").textContent=currentNfe.supplier||"—";
+  document.getElementById("nfe-number").textContent=(currentNfe.number||"—")+(currentNfe.series?" / Série "+currentNfe.series:"");
+  document.getElementById("nfe-date").textContent=formatDateBR(currentNfe.date);
+  document.getElementById("nfe-total").textContent=money(currentNfe.total);
+
+  let matched=0;
+  const body=document.getElementById("nfe-items-body");
+  body.innerHTML="";
+  currentNfe.items.forEach(it=>{
+    if(it.match) matched++;
+    const tr=document.createElement("tr");
+    if(!it.match) tr.classList.add("unmatched");
+    tr.innerHTML=
+      '<td><div class="nfe-product-name">'+esc(it.name)+'</div><div class="product-ean">EAN: '+esc(it.ean||"sem GTIN")+'</div></td>'+
+      '<td>'+it.qty+'</td>'+
+      '<td>'+money(it.unit)+'</td>'+
+      '<td>'+money(it.discount)+'</td>'+
+      '<td><b>'+money(it.netUnit)+'</b></td>'+
+      '<td>'+(it.match?'<span class="status ok">'+esc(it.match.supplier==="eurofarma"?"Eurofarma":"Medley")+'</span>':'<span class="status falta">Não cadastrado</span>')+'</td>';
+    body.appendChild(tr);
+  });
+  const missing=currentNfe.items.length-matched;
+  nfeMessage(
+    currentNfe.items.length+" itens lidos • "+matched+" encontrados no estoque"+(missing?" • "+missing+" não cadastrados":""),
+    missing?"warn":"success"
+  );
+}
+function clearNfe(){
+  currentNfe=null;
+  document.getElementById("nfe-key").value="";
+  document.getElementById("nfe-xml-file").value="";
+  document.getElementById("nfe-file-name").textContent="Nenhum arquivo selecionado";
+  document.getElementById("nfe-summary").style.display="none";
+  document.getElementById("nfe-items-wrap").style.display="none";
+  document.getElementById("nfe-actions").style.display="none";
+  document.getElementById("nfe-items-body").innerHTML="";
+  nfeMessage("","");
+}
+function confirmNfeEntry(){
+  if(!currentNfe){alert("Importe o XML da NF-e primeiro.");return;}
+  state.nfeHistory ??= [];
+  if(currentNfe.key && state.nfeHistory.some(x=>x.key===currentNfe.key)){
+    alert("Esta NF-e já foi lançada no estoque.");
+    return;
+  }
+
+  const matched=currentNfe.items.filter(x=>x.match);
+  const unmatched=currentNfe.items.length-matched.length;
+  if(!matched.length){
+    alert("Nenhum item da nota foi encontrado nas listas cadastradas.");
+    return;
+  }
+  if(unmatched && !confirm(unmatched+" item(ns) não estão cadastrados e não serão lançados. Deseja continuar?")) return;
+
+  matched.forEach(it=>{
+    const st=ps(it.match.supplier,it.match.index);
+    const current=st.stock===""?0:Number(st.stock||0);
+    st.stock=current+Number(it.qty||0);
+    st.lastCost=Number(it.netUnit||0);
+    st.lastGross=Number(it.unit||0);
+    st.lastDiscount=Number(it.discount||0);
+    st.lastEntry=new Date().toISOString();
+    st.lastNfe=currentNfe.number||currentNfe.key||"";
+    st.lastNfeKey=currentNfe.key||"";
+  });
+
+  state.nfeHistory.unshift({
+    key:currentNfe.key||"",
+    number:currentNfe.number||"",
+    series:currentNfe.series||"",
+    supplier:currentNfe.supplier||"",
+    date:new Date().toISOString(),
+    issueDate:currentNfe.date||"",
+    items:matched.length,
+    total:Number(currentNfe.total||0)
+  });
+  state.nfeHistory=state.nfeHistory.slice(0,50);
+  save();
+  renderProducts("eurofarma");
+  renderProducts("medley");
+  renderNfeHistory();
+  nfeMessage("Entrada confirmada. "+matched.length+" item(ns) somados ao estoque.","success");
+}
+function renderNfeHistory(){
+  const body=document.getElementById("nfe-history-body");
+  if(!body) return;
+  state.nfeHistory ??= [];
+  body.innerHTML="";
+  if(!state.nfeHistory.length){
+    const tr=document.createElement("tr");
+    tr.innerHTML='<td colspan="5" class="empty-row">Nenhuma entrada registrada.</td>';
+    body.appendChild(tr);
+    return;
+  }
+  state.nfeHistory.slice(0,20).forEach(h=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=
+      '<td>'+formatDateBR(h.date)+'</td>'+
+      '<td>'+esc(h.number||"—")+'</td>'+
+      '<td>'+esc(h.supplier||"—")+'</td>'+
+      '<td>'+Number(h.items||0)+'</td>'+
+      '<td>'+money(h.total)+'</td>';
+    body.appendChild(tr);
+  });
+}
+async function startBarcodeScanner(){
+  const keyInput=document.getElementById("nfe-key");
+  if(!("BarcodeDetector" in window)){
+    keyInput.focus();
+    nfeMessage("A câmera para código de barras não é suportada neste navegador. Use um leitor USB/Bluetooth ou digite a chave.","warn");
+    return;
+  }
+  try{
+    const formats=await BarcodeDetector.getSupportedFormats();
+    const wanted=formats.includes("code_128")?["code_128"]:formats;
+    const detector=new BarcodeDetector({formats:wanted});
+    scannerStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}}});
+    const modal=document.getElementById("scanner-modal");
+    const video=document.getElementById("scanner-video");
+    video.srcObject=scannerStream;
+    modal.style.display="flex";
+    scannerActive=true;
+
+    const scan=async()=>{
+      if(!scannerActive) return;
+      try{
+        const codes=await detector.detect(video);
+        for(const c of codes){
+          const key=extractNfeKey(c.rawValue);
+          if(key){
+            keyInput.value=key;
+            stopBarcodeScanner();
+            nfeMessage("Chave lida com sucesso. Agora importe o XML da NF-e.","success");
+            return;
+          }
+        }
+      }catch(e){}
+      requestAnimationFrame(scan);
+    };
+    requestAnimationFrame(scan);
+  }catch(e){
+    console.error(e);
+    stopBarcodeScanner();
+    nfeMessage("Não consegui acessar a câmera. Verifique a permissão do navegador.","error");
+  }
+}
+function stopBarcodeScanner(){
+  scannerActive=false;
+  if(scannerStream){
+    scannerStream.getTracks().forEach(t=>t.stop());
+    scannerStream=null;
+  }
+  const video=document.getElementById("scanner-video");
+  if(video) video.srcObject=null;
+  const modal=document.getElementById("scanner-modal");
+  if(modal) modal.style.display="none";
+}
+
 function renderWeek(){
   state.rotina ??= {};
   const tb=document.querySelector("#rotinaTable tbody");
@@ -300,6 +733,6 @@ function renderWeek(){
 function setRoutine(i,d,v){state.rotina[i][d]=v;save();} function setPriority(i,f,v){state.prioridades[i][f]=v;save();}
 function renderPending(){state.pendencias??=Array.from({length:8},()=>({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"}));const tb=document.querySelector("#pendTable tbody");tb.innerHTML="";state.pendencias.forEach((p,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><input type="text" placeholder="dd/mm" value="${esc(p.data)}" onchange="setPending(${i},'data',this.value)"></td><td><input type="text" value="${esc(p.desc)}" onchange="setPending(${i},'desc',this.value)"></td><td><select onchange="setPending(${i},'prio',this.value)"><option ${p.prio==="Alta"?"selected":""}>Alta</option><option ${p.prio==="Média"?"selected":""}>Média</option><option ${p.prio==="Baixa"?"selected":""}>Baixa</option></select></td><td><input type="text" value="${esc(p.resp)}" onchange="setPending(${i},'resp',this.value)"></td><td><select onchange="setPending(${i},'status',this.value)"><option ${p.status==="Pendente"?"selected":""}>Pendente</option><option ${p.status==="Em andamento"?"selected":""}>Em andamento</option><option ${p.status==="Concluído"?"selected":""}>Concluído</option></select></td>`;tb.appendChild(tr);});}
 function setPending(i,f,v){state.pendencias[i][f]=v;save();} function addPendingRow(){state.pendencias.push({data:"",desc:"",prio:"Média",resp:"",status:"Pendente"});save();renderPending();}
-try{renderWeek();}catch(e){console.error("Semana:",e);} try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);}
+try{renderWeek();}catch(e){console.error("Semana:",e);} try{renderProducts("eurofarma");}catch(e){console.error("Eurofarma:",e);} try{renderProducts("medley");}catch(e){console.error("Medley:",e);} try{renderNfeHistory();}catch(e){console.error("NF:",e);}
 </script>
 </body></html>
