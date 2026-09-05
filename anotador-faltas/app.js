@@ -1,16 +1,18 @@
 const KEYS = {
-  manuais: 'dr_produtos_manuais_v2',
+  manuais: 'dr_produtos_manuais_v3',
+  cache: 'dr_produtos_supabase_cache_v1',
   faltas: 'dr_faltas_v1'
 };
 
+const SUPABASE_LOOKUP_URL = 'https://khmowqmmwdrornfgrbpi.supabase.co/functions/v1/lookup-barcode-products-rocha';
+
 let produtosManuais = carregar(KEYS.manuais, {});
-let catalogoBase = {};
-let catalogoPronto = false;
-let filaLeituras = [];
+let cacheProdutos = carregar(KEYS.cache, {});
 let faltas = carregar(KEYS.faltas, []);
 let buffer = '';
 let ultimoTeclaEm = 0;
 let toastTimer;
+let consultaEmAndamento = false;
 
 const els = {
   listaBody: document.querySelector('#listaBody'),
@@ -43,6 +45,7 @@ function carregar(chave, fallback) {
 
 function salvar() {
   localStorage.setItem(KEYS.manuais, JSON.stringify(produtosManuais));
+  localStorage.setItem(KEYS.cache, JSON.stringify(cacheProdutos));
   localStorage.setItem(KEYS.faltas, JSON.stringify(faltas));
 }
 
@@ -50,59 +53,49 @@ function normalizarCodigo(codigo) {
   return String(codigo || '').replace(/\D/g, '').trim();
 }
 
-function obterCadastro(codigo) {
+async function obterCadastro(codigo) {
   if (produtosManuais[codigo]) return produtosManuais[codigo];
-  const item = catalogoBase[codigo];
-  if (!item) return null;
-  return { nome: item[0], codigoInterno: item[1] };
-}
+  if (cacheProdutos[codigo]) return cacheProdutos[codigo];
 
-async function carregarCatalogo() {
-  els.lastRead.textContent = 'Carregando base de produtos da Drogaria Rocha...';
-  try {
-    const resp = await fetch('catalogo.b64?v=20260905-1', { cache: 'no-store' });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const b64 = (await resp.text()).trim();
-    const bin = atob(b64);
-    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
-    if (!('DecompressionStream' in window)) throw new Error('Navegador sem suporte a descompressão');
-    const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
-    const texto = await new Response(stream).text();
-    catalogoBase = JSON.parse(texto);
-    catalogoPronto = true;
+  const resp = await fetch(`${SUPABASE_LOOKUP_URL}?code=${encodeURIComponent(codigo)}`, {
+    method: 'GET',
+    cache: 'no-store'
+  });
 
-    faltas = faltas.map(item => {
-      const cadastro = obterCadastro(item.codigo);
-      return cadastro ? { ...item, nome: cadastro.nome, cadastrado: true } : item;
-    });
-    salvar();
-    renderizar();
-
-    const total = Object.keys(catalogoBase).length;
-    els.lastRead.textContent = `✓ Base carregada: ${total.toLocaleString('pt-BR')} produtos. Passe o código no leitor.`;
-
-    const pendentes = [...filaLeituras];
-    filaLeituras = [];
-    pendentes.forEach(processarCodigo);
-  } catch (erro) {
-    console.error('Falha ao carregar catálogo:', erro);
-    catalogoPronto = false;
-    els.lastRead.textContent = '⚠ Falha ao carregar a base de produtos. Atualize a página.';
-    mostrarToast('Falha ao carregar a base de produtos', true);
+  if (!resp.ok) {
+    throw new Error(`Falha Supabase HTTP ${resp.status}`);
   }
+
+  const data = await resp.json();
+  if (!data.found) return null;
+
+  const cadastro = {
+    nome: data.name,
+    codigo: data.barcode || codigo
+  };
+  cacheProdutos[codigo] = cadastro;
+  if (data.barcode && data.barcode !== codigo) cacheProdutos[data.barcode] = cadastro;
+  salvar();
+  return cadastro;
 }
 
-function processarCodigo(codigoBruto) {
+async function processarCodigo(codigoBruto) {
   const codigo = normalizarCodigo(codigoBruto);
   if (!codigo) return;
 
-  if (!catalogoPronto) {
-    filaLeituras.push(codigo);
-    els.lastRead.textContent = `Aguarde: carregando base para identificar o código ${codigo}...`;
-    return;
+  els.lastRead.textContent = `Consultando código ${codigo} no Supabase...`;
+  consultaEmAndamento = true;
+
+  let cadastro = null;
+  try {
+    cadastro = await obterCadastro(codigo);
+  } catch (erro) {
+    console.error('Erro na consulta do Supabase:', erro);
+    mostrarToast('Falha ao consultar Supabase — item anotado mesmo assim', true);
+  } finally {
+    consultaEmAndamento = false;
   }
 
-  const cadastro = obterCadastro(codigo);
   const existente = faltas.find(item => item.codigo === codigo);
 
   if (existente) {
@@ -129,10 +122,25 @@ function processarCodigo(codigoBruto) {
     mostrarToast(`${cadastro.nome} adicionado`);
     bip(880);
   } else {
-    els.lastRead.textContent = `⚠ Código ${codigo} não encontrado na base original.`;
+    els.lastRead.textContent = `⚠ Código ${codigo} não encontrado no Supabase.`;
     mostrarToast('Código não encontrado — item anotado mesmo assim', true);
     bip(440);
   }
+}
+
+async function revisarItensNaoCadastrados() {
+  const pendentes = faltas.filter(item => !item.cadastrado).slice(0, 20);
+  for (const item of pendentes) {
+    try {
+      const cadastro = await obterCadastro(item.codigo);
+      if (cadastro) {
+        item.nome = cadastro.nome;
+        item.cadastrado = true;
+      }
+    } catch {}
+  }
+  salvar();
+  renderizar();
 }
 
 function renderizar() {
@@ -147,7 +155,11 @@ function renderizar() {
       <td class="center no-print"><button class="remove-btn" data-codigo="${escapeHtml(item.codigo)}">Remover</button></td>`;
     els.listaBody.appendChild(tr);
   });
-  document.querySelectorAll('.remove-btn').forEach(btn => btn.addEventListener('click', () => removerItem(btn.dataset.codigo)));
+
+  document.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', () => removerItem(btn.dataset.codigo));
+  });
+
   els.totalProdutos.textContent = faltas.length;
   els.totalUnidades.textContent = faltas.reduce((acc, item) => acc + item.quantidade, 0);
   els.totalNaoCadastrados.textContent = faltas.filter(item => !item.cadastrado).length;
@@ -156,7 +168,9 @@ function renderizar() {
 
 function removerItem(codigo) {
   faltas = faltas.filter(item => item.codigo !== codigo);
-  salvar(); renderizar(); mostrarToast('Item removido');
+  salvar();
+  renderizar();
+  mostrarToast('Item removido');
 }
 
 function mostrarToast(texto, warning = false) {
@@ -164,7 +178,7 @@ function mostrarToast(texto, warning = false) {
   els.toast.textContent = texto;
   els.toast.classList.toggle('warning', warning);
   els.toast.classList.add('show');
-  toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1600);
+  toastTimer = setTimeout(() => els.toast.classList.remove('show'), 1800);
 }
 
 function bip(frequencia = 880) {
@@ -173,58 +187,97 @@ function bip(frequencia = 880) {
     const ctx = new AudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.frequency.value = frequencia; gain.gain.value = 0.04;
-    osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.08);
+    osc.frequency.value = frequencia;
+    gain.gain.value = 0.04;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.08);
   } catch {}
 }
 
 function escapeHtml(texto) {
-  return String(texto).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+  return String(texto)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function abrirCadastro(codigo = '') {
   els.modal.classList.remove('hidden');
   els.eanInput.value = codigo;
-  els.nomeInput.value = obterCadastro(codigo)?.nome || '';
+  els.nomeInput.value = produtosManuais[codigo]?.nome || cacheProdutos[codigo]?.nome || '';
   setTimeout(() => (codigo ? els.nomeInput : els.eanInput).focus(), 50);
 }
-function fecharCadastro() { els.modal.classList.add('hidden'); els.formCadastro.reset(); }
+
+function fecharCadastro() {
+  els.modal.classList.add('hidden');
+  els.formCadastro.reset();
+}
 
 els.btnCadastro.addEventListener('click', () => abrirCadastro());
 els.btnFecharModal.addEventListener('click', fecharCadastro);
-els.modal.addEventListener('click', e => { if (e.target === els.modal) fecharCadastro(); });
+els.modal.addEventListener('click', e => {
+  if (e.target === els.modal) fecharCadastro();
+});
+
 els.formCadastro.addEventListener('submit', e => {
   e.preventDefault();
   const codigo = normalizarCodigo(els.eanInput.value);
   const nome = els.nomeInput.value.trim();
   if (!codigo || !nome) return;
-  produtosManuais[codigo] = { nome };
+
+  produtosManuais[codigo] = { nome, codigo };
+  cacheProdutos[codigo] = { nome, codigo };
   faltas = faltas.map(item => item.codigo === codigo ? { ...item, nome, cadastrado: true } : item);
-  salvar(); renderizar(); fecharCadastro(); mostrarToast(`${nome} cadastrado`);
+  salvar();
+  renderizar();
+  fecharCadastro();
+  mostrarToast(`${nome} cadastrado localmente`);
 });
 
 els.btnLimpar.addEventListener('click', () => {
   if (!faltas.length || !confirm('Deseja realmente apagar toda a lista de faltas?')) return;
-  faltas = []; salvar(); renderizar(); els.lastRead.textContent = 'Lista limpa. Passe um produto no leitor.';
+  faltas = [];
+  salvar();
+  renderizar();
+  els.lastRead.textContent = 'Lista limpa. Passe um produto no leitor.';
 });
+
 els.btnImprimir.addEventListener('click', () => window.print());
-els.btnSimular.addEventListener('click', () => { processarCodigo(els.manualCode.value); els.manualCode.value=''; els.manualCode.focus(); });
-els.manualCode.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); els.btnSimular.click(); } });
+els.btnSimular.addEventListener('click', () => {
+  processarCodigo(els.manualCode.value);
+  els.manualCode.value = '';
+  els.manualCode.focus();
+});
+els.manualCode.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    els.btnSimular.click();
+  }
+});
 
 document.addEventListener('keydown', e => {
   const modalAberto = !els.modal.classList.contains('hidden');
-  const elementoDigitavel = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName);
+  const elementoDigitavel = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
   if (modalAberto || elementoDigitavel) return;
+
   const agora = Date.now();
-  if (agora - ultimoTeclaEm > 120) buffer = '';
+  if (agora - ultimoTeclaEm > 180) buffer = '';
   ultimoTeclaEm = agora;
-  if (e.key === 'Enter') {
+
+  if (e.key === 'Enter' || e.key === 'Tab') {
     if (buffer.length >= 6) processarCodigo(buffer);
     buffer = '';
+    if (e.key === 'Tab') e.preventDefault();
     return;
   }
+
   if (/^\d$/.test(e.key)) buffer += e.key;
 });
 
 renderizar();
-carregarCatalogo();
+els.lastRead.textContent = 'Supabase conectado. Passe o código no leitor.';
+revisarItensNaoCadastrados();
