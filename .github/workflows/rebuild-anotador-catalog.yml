@@ -1,0 +1,97 @@
+name: Rebuild Anotador Catalog
+
+on:
+  push:
+    paths:
+      - '.github/workflows/rebuild-anotador-catalog.yml'
+      - 'anotador-faltas/catalog/**'
+      - 'anotador-faltas/base-v2/**'
+      - 'anotador-faltas/base/**'
+      - 'anotador-faltas/compact/**'
+      - 'anotador-faltas/db/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Rebuild and validate catalog
+        run: |
+          python - <<'PY'
+          import base64, gzip, json, glob, os
+
+          candidates = [
+              'anotador-faltas/catalog',
+              'anotador-faltas/base-v2',
+              'anotador-faltas/base',
+              'anotador-faltas/compact',
+              'anotador-faltas/db',
+          ]
+
+          valid = []
+          details = []
+
+          for folder in candidates:
+              files = sorted(glob.glob(os.path.join(folder, '*.txt')))
+              if not files:
+                  details.append({'folder': folder, 'status': 'sem arquivos'})
+                  continue
+              try:
+                  joined = ''.join(open(f, encoding='utf-8').read().strip() for f in files)
+                  raw = base64.b64decode(joined)
+                  text = gzip.decompress(raw).decode('utf-8')
+                  data = json.loads(text)
+                  if not isinstance(data, dict):
+                      raise ValueError('JSON não é objeto')
+                  count = len(data)
+                  sample = data.get('7898953823103')
+                  details.append({'folder': folder, 'status': 'valido', 'files': len(files), 'count': count, 'sample_7898953823103': sample})
+                  valid.append((count, folder, joined, data, len(files)))
+              except Exception as e:
+                  details.append({'folder': folder, 'status': 'invalido', 'files': len(files), 'error': f'{type(e).__name__}: {e}'})
+
+          if not valid:
+              print(json.dumps(details, ensure_ascii=False, indent=2))
+              raise SystemExit('Nenhum conjunto de blocos forma um catálogo gzip/json válido')
+
+          valid.sort(reverse=True, key=lambda x: x[0])
+          count, folder, joined, data, file_count = valid[0]
+          if count < 1000:
+              raise SystemExit(f'Catálogo válido, mas pequeno demais: {count}')
+
+          with open('anotador-faltas/catalogo.b64', 'w', encoding='utf-8') as f:
+              f.write(joined)
+
+          status = {
+              'ok': True,
+              'source': folder,
+              'parts': file_count,
+              'count': count,
+              'sample_ean': '7898953823103',
+              'sample_product': data.get('7898953823103'),
+              'candidates': details,
+          }
+          with open('anotador-faltas/catalog-status.json', 'w', encoding='utf-8') as f:
+              json.dump(status, f, ensure_ascii=False, indent=2)
+
+          print(json.dumps(status, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit rebuilt catalog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add anotador-faltas/catalogo.b64 anotador-faltas/catalog-status.json
+          if git diff --cached --quiet; then
+            echo "Catalog already up to date"
+          else
+            git commit -m "Rebuild complete barcode catalog"
+            git push
+          fi
