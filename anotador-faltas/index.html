@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anotador de Faltas — Drogaria Rocha</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">DROGARIA ROCHA</p>
+        <h1>Anotador de Faltas</h1>
+      </div>
+      <button id="btnCadastro" class="btn btn-secondary">Cadastrar produto</button>
+    </header>
+
+    <section class="scanner-card" aria-live="polite">
+      <div class="scanner-icon">▥</div>
+      <div>
+        <div class="scanner-status"><span class="dot"></span> Leitor aguardando código...</div>
+        <p id="lastRead">Passe um produto no leitor. Não precisa clicar em nada.</p>
+      </div>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span>Produtos diferentes</span>
+        <strong id="totalProdutos">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Unidades para comprar</span>
+        <strong id="totalUnidades">0</strong>
+      </article>
+      <article class="stat-card">
+        <span>Não cadastrados</span>
+        <strong id="totalNaoCadastrados">0</strong>
+      </article>
+    </section>
+
+    <section class="list-card">
+      <div class="list-header">
+        <div>
+          <h2>Lista de compras</h2>
+          <p>Os itens entram automaticamente após a leitura do código.</p>
+        </div>
+        <div class="actions">
+          <button id="btnImprimir" class="btn btn-secondary">Imprimir</button>
+          <button id="btnLimpar" class="btn btn-danger">Limpar lista</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Código de barras</th>
+              <th class="center">Qtd.</th>
+              <th class="center no-print">Ação</th>
+            </tr>
+          </thead>
+          <tbody id="listaBody"></tbody>
+        </table>
+        <div id="emptyState" class="empty-state">
+          <strong>Nenhuma falta anotada.</strong>
+          <span>Passe o primeiro produto no leitor.</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="test-card no-print">
+      <details>
+        <summary>Teste sem leitor</summary>
+        <div class="test-row">
+          <input id="manualCode" inputmode="numeric" autocomplete="off" placeholder="Digite um EAN para simular" />
+          <button id="btnSimular" class="btn btn-secondary">Simular leitura</button>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <p class="eyebrow">CADASTRO RÁPIDO</p>
+          <h2 id="modalTitle">Cadastrar produto</h2>
+        </div>
+        <button id="btnFecharModal" class="icon-btn" aria-label="Fechar">×</button>
+      </div>
+
+      <form id="formCadastro">
+        <label>
+          Código de barras (EAN)
+          <input id="eanInput" inputmode="numeric" autocomplete="off" required />
+        </label>
+        <label>
+          Nome do produto
+          <input id="nomeInput" autocomplete="off" required />
+        </label>
+        <button class="btn btn-primary" type="submit">Salvar produto</button>
+      </form>
+      <p class="modal-note">O cadastro é necessário apenas uma vez. Depois disso, a leitura será totalmente automática.</p>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="assertive"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
