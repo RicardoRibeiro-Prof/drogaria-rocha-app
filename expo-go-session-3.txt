@@ -1,0 +1,1 @@
+Sessão Expo Go validada com manifesto e bundle públicos.
